@@ -1,0 +1,118 @@
+# Personal TODO - Setup Instructions
+
+## Prerequisites
+- Python 3.11+
+- `uv` (modern Python package manager)
+
+## Installation
+
+```bash
+# Clone the repository (already done)
+cd personal-todo
+
+# Install uv if not already installed
+pip install uv
+
+# Install dependencies (this creates virtual environment)
+uv pip install -e .
+
+# Copy environment file
+cp .env.example .env
+
+# Edit .env with your configuration
+nano .env
+# Or use any editor
+```
+
+## Running the Application
+
+```bash
+# Start the backend API server
+uv run backend.main:app
+
+# Run CLI commands
+uv run backend.cli.main:app
+
+# Example CLI commands
+uv run backend.cli.main:app list
+uv run backend.cli.main:app add "My first task"
+uv run backend.cli.main:app config
+```
+
+## Development
+
+```bash
+# Install development dependencies
+uv pip install -e ".[dev]"
+
+# Run linting
+ruff check backend/
+
+# Format code
+ruff format backend/
+
+# Type checking
+mypy backend/
+
+# Run tests
+pytest
+```
+
+## Configuration
+
+Edit `.env` file to configure:
+
+```env
+APP_NAME=Personal TODO
+APP_VERSION=0.1.0
+DEBUG=true
+HOST=127.0.0.1
+PORT=8080
+DATABASE_URL=sqlite+aiosqlite:///./data/todo.db
+
+# LLM Configuration
+LLM_PROVIDER=openrouter
+LLM_API_KEY=your-openrouter-api-key-here
+LLM_MODEL=anthropic/claude-3-haiku
+
+# Gmail (optional)
+GMAIL_ENABLED=false
+GMAIL_CREDENTIALS_PATH=
+
+# GitHub (optional)
+GITHUB_TOKEN=
+GITHUB_USERNAME=
+
+# Notifications
+NOTIFICATIONS_ENABLED=true
+NOTIFICATION_SCHEDULE=["24h","6h"]
+```
+
+## Project Structure
+
+```
+personal-todo/
+├── .env                # Configuration (copy from .env.example)
+├── .gitignore
+├── pyproject.toml        # Dependencies and tooling config
+├── README.md
+├── backend/
+│   ├── __init__.py
+│   ├── main.py            # FastAPI application entry point
+│   ├── config.py           # Settings management
+│   ├── database.py         # Database connection and setup
+│   ├── models/             # SQLAlchemy models
+│   ├── schemas/            # Pydantic schemas
+│   ├── services/            # Business logic
+│   ├── cli/               # CLI commands
+│   └── api/               # API routes (to be added)
+└── data/                   # SQLite database and ChromaDB vector store
+```
+
+## Next Steps
+
+1. ✅ Install dependencies: `uv pip install -e .`
+2. ✅ Configure environment: Edit `.env` file
+3. ✅ Start backend: `uv run backend.main:app`
+4. ✅ Test CLI: `uv run backend.cli.main:app list`
+5. ✅ Check health: `curl http://localhost:8080/health`

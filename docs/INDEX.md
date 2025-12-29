@@ -15,26 +15,27 @@
 ### [00-research/](00-research/)
 Market research, competitor analysis, and gap identification.
 
-- [MARKET_RESEARCH.md](MARKET_RESEARCH.md) - Detailed analysis of 40+ open-source competitors
-- [COMPARISON_SUMMARY.md](COMPARISON_SUMMARY.md) - Quick reference with market gap analysis
+- [MARKET_RESEARCH.md](00-research/MARKET_RESEARCH.md) - Detailed analysis of 40+ open-source competitors
+- [COMPARISON_SUMMARY.md](00-research/COMPARISON_SUMMARY.md) - Quick reference with market gap analysis
 
 ### [01-design/](01-design/)
 Technical design specifications and architecture decisions.
 
 - [DOCS_STRUCTURE.md](01-design/DOCS_STRUCTURE.md) - Documentation organization guide
-- [DESIGN_ARCHITECTURE.md](DESIGN_ARCHITECTURE.md) - System architecture and service boundaries
-- [DESIGN_CLI.md](DESIGN_CLI.md) - CLI command design with examples
-- [DESIGN_DATA.md](DESIGN_DATA.md) - Database schemas and data models
-- [DESIGN_CHAT.md](DESIGN_CHAT.md) - AI/chat flow and RAG integration
-- [DESIGN_WEB.md](DESIGN_WEB.md) - Web UI pages and components
-- [DESIGN_NOTIFICATIONS.md](DESIGN_NOTIFICATIONS.md) - Notification system design
-- [DESIGN_SUMMARY.md](DESIGN_SUMMARY.md) - Executive summary
+- [DESIGN_ARCHITECTURE.md](01-design/DESIGN_ARCHITECTURE.md) - System architecture and service boundaries
+- [DESIGN_CLI.md](01-design/DESIGN_CLI.md) - CLI command design with examples
+- [DESIGN_DATA.md](01-design/DESIGN_DATA.md) - Database schemas and data models
+- [DESIGN_CHAT.md](01-design/DESIGN_CHAT.md) - AI/chat flow and RAG integration
+- [DESIGN_WEB.md](01-design/DESIGN_WEB.md) - Web UI pages and components
+- [DESIGN_NOTIFICATIONS.md](01-design/DESIGN_NOTIFICATIONS.md) - Notification system design
+- [DESIGN_SUMMARY.md](01-design/DESIGN_SUMMARY.md) - Executive summary
+- [REQUIREMENTS_AUDIT.md](01-design/REQUIREMENTS_AUDIT.md) - Requirements and design audit
 
 ### [02-implementation/](02-implementation/)
 Implementation plans, pull request tracking, and development roadmap.
 
-- [PR-PLANS.md](PR-PLANS.md) - **START HERE** - Detailed PR plan with 14 planned PRs
-- [DOCS_STRUCTURE.md](01-design/DOCS_STRUCTURE.md) - Documentation organization guide
+- [PR-PLANS.md](02-implementation/PR-PLANS.md) - **START HERE** - Detailed PR plan with 14 planned PRs
+- [PLAN.md](02-implementation/PLAN.md) - Original requirements and project planning
 
 ---
 
@@ -48,13 +49,15 @@ Implementation plans, pull request tracking, and development roadmap.
 - [Data Models](01-design/DESIGN_DATA.md)
 
 ### API Design
+- [API Reference](01-design/API_REFERENCE.md) ⭐ NEW
 - [CLI Commands](01-design/DESIGN_CLI.md)
 - [Chat Interface](01-design/DESIGN_CHAT.md)
 - [Web UI Design](01-design/DESIGN_WEB.md)
 - [Notifications](01-design/DESIGN_NOTIFICATIONS.md)
 
 ### Development
-- [PR Plans](02-implementation/PR-PLANS.md) - Roadmap with 14 tracked PRs
+- [PR Plans](02-implementation/PR-PLANS.md) - Roadmap with 17 tracked PRs
+- [Testing Guide](02-implementation/TESTING_GUIDE.md) ⭐ NEW
 
 ---
 
@@ -80,6 +83,6 @@ Implementation plans, pull request tracking, and development roadmap.
 
 ## Project Stats
 
-- **Total Planned PRs:** 14
-- **Estimated Effort:** 120-150 hours (~3-4 months for one developer)
+- **Total Planned PRs:** 17 (added 3: Attachments API, Link Detection, Base API Router)
+- **Estimated Effort:** ~130 hours (~16 weeks for one developer)
 - **Current Status:** Planning phase complete, ready to implement

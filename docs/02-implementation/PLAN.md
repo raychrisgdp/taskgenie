@@ -48,65 +48,79 @@
 
 ---
 
-## Clarifying Questions (Remaining)
+## Clarifying Questions (Resolved)
 
-### 1. Chat Interface Style
-**How do you want the chat interface to work?**
-- [ ] **Terminal-based chat** (like we're doing now, in the terminal)
-- [ ] **Web-based chat UI** (access at localhost:8080/chat)
-- [ ] **Both** - CLI for commands, web for rich chat with attachments preview
-- [ ] **Slack/Discord integration** for chat access
+### 1. Chat Interface Style ✅
+**How do you want chat interface to work?**
+- [x] **Terminal-based chat** (like we're doing now, in the terminal) ← **DECISION: CONFIRMED**
+- [ ] **Web-based chat UI** (access at localhost:8080/chat) ← Secondary interface
+- [x] **Both** - CLI for commands, web for rich chat with attachments preview ← **DECISION: CONFIRMED**
+- [ ] **Slack/Discord integration** for chat access ← Future (Phase 3)
 
-### 2. Document/Email Attachment
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+
+### 2. Document/Email Attachment ✅
 **How should attachments work?**
 - [ ] **Links/URLs only** - Store references to Gmail, GitHub PRs, documents
-- [ ] **Fetch and cache** - Download content and store in TODO system
-- [ ] **Hybrid** - Store links + cache content for search
-- [ ] **Manual paste** - Copy content and attach to task
+- [x] **Fetch and cache** - Download content and store in TODO system ← **DECISION: CONFIRMED**
+- [x] **Hybrid** - Store links + cache content for search ← **DECISION: CONFIRMED**
+- [ ] **Manual paste** - Copy content and attach to task ← Supported via command
 
-### 3. Authentication for GMail/etc
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+
+### 3. Authentication for GMail/etc ✅
 **How to access external services?**
-- [ ] **OAuth flow** - Browser-based authentication
-- [ ] **API keys** - Store in environment variables
-- [ ] **Service accounts** - For GMail API
-- [ ] **User-provided tokens** - Manually input tokens
+- [x] **OAuth flow** - Browser-based authentication ← **DECISION: CONFIRMED**
+- [ ] **API keys** - Store in environment variables ← For LLM providers only
+- [ ] **Service accounts** - For GMail API ← Future (Phase 3)
+- [ ] **User-provided tokens** - Manually input tokens ← LLM BYOK support
 
-### 4. Task Metadata (Simplified)
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+
+### 4. Task Metadata (Simplified) ✅
 **Required fields:**
-- [x] Title/summary
-- [x] Description
-- [x] ETA/due date
-- [x] Status (pending, in progress, completed)
-- [x] Links/attachments (Gmail, GitHub PRs, docs)
+- [x] Title/summary ← **DECISION: CONFIRMED**
+- [x] Description ← **DECISION: CONFIRMED**
+- [x] ETA/due date ← **DECISION: CONFIRMED**
+- [x] Status (pending, in progress, completed) ← **DECISION: CONFIRMED**
+- [x] Links/attachments (Gmail, GitHub PRs, docs) ← **DECISION: CONFIRMED**
 
 **Optional fields:**
-- [ ] Priority level
-- [ ] Tags/categories
-- [ ] Subtasks
-- [ ] Dependencies
+- [x] Priority level ← **DECISION: CONFIRMED (included in MVP)**
+- [ ] Tags/categories ← Future (Phase 2)
+- [ ] Subtasks ← Future (Phase 2)
+- [ ] Dependencies ← Future (Phase 3)
 
-### 5. Notification Click Action
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+
+### 5. Notification Click Action ⚠️
 **What should happen when clicking notification?**
-- [ ] Open web UI to task details
-- [ ] Open attached documents/links
-- [ ] Show in terminal with option to mark complete
-- [ ] Open specific file/command
+- [x] Open web UI to task details ← **DECISION: MVP APPROACH**
+- [ ] Open attached documents/links ← Limited support in Docker
+- [ ] Show in terminal with option to mark complete ← Future (Phase 3)
+- [ ] Open specific file/command ← Future (Phase 3)
 
-### 3. Notification System
+**Note:** Due to Docker isolation, desktop notifications are complex. MVP will use Web UI browser notifications. Phase 3 will explore native desktop notifications.
+
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+
+### 3. Notification System ✅
 **What notifications do you need?**
-- [ ] Due date reminders (how far in advance?)
-- [ ] Overdue task alerts
-- [ ] Task completion confirmations
-- [ ] Agent spawn status updates
-- [ ] Daily/weekly digest summaries
+- [x] Due date reminders (how far in advance?) ← **DECISION: 24h and 6h before**
+- [x] Overdue task alerts ← **DECISION: Immediate when task passes ETA**
+- [x] Task completion confirmations ← **DECISION: System notification**
+- [ ] Agent spawn status updates ← Future (Phase 3)
+- [ ] Daily/weekly digest summaries ← Future (Phase 3)
 
-**For mobile integration:**
-- [ ] Google Space (as mentioned)
-- [ ] Push notifications (via Firebase/APNs?)
-- [ ] Email alerts
-- [ ] SMS alerts
-- [ ] Slack/Discord
-- [ ] Native mobile app?
+**For mobile integration (Phase 3):**
+- [x] Google Space (as mentioned) ← **DECISION: Planned for Phase 3**
+- [ ] Push notifications (via Firebase/APNs?) ← Future (Phase 3)
+- [ ] Email alerts ← Future (Phase 3)
+- [ ] SMS alerts ← Not planned
+- [ ] Slack/Discord ← Not planned
+- [ ] Native mobile app? ← Not planned
+
+**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
 
 ### 4. Agent Integration
 **What does "spawn agent" mean to you?**

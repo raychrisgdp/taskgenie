@@ -77,7 +77,7 @@ pytest
 
 Configuration is managed via `.env` file. Copy `.env.example` and customize.
 
-See `PLAN.md` for detailed requirements and design documents.
+See `docs/` directory for detailed requirements, design documents, and implementation plans.
 
 ## License
 

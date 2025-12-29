@@ -1,329 +1,192 @@
-# Implementation Plan: Pull Requests
+# Implementation Plan: Pull Requests (Chat-First Strategy)
 
 ## Overview
 
-This document tracks all planned Pull Requests for the taskgenie repository.
+This document tracks all planned Pull Requests for the taskgenie repository. The plan follows a **Chat-First** strategy, prioritizing the AI/LLM core and Chat interface over traditional CLI commands.
 
-## Phase 1: Core Infrastructure (Weeks 1-2)
+**Strategy:**
+1.  **Foundation:** DB, API, and LLM backbone
+2.  **Chat Core:** Conversational interface and basic context
+3.  **Intelligence:** RAG and Semantic Search
+4.  **Integrations:** Connecting external tools (Gmail, GitHub)
+5.  **Interfaces:** CLI (Secondary) and Web UI
+6.  **Polish:** Notifications and Deployment
+
+---
+
+## Phase 1: Core Foundation & AI Backbone (Weeks 1-2)
 
 ### PR-001: Database & Configuration Setup
 **Branch:** `feature/db-config`
 **Status:** ⬜ Not Started
-**Description:** Initialize SQLite database with migrations and environment configuration
+**Description:** Initialize SQLite database with migrations and environment configuration.
 **Files to modify:**
-- `backend/database.py` - Complete database initialization
+- `backend/database.py` - Complete database initialization (Async SQLAlchemy)
 - `backend/config.py` - Add configuration for migrations
+- `backend/main.py` - Basic FastAPI app structure
 **Acceptance Criteria:**
 - [ ] Database creates tables on startup
 - [ ] Environment variables load correctly
 - [ ] Tests pass for database operations
-**Estimated effort:** 2-3 hours
-
----
 
 ### PR-002: Task CRUD API Endpoints
 **Branch:** `feature/task-crud`
 **Status:** ⬜ Not Started
-**Description:** Create REST API endpoints for task management
+**Dependency:** PR-001
+**Description:** Create REST API endpoints for basic task management.
 **Files to modify:**
 - `backend/api/tasks.py` - Create API routes
-- `backend/schemas/task.py` - Add/update schemas as needed
+- `backend/schemas/task.py` - Pydantic models
 **Acceptance Criteria:**
-- [ ] POST /api/tasks - Create task
-- [ ] GET /api/tasks - List tasks with filters
-- [ ] GET /api/tasks/{id} - Get task by ID
-- [ ] PATCH /api/tasks/{id} - Update task
-- [ ] DELETE /api/tasks/{id} - Delete task
-- [ ] All endpoints return proper HTTP status codes
-**Estimated effort:** 3-4 hours
+- [ ] CRUD Endpoints (POST, GET, PATCH, DELETE) working
+- [ ] Status transitions working
+- [ ] Unit tests for API endpoints
 
----
-
-### PR-003: CLI Task Commands
-**Branch:** `feature/cli-tasks`
-**Status:** ⬜ Not Started
-**Description:** Implement CLI commands for task management
-**Files to modify:**
-- `backend/cli/main.py` - Add task commands
-- `backend/cli/commands.py` - Create command modules (new file)
-**Acceptance Criteria:**
-- [ ] `todo add "Task title"` works
-- [ ] `todo list` displays tasks
-- [ ] `todo show <id>` shows task details
-- [ ] `todo edit <id>` updates task
-- [ ] `todo done <id>` marks complete
-- [ ] `todo delete <id>` removes task
-- [ ] Rich output with colors and formatting
-**Estimated effort:** 4-5 hours
-
----
-
-## Phase 2: AI Integration (Weeks 3-4)
-
-### PR-004: LLM Service Implementation
+### PR-003: LLM Service & Chat Backbone
 **Branch:** `feature/llm-service`
 **Status:** ⬜ Not Started
-**Description:** Implement LLM service with OpenRouter/BYOK support
+**Dependency:** PR-001
+**Description:** Implement LLM service with OpenRouter/BYOK support and basic Chat API.
 **Files to modify:**
-- `backend/services/llm_service.py` - Complete implementation
-- `backend/config.py` - Add LLM configuration options
+- `backend/services/llm_service.py` - LLM Provider logic
+- `backend/api/chat.py` - Chat endpoint (streaming)
 **Acceptance Criteria:**
-- [ ] Supports OpenRouter API
-- [ ] Supports custom provider via base URL
-- [ ] Handles API errors gracefully
-- [ ] Streaming responses supported
-- [ ] Tests pass for LLM calls
-**Estimated effort:** 5-6 hours
+- [ ] Supports OpenRouter/OpenAI API
+- [ ] Streaming response support
+- [ ] Basic "Chat with Task" capability (System prompt aware of tasks)
 
 ---
 
-### PR-005: Chat API & CLI Command
-**Branch:** `feature/chat-api`
+## Phase 2: Intelligence & Attachments (Weeks 3-4)
+
+### PR-004: Attachment API & Link Detection
+**Branch:** `feature/attachments`
 **Status:** ⬜ Not Started
-**Description:** Create chat API endpoint and CLI chat command
+**Dependency:** PR-002
+**Description:** API for attachments and auto-detection service.
 **Files to modify:**
-- `backend/api/chat.py` - Create API routes (new file)
-- `backend/schemas/chat.py` - Add/update schemas as needed
-- `backend/cli/main.py` - Add chat command
+- `backend/api/attachments.py` - CRUD for attachments
+- `backend/services/link_detection.py` - Regex matcher for URLs
+- `backend/schemas/attachment.py`
 **Acceptance Criteria:**
-- [ ] POST /api/chat - Send message, get response
-- [ ] WebSocket or SSE streaming support
-- [ ] CLI `todo chat` starts interactive session
-- [ ] Conversation context maintained
-- [ ] Tests for chat functionality
-**Estimated effort:** 6-8 hours
+- [ ] Manual attachment API works
+- [ ] Detecting a URL in task description auto-creates attachment
+
+### PR-005: ChromaDB & RAG Integration
+**Branch:** `feature/rag-core`
+**Status:** ⬜ Not Started
+**Dependency:** PR-003, PR-004
+**Description:** Vector storage for tasks and attachments to enable semantic search.
+**Files to modify:**
+- `backend/services/rag_service.py`
+- `backend/database.py` - ChromaDB setup
+**Acceptance Criteria:**
+- [ ] Tasks/Attachments are auto-embedded on create/update
+- [ ] Semantic search endpoint returns relevant results
+- [ ] Chat uses RAG context for answers
 
 ---
 
 ## Phase 3: Integrations (Weeks 5-8)
 
+*Note: PR-006 and PR-007 can be developed in parallel.*
+
 ### PR-006: Gmail Integration
 **Branch:** `feature/gmail-integration`
 **Status:** ⬜ Not Started
-**Description:** Add Gmail OAuth and email fetching
+**Dependency:** PR-004
+**Description:** Gmail OAuth, email fetching, and RAG content caching.
 **Files to modify:**
-- `backend/integrations/gmail.py` - Complete implementation
-- `backend/config.py` - Add Gmail OAuth settings
-- `backend/schemas/attachment.py` - Update for Gmail attachments
+- `backend/integrations/gmail.py`
+- `backend/services/rag_service.py` (Update for email content)
 **Acceptance Criteria:**
-- [ ] OAuth flow works (browser authentication)
-- [ ] Can fetch email by message ID or URL
-- [ ] Email content cached in database
-- [ ] Parse email metadata (subject, from, etc.)
-- [ ] Tests for Gmail operations
-**Estimated effort:** 8-10 hours
-
----
+- [ ] OAuth flow working
+- [ ] Fetch email content by ID/URL
+- [ ] Email content indexed in RAG
 
 ### PR-007: GitHub Integration
 **Branch:** `feature/github-integration`
 **Status:** ⬜ Not Started
-**Description:** Add GitHub API integration for PRs and issues
+**Dependency:** PR-004
+**Description:** GitHub API integration for Issues/PRs.
 **Files to modify:**
-- `backend/integrations/github.py` - Complete implementation
-- `backend/config.py` - Add GitHub token settings
-- `backend/schemas/attachment.py` - Update for GitHub attachments
+- `backend/integrations/github.py`
 **Acceptance Criteria:**
-- [ ] Can fetch PR by number
-- [ ] Can fetch issue by number
-- [ ] Repository and file details accessible
-- [ ] Parse GitHub metadata (author, labels, etc.)
-- [ ] Error handling for rate limits
-- [ ] Tests for GitHub operations
-**Estimated effort:** 6-8 hours
+- [ ] Fetch Issue/PR details by URL
+- [ ] PR content indexed in RAG
 
 ---
 
-## Phase 4: RAG & Search (Weeks 9-10)
+## Phase 4: User Interfaces (Weeks 9-12)
 
-### PR-008: ChromaDB Integration
-**Branch:** `feature/chromadb`
+### PR-008: CLI Chat-First Interface
+**Branch:** `feature/cli-core`
 **Status:** ⬜ Not Started
-**Description:** Integrate ChromaDB for vector storage and retrieval
+**Dependency:** PR-003, PR-005
+**Description:** The "todo" command entry point. Defaults to interactive chat REPL.
 **Files to modify:**
-- `backend/services/rag_service.py` - Create new file
-- `backend/database.py` - Add ChromaDB setup
-- `backend/config.py` - Add ChromaDB configuration
-- `pyproject.toml` - Add ChromaDB dependency
+- `backend/cli/main.py`
+- `backend/cli/chat_repl.py`
 **Acceptance Criteria:**
-- [ ] ChromaDB collection created on startup
-- [ ] Documents embedded when created/updated
-- [ ] Vector search implemented
-- [ ] Semantic search across tasks and attachments
-- [ ] Tests for RAG operations
-**Estimated effort:** 8-10 hours
+- [ ] `todo` opens chat REPL
+- [ ] `todo "msg"` sends one-shot chat
+- [ ] REPL supports slash commands (`/help`, `/exit`)
 
----
-
-### PR-009: Semantic Search API
-**Branch:** `feature/semantic-search`
+### PR-009: CLI Standard Commands (Secondary)
+**Branch:** `feature/cli-commands`
 **Status:** ⬜ Not Started
-**Description:** Add semantic search endpoint with RAG
+**Dependency:** PR-008
+**Description:** Standard commands (`add`, `list`, `edit`) for scripting/power users.
 **Files to modify:**
-- `backend/api/search.py` - Create API routes (new file)
-- `backend/services/rag_service.py` - Add search methods
+- `backend/cli/commands.py`
 **Acceptance Criteria:**
-- [ ] GET /api/search - Semantic search endpoint
-- [ ] Returns ranked results with relevance scores
-- [ ] Supports keyword search fallback
-- [ ] RAG context included in results
-- [ ] Tests for search functionality
-**Estimated effort:** 4-5 hours
+- [ ] `todo list`, `todo add` work as subcommands
+- [ ] Rich terminal output
+
+### PR-010: Web UI (Chat & Tasks)
+**Branch:** `feature/web-ui`
+**Status:** ⬜ Not Started
+**Dependency:** PR-003
+**Description:** HTMX + Jinja2 Web Interface.
+**Files to modify:**
+- `backend/templates/*`
+- `backend/api/web.py`
+**Acceptance Criteria:**
+- [ ] Chat interface with streaming
+- [ ] Task management pages
+- [ ] Responsive design
 
 ---
 
-## Phase 5: Notifications (Weeks 11-12)
+## Phase 5: Polish & Deployment (Weeks 13-14)
 
-### PR-010: Notification Service
+### PR-011: Notification Service
 **Branch:** `feature/notifications`
 **Status:** ⬜ Not Started
-**Description:** Implement desktop notification service with scheduling
+**Description:** Desktop notifications via `plyer` and scheduler.
 **Files to modify:**
-- `backend/services/notification_service.py` - Complete implementation
-- `backend/models/notification.py` - Update model
-- `backend/config.py` - Add notification settings
-- `pyproject.toml` - Add APScheduler dependency
+- `backend/services/notification_service.py`
 **Acceptance Criteria:**
-- [ ] Notification scheduler runs in background
-- [ ] Notifications sent 24h before ETA
-- [ ] Notifications sent 6h before ETA
-- [ ] Overdue notifications sent
-- [ ] Notifications use plyer (cross-platform)
-- [ ] Tests for notification operations
-**Estimated effort:** 6-8 hours
+- [ ] Notifications trigger 24h/6h before deadline
 
----
-
-## Phase 6: Web UI (Weeks 13-14)
-
-### PR-011: Web UI - Task Pages
-**Branch:** `feature/web-tasks`
+### PR-012: Deployment & Documentation
+**Branch:** `feature/deploy`
 **Status:** ⬜ Not Started
-**Description:** Create web UI pages for task management
-**Files to modify:**
-- `backend/api/tasks.py` - Add HTMX support
-- `backend/templates/tasks.html` - Create template (new file)
-- `backend/templates/base.html` - Update base template
+**Description:** Docker polish, comprehensive README, and final docs.
 **Acceptance Criteria:**
-- [ ] Task list page renders correctly
-- [ ] Task details page works
-- [ ] HTMX interactions functional
-- [ ] Responsive design
-- [ ] No JavaScript required for basic functionality
-**Estimated effort:** 8-10 hours
+- [ ] `docker compose up` works flawlessly
+- [ ] User guide complete
 
 ---
 
-### PR-012: Web UI - Chat Interface
-**Branch:** `feature/web-chat`
-**Status:** ⬜ Not Started
-**Description:** Create web chat interface with streaming
-**Files to modify:**
-- `backend/api/chat.py` - Add WebSocket/SSE for web
-- `backend/templates/chat.html` - Create template (new file)
-- `backend/templates/base.html` - Update for streaming
-**Acceptance Criteria:**
-- [ ] Chat page renders messages
-- [ ] Streaming responses work
-- [ ] WebSocket or SSE connected
-- [ ] Input field accepts messages
-- [ ] Responsive design
-**Estimated effort:** 10-12 hours
+## Summary Timeline
 
----
+| Phase | Focus | Weeks | Key PRs |
+|-------|-------|--------|----------|
+| **1** | **Foundation** | 1-2 | PR-001 (DB), PR-002 (Task API), PR-003 (LLM) |
+| **2** | **Intelligence** | 3-4 | PR-004 (Attachments), PR-005 (RAG), PR-006 (Router) |
+| **3** | **Integrations** | 5-8 | PR-007 (Gmail), PR-008 (GitHub) - **Can parallelize** |
+| **4** | **Interfaces** | 9-12 | PR-009 (CLI Chat), PR-010 (CLI Commands), PR-011 (Web UI) |
+| **5** | **Polish** | 13-14 | PR-012 (Notifications), PR-013 (Testing), PR-014 (Docs & Deploy) |
 
-## Phase 7: Testing & Polish (Weeks 15-16)
-
-### PR-013: Testing Suite
-**Branch:** `feature/testing`
-**Status:** ⬜ Not Started
-**Description:** Add comprehensive test suite
-**Files to create:**
-- `tests/test_tasks.py`
-- `tests/test_chat.py`
-- `tests/test_rag.py`
-- `tests/test_integrations.py`
-**Acceptance Criteria:**
-- [ ] Unit tests for all services
-- [ ] Integration tests for API endpoints
-- [ ] Test coverage > 80%
-- [ ] CI/CD pipeline configured
-**Estimated effort:** 10-12 hours
-
----
-
-### PR-014: Documentation & Deployment
-**Branch:** `feature/docs-deploy`
-**Status:** ⬜ Not Started
-**Description:** Complete documentation and deployment configuration
-**Files to modify:**
-- `docs/02-implementation/DEPLOYMENT.md` - Create deployment guide
-- `docs/INDEX.md` - Update to reflect new structure
-- `README.md` - Update with deployment instructions
-- `pyproject.toml` - Add deployment scripts
-**Acceptance Criteria:**
-- [ ] Deployment guide complete
-- [ ] Docker configuration documented
-- [ ] Local setup instructions clear
-- [ ] Production deployment options documented
-- [ ] README is comprehensive
-**Estimated effort:** 4-6 hours
-
----
-
-## PR Organization Strategy
-
-### Immediate (Next 1-2 PRs)
-1. **PR-001: Database & Configuration** - Foundation for everything
-2. **PR-002: Task CRUD API** - Core API functionality
-
-### Short-term (Weeks 3-6)
-3. **PR-003: CLI Task Commands** - Primary interface
-4. **PR-004: LLM Service** - AI capabilities
-5. **PR-005: Chat API** - AI chat interface
-6. **PR-006: Gmail Integration** - First integration
-7. **PR-007: GitHub Integration** - Second integration
-8. **PR-008: ChromaDB Integration** - Vector storage
-9. **PR-009: Semantic Search** - RAG search
-
-### Medium-term (Weeks 7-14)
-10. **PR-010: Notification Service** - Desktop notifications
-11. **PR-011: Web UI - Task Pages** - Web interface
-12. **PR-012: Web UI - Chat Interface** - Streaming chat
-
-### Long-term (Weeks 15-16)
-13. **PR-013: Testing Suite** - Quality assurance
-14. **PR-014: Documentation & Deployment** - Production ready
-
----
-
-## Tracking Status
-
-| PR # | Branch | Phase | Status | Estimated Effort |
-|--------|---------|--------|--------|------------------|
-| PR-001 | feature/db-config | Phase 1 | ⬜ Not Started | 2-3h |
-| PR-002 | feature/task-crud | Phase 1 | ⬜ Not Started | 3-4h |
-| PR-003 | feature/cli-tasks | Phase 1 | ⬜ Not Started | 4-5h |
-| PR-004 | feature/llm-service | Phase 2 | ⬜ Not Started | 5-6h |
-| PR-005 | feature/chat-api | Phase 2 | ⬜ Not Started | 6-8h |
-| PR-006 | feature/gmail-integration | Phase 3 | ⬜ Not Started | 8-10h |
-| PR-007 | feature/github-integration | Phase 3 | ⬜ Not Started | 6-8h |
-| PR-008 | feature/chromadb | Phase 4 | ⬜ Not Started | 8-10h |
-| PR-009 | feature/semantic-search | Phase 4 | ⬜ Not Started | 4-5h |
-| PR-010 | feature/notifications | Phase 5 | ⬜ Not Started | 6-8h |
-| PR-011 | feature/web-tasks | Phase 6 | ⬜ Not Started | 8-10h |
-| PR-012 | feature/web-chat | Phase 6 | ⬜ Not Started | 10-12h |
-| PR-013 | feature/testing | Phase 7 | ⬜ Not Started | 10-12h |
-| PR-014 | feature/docs-deploy | Phase 7 | ⬜ Not Started | 4-6h |
-
-**Total Estimated Effort:** ~120-150 hours (~3-4 months for one developer)
-
----
-
-## Notes
-
-- All PRs should be created from `main` branch
-- Each PR should focus on one feature/component
-- Tests should be included with each PR
-- Documentation updates should accompany code changes
-- Use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+**Total Estimated Effort:** ~130 hours (~16 weeks for one developer)

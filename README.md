@@ -8,9 +8,6 @@ CLI-first, AI-native personal task manager with RAG-powered search.
 # Install uv
 pip install uv
 
-# Create virtual environment
-uv venv
-
 # Install dependencies
 uv pip install -e .
 
@@ -20,7 +17,7 @@ cp .env.example .env
 # Edit .env with your settings
 nano .env
 
-# Start the backend
+# Start backend
 uv run backend.main:main
 
 # In another terminal, run CLI
@@ -33,8 +30,8 @@ uv run backend.cli.main:app
 - ✅ AI-powered chat interface
 - ✅ RAG semantic search across tasks and attachments
 - ✅ Desktop notifications (plyer)
-- ✅ Gmail integration
-- ✅ GitHub integration
+- ✅ Gmail integration (planned)
+- ✅ GitHub integration (planned)
 - ✅ BYOK + OpenRouter support
 - ✅ Local-first with SQLite
 

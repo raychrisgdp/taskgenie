@@ -12,18 +12,18 @@
 *   **Option C (Bridge):** Build a tiny "host listener" script that listens to the Docker container and triggers the alert.
 
 ### 2. Gmail "Attachment" Interaction Flow
-**The Issue:** `DESIGN_CLI.md` uses `todo attach --ref 18e4f7a2b3c`.
+**The Issue:** `DESIGN_CLI.md` uses `tgenie attach --ref 18e4f7a2b3c`.
 **The Problem:** Finding a specific Gmail `message-id` is extremely difficult for a normal user (requires "Show Original" in Gmail -> Copy Message-ID header).
 **Impact:** Users will find this feature unusable.
 **Recommendation:**
-*   Change interaction to accept **URL**: `todo attach --ref "https://mail.google.com/mail/u/0/#inbox/FMfcgzGvw..."`
+*   Change interaction to accept **URL**: `tgenie attach --ref "https://mail.google.com/mail/u/0/#inbox/FMfcgzGvw..."`
 *   System should parse the ID from the URL automatically.
 
 ### 3. CLI Chat History Continuity
 **The Issue:** `DESIGN_CHAT.md` implies stateful conversations, but CLI tools are stateless by default.
-**The Problem:** If I run `todo chat`, ask "What's due?", exit, and then run `todo chat` again 5 minutes later, does it remember the context?
+**The Problem:** If I run `tgenie`, ask "What's due?", exit, and then run `tgenie` again 5 minutes later, does it remember the context?
 **Recommendation:**
-*   Explicitly define default behavior: Does `todo chat` start fresh or resume?
+*   Explicitly define default behavior: Does `tgenie` start fresh or resume?
 *   Suggest: Default to **Resume** last session (for context continuity), with a `--new` flag to reset.
 
 ---
@@ -38,12 +38,12 @@
 
 ### 2. CLI "Interactive Mode" Details
 **Location:** `DESIGN_CLI.md`
-**Ambiguity:** `todo add --interactive`
+**Ambiguity:** `tgenie add --interactive`
 **Missing Detail:** How are multi-line descriptions handled? (Pressing Enter usually submits).
 **Proposal:** Specify that Description uses a temp file (like `git commit`) OR requires a specific terminator (e.g., `Ctrl+D` or `END` on a new line).
 
 ### 3. Attachment "Preview" in CLI
-**Location:** `DESIGN_CLI.md` (`todo show`)
+**Location:** `DESIGN_CLI.md` (`tgenie show`)
 **Ambiguity:** "View in GitHub" is listed as an action.
 **Missing Detail:** In a CLI, does this print the URL? Or try to open the system browser (`xdg-open`)?
 **Proposal:** Explicitly state that "View" actions launch the default system browser.
@@ -61,10 +61,10 @@
 ### 1. Task Schema Definitions
 **Observation:** Task fields are defined in `PLAN.md`, `DESIGN_DATA.md` (SQL), and `DESIGN_DATA.md` (Pydantic).
 **Status:** **Acceptable.** This is necessary redundancy for different layers (DB vs API).
-**Action:** Ensure `status` enums match exactly across all files (`pending` vs `todo`).
+**Action:** Ensure `status` enums match exactly across all files (`pending`, `in_progress`, `completed`).
 
 ### 2. Chat Commands
-**Observation:** `todo chat` (CLI) and Web Chat share logic.
+**Observation:** `tgenie` (interactive chat) and Web Chat share logic.
 **Status:** **Good.** Both should hit the same API endpoint (`POST /api/chat`).
 **Risk:** If CLI implements logic locally instead of calling API, logic will diverge.
 **Action:** Enforce "Thick Server, Thin Client" - CLI should just be an API client.

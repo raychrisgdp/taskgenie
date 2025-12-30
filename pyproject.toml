@@ -45,7 +45,8 @@ dev = [
 ]
 
 [project.scripts]
-todo = "personal_todo.cli.main:app"
+tgenie = "backend.cli.main:app"
+taskgenie = "backend.cli.main:app"
 
 [tool.hatchling.scripts]
 # No custom build scripts needed
@@ -53,6 +54,8 @@ todo = "personal_todo.cli.main:app"
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+
+[tool.ruff.lint]
 select = [
     "E",
     "F",
@@ -70,6 +73,7 @@ unfixable = ["F841"]
 [tool.ruff.lint.isort]
 known-first-party = ["personal_todo"]
 known-third-party = ["fastapi", "pydantic", "sqlalchemy", "typer"]
+split-on-trailing-comma = false
 
 [tool.ruff.format]
 indent-style = "space"
@@ -79,12 +83,11 @@ quote-style = "double"
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
-warn_unused_ignores = true
+warn_unused_ignores = false
 disallow_untyped_defs = true
 check_untyped_defs = true
 no_implicit_optional = true
 warn_redundant_casts = true
-warn_unused_ignores = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

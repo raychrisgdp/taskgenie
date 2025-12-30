@@ -10,7 +10,7 @@ The chat interface is the **primary way users interact** with their tasks. It's 
 
 ```mermaid
 graph TD
-    A[User: todo chat] --> B{New or existing?}
+    A[User: tgenie] --> B{New or existing?}
     B -->|New| C[Load recent task context]
     B -->|Existing| D[Load chat history]
     C --> E[Display welcome message]
@@ -176,12 +176,12 @@ Found 3 relevant results (semantic search):
   Task: ghi789 - Fix authentication bug
   Reasoning: Task title and description discuss authentication issues
   Excerpt: "Users unable to log in after token expiration"
-  
+
 📋 Relevant (0.89):
   Attachment from task abc123 - GitHub PR #123
   Reasoning: PR description contains JWT token validation issues
   Excerpt: "The current JWT token validation doesn't properly handle expired tokens"
-  
+
 📋 Related (0.72):
   Task: jkl012 - Update documentation
   Reasoning: Documentation mentions authentication flow
@@ -218,10 +218,10 @@ You: What should I focus on right now?
 📅 UPCOMING (Due this week):
   • abc123 - Review PR #123 [high, due Wed 2PM]
     You're making good progress - PR has 2 approved reviews
-  
+
   • def456 - Send project update [medium, due Fri 5PM]
     Gmail thread has 3 messages, client is waiting
-  
+
   • ghi789 - Fix authentication bug [high, due Sat 10AM]
     No activity yet, consider blocking time
 
@@ -404,17 +404,17 @@ class ChatSession:
         self.session_id = session_id or str(uuid4())
         self.messages = []
         self.context = {}  # Current task, attachments in focus
-    
+
     def add_message(self, role, content):
         self.messages.append({
             "role": role,
             "content": content,
             "timestamp": datetime.now()
         })
-    
+
     def get_recent_context(self, limit=5):
         return self.messages[-limit:]
-    
+
     def save_to_db(self):
         # Persist session for later
         pass
@@ -446,7 +446,7 @@ async def chat_stream(request: ChatRequest):
         async for token in llm.stream_async(request.message):
             yield f"data: {token}\n\n"
         yield "data: [DONE]\n\n"
-    
+
     return StreamingResponse(
         generate(),
         media_type="text/event-stream"
@@ -490,7 +490,7 @@ except LLMNotAvailableError:
 You: What tasks are due?
 
 ⚠️  LLM not configured. Please run:
-  $ todo config --llm openrouter --api-key YOUR_KEY
+  $ tgenie config --llm openrouter --api-key YOUR_KEY
 
 In the meantime, I can show you tasks using basic search:
 
@@ -525,7 +525,7 @@ Tasks Due This Week:
 class LLMProvider:
     async def generate(self, prompt, **kwargs):
         raise NotImplementedError
-    
+
     async def stream(self, prompt, **kwargs):
         raise NotImplementedError
 

@@ -1,6 +1,6 @@
-from .task import TaskCreate, TaskUpdate, TaskResponse, TaskStatus, TaskPriority
 from .attachment import AttachmentCreate, AttachmentResponse, AttachmentType
 from .chat import ChatMessage, ChatRequest, ChatResponse
+from .task import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 __all__ = [
     "TaskCreate",

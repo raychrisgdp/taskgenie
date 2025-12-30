@@ -39,7 +39,7 @@ def detect_links(text: str) -> List[str]:
     return extract_urls(text)
 
 # User can also manually attach:
-# todo attach <task_id> --type gmail --ref "https://mail.google.com/mail/u/0/#inbox/..."
+# tgenie attach <task_id> --type gmail --ref "https://mail.google.com/mail/u/0/#inbox/..."
 ```
 
 ---
@@ -65,7 +65,7 @@ if web_ui_open:
 **Implementation (Phase 3):**
 ```python
 # Optional: Host-side notification daemon
-# Systemd service: todo-notify-host
+# Systemd service: tgenie-notify-host
 # Listens to Docker container via socket, triggers plyer
 ```
 
@@ -88,11 +88,11 @@ if web_ui_open:
 **Implementation:**
 ```python
 # Default behavior
-todo chat  # Resumes session if last message <24h ago
+tgenie  # Resumes session if last message <24h ago
 
 # Explicit controls
-todo chat --new       # Always start fresh
-todo chat --continue  # Force resume even if old
+tgenie --new       # Always start fresh
+tgenie --continue  # Force resume even if old
 ```
 
 ---
@@ -153,7 +153,7 @@ todo chat --continue  # Force resume even if old
 
 **Implementation:**
 ```python
-# Config in ~/.todo/config.toml
+# Config in ~/.taskgenie/config.toml
 [llm]
 provider = "openrouter"  # or "openai", "anthropic", "ollama"
 model = "anthropic/claude-3-haiku"
@@ -277,16 +277,16 @@ class IntegrationProvider(Protocol):
 
 ## 13. TUI Approach
 
-**Decision:** Rich CLI for MVP; Textual TUI as Phase 3 enhancement
-**Date:** 2025-01-29
+**Decision:** Textual TUI-first for MVP; CLI subcommands for scripting
+**Date:** 2025-12-29 (updated)
 **Status:** ✅ Confirmed
 **Rationale:**
-- MVP: Rich CLI is sufficient, simpler, proven
-- Phase 3: Textual provides full-screen "IDE-like" experience
-- Textual: Modern, async, rich widgets, hot-reload
+- UX is a priority from day 1; TUI is the primary interface
+- Textual provides full-screen "IDE-like" experience with fast iteration
+- CLI subcommands remain for automation/scripting (best of both)
 
 **Comparison:**
-| Aspect | Rich (MVP) | Textual (Phase 3) |
+| Aspect | Rich (Subcommands) | Textual (Interactive TUI) |
 |---------|----------------|---------------------|
 | Complexity | Low | Medium |
 | UX | Good | Excellent |

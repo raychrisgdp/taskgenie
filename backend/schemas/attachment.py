@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 class AttachmentType(str, Enum):
@@ -15,7 +15,7 @@ class AttachmentCreate(BaseModel):
     task_id: str
     type: AttachmentType
     reference: str
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class AttachmentResponse(BaseModel):
@@ -23,7 +23,7 @@ class AttachmentResponse(BaseModel):
     task_id: str
     type: AttachmentType
     reference: str
-    title: Optional[str]
-    content: Optional[str]
-    metadata: Optional[dict]
+    title: str | None
+    content: str | None
+    metadata: dict | None
     created_at: datetime

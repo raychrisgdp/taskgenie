@@ -38,20 +38,20 @@ uv run backend.cli.main:app
 ## Commands
 
 ```bash
-# List all tasks
-todo list
+# Start interactive TUI (primary; includes chat)
+tgenie
 
-# Add a new task
-todo add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15"
+# List all tasks (non-interactive)
+tgenie list
 
-# Start AI chat
-todo chat
+# Add a new task (non-interactive)
+tgenie add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15"
 
 # Show configuration
-todo config
+tgenie config
 
 # Start web UI
-todo ui
+tgenie ui
 ```
 
 ## Development
@@ -59,6 +59,9 @@ todo ui
 ```bash
 # Install dev dependencies
 uv pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
 
 # Run linting
 ruff check backend/

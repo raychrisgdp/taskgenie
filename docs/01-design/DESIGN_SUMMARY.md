@@ -2,7 +2,7 @@
 
 ## What We're Building
 
-A **CLI-first, AI-native personal task manager** with:
+An **interactive TUI-first, AI-native personal task manager** with:
 - Conversational chat interface (like opencode)
 - Gmail + GitHub attachment support
 - RAG-powered semantic search
@@ -64,8 +64,8 @@ git clone https://github.com/user/personal-todo.git
 cd personal-todo
 
 # Configure
-todo config --llm openrouter --api-key YOUR_KEY
-todo config --gmail-auth  # Optional, opens browser
+tgenie config --llm openrouter --api-key YOUR_KEY
+tgenie config --gmail-auth  # Optional, opens browser
 docker compose up -d
 
 # Done! System running on http://localhost:8080
@@ -75,23 +75,23 @@ docker compose up -d
 
 **Morning - Check what's due:**
 ```bash
-$ todo chat
+$ tgenie
 You: What do I have due today?
 🤖 You have 2 tasks due today:
   1. Review PR #123 [high]
   2. Client meeting [medium]
 ```
 
-**Add task from email:**
+**Add task from email (using subcommand):**
 ```bash
 # Found important email in Gmail
-$ todo attach abc123 --type gmail --ref 18e4f7a2b3c
+$ tgenie attach abc123 --type gmail --ref 18e4f7a2b3c
 ✓ Gmail attached to task abc123
 ```
 
 **Get help prioritizing:**
 ```bash
-$ todo chat
+$ tgenie
 You: What should I focus on today?
 🤖 Based on 3 pending tasks:
   • Start with PR #123 (high priority, 2 approvals)
@@ -101,11 +101,11 @@ You: What should I focus on today?
 
 **Evening - Progress:**
 ```bash
-$ todo done abc123
+$ tgenie done abc123
 ✓ Task completed
 🔔 Desktop notification shows task completed
 
-$ todo chat
+$ tgenie
 You: What's left for tomorrow?
 🤖 1 task due tomorrow:
   • Send project update (medium priority)
@@ -147,7 +147,7 @@ CLI (Typer)          Web UI (HTMX)          API (FastAPI)
 ### Adding a Task
 ```mermaid
 graph LR
-    A[CLI: todo add] --> B[Task Service]
+    A[CLI: tgenie add] --> B[Task Service]
     B --> C[Save to SQLite]
     C --> D[Generate Embedding]
     D --> E[Store in ChromaDB]
@@ -223,56 +223,23 @@ personal-todo/
 └── README.md
 ```
 
-## Implementation Timeline
+## Implementation Roadmap
 
-### Phase 1: MVP (Weeks 1-8)
-- [ ] Week 1-2: Core infrastructure
-  - FastAPI backend, SQLite database
-  - Typer CLI for add/list/show/edit/delete
-  - Docker Compose setup
-- [ ] Week 3-4: AI integration
-  - OpenRouter + BYOK support
-  - Basic chat endpoint (non-RAG)
-  - LLM configuration management
-- [ ] Week 5-6: Web UI
-  - HTMX + Jinja2 templates
-  - Chat interface with streaming
-  - Task list and detail pages
-- [ ] Week 7-8: Notifications
-  - Desktop notifications (plyer)
-  - Notification scheduler (24h, 6h before ETA)
-  - Notification preferences
+**Source of truth:** `docs/02-implementation/PR-PLANS.md` (UX-first execution order + dependency diagram).
 
-### Phase 2: Differentiators (Weeks 9-16)
-- [ ] Week 9-10: Gmail integration
-  - Gmail OAuth flow
-  - Email fetching and parsing
-  - Attach emails to tasks
-- [ ] Week 11-12: GitHub integration
-  - GitHub API integration
-  - Fetch PR/issue details
-  - Attach GitHub items to tasks
-- [ ] Week 13-14: RAG system
-  - ChromaDB integration
-  - Embedding generation
-  - Semantic search
-  - Chat with RAG context
-- [ ] Week 15-16: Polish
-  - Shell completion
-  - Better error messages
-  - Performance optimization
-
-### Phase 3: Advanced Features (Weeks 17+)
-- [ ] TUI mode (optional)
-- [ ] Mobile notifications (Google Space)
-- [ ] Smart suggestions (ML)
-- [ ] Task dependencies
-- [ ] Subtasks
-- [ ] Export/Import
+High-level sequence:
+1. Foundation (DB + Task API)
+2. Interface (interactive TUI tasks MVP)
+3. Chat (LLM + chat inside the TUI)
+4. Context (attachments + link detection)
+5. Early value (notifications and/or integrations)
+6. Intelligence (RAG + semantic search)
+7. Secondary UIs (web UI)
+8. Shipping (deployment + docs)
 
 ## Configuration Files
 
-### ~/.todo/config.toml
+### ~/.taskgenie/config.toml
 ```toml
 [llm]
 provider = "openrouter"
@@ -281,7 +248,7 @@ api_key = "sk-or-v1-..."
 
 [gmail]
 enabled = true
-credentials_path = "~/.todo/credentials.json"
+credentials_path = "~/.taskgenie/credentials.json"
 
 [github]
 enabled = true
@@ -294,7 +261,7 @@ sound_enabled = true
 quiet_hours = {"start": "22:00", "end": "08:00"}
 
 [database]
-path = "~/.todo/data/todo.db"
+path = "~/.taskgenie/data/taskgenie.db"
 
 [web]
 port = 8080
@@ -328,37 +295,36 @@ host = "localhost"
 ## CLI Commands Reference
 
 ```bash
-# Task Management
-todo add "Task title" [-d desc] [-e eta] [-p priority] [-a attachment]
-todo list [--status STATUS] [--priority PRI] [--due DATE]
-todo show <task_id>
-todo edit <task_id> [options]
-todo done <task_id>
-todo delete <task_id>
+# Interactive TUI (default - chat-first)
+tgenie                              # Start interactive TUI
+tgenie "What tasks are due?"        # One-shot chat query
 
-# Chat Interface
-todo chat                          # Start chat session
-todo chat --continue              # Continue last session
-todo chat --new               # Start new session
+# Task Management (subcommands for scripting)
+tgenie add "Task title" [-d desc] [-e eta] [-p priority] [-a attachment]
+tgenie list [--status STATUS] [--priority PRI] [--due DATE]
+tgenie show <task_id>
+tgenie edit <task_id> [options]
+tgenie done <task_id>
+tgenie delete <task_id>
 
 # Attachments
-todo attach <task_id> --type TYPE --ref REFERENCE
+tgenie attach <task_id> --type TYPE --ref REFERENCE
 
 # Configuration
-todo config                        # Show current config
-todo config --llm PROVIDER          # Set LLM provider
-todo config --api-key KEY           # Set API key
-todo config --gmail-auth             # Configure Gmail
-todo config --notify SCHEDULE        # Set notification schedule
+tgenie config                       # Show current config
+tgenie config --llm PROVIDER        # Set LLM provider
+tgenie config --api-key KEY         # Set API key
+tgenie config --gmail-auth          # Configure Gmail
+tgenie config --notify SCHEDULE     # Set notification schedule
 
 # Web UI
-todo ui                            # Launch web interface
-todo ui --port 9000             # Specify port
+tgenie ui                           # Launch web interface
+tgenie ui --port 9000               # Specify port
 
 # Data
-todo export --format json           # Export tasks
-todo import --file backup.json      # Import tasks
-todo search <query>              # Search tasks
+tgenie export --format json         # Export tasks
+tgenie import --file backup.json    # Import tasks
+tgenie search <query>               # Search tasks
 ```
 
 ## Design Documents Created
@@ -400,14 +366,15 @@ todo search <query>              # Search tasks
 - **Portable:** Works in Docker, easy to migrate later
 - **Fast:** Good enough for personal use
 
-### Why CLI-first?
-- **Scriptable:** Can be automated
+### Why Interactive TUI-first?
+- **Natural interaction:** Chat-first feels more intuitive than memorizing commands
+- **Context-aware:** Conversation history helps with follow-up questions
+- **Scriptable:** Subcommands (`tgenie add`, `tgenie list`) can be automated
 - **SSH-friendly:** Works perfectly remotely
-- **Familiar:** Like git, docker, kubectl
-- **Fast:** No web latency for quick commands
+- **Familiar:** Like modern CLI tools (git, docker) but with AI assistance
 
 ### Why Chat Interface?
-- **Natural:** Ask "what's due?" instead of "todo list --status pending"
+- **Natural:** Ask "what's due?" instead of `tgenie list --status pending`
 - **Context-aware:** Remembers conversation
 - **RAG-powered:** Searches across all attachments
 - **Actionable:** Suggests and executes actions directly

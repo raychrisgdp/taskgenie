@@ -7,6 +7,8 @@ This guide explains the testing strategy for the Personal TODO system, including
 **Coverage Target:** >80%
 **Frameworks:** Pytest (unit), HTTPX (integration), Playwright (E2E)
 
+**Per-PR Test Plans:** See `docs/02-implementation/pr-specs/INDEX.md` (each PR mini-spec includes concrete scenarios).
+
 ---
 
 ## Testing Philosophy
@@ -61,7 +63,7 @@ Every Pull Request MUST include:
 - [ ] Journey 5: Complete task workflow
 
 ### Manual Testing Checklist
-- [ ] Run CLI commands manually (`todo add`, `todo list`, `todo chat`)
+- [ ] Run interactive TUI and CLI commands manually (`tgenie`, `tgenie add`, `tgenie list`)
 - [ ] Test Web UI in browser
 - [ ] Test Docker Compose startup
 - [ ] Verify chat streaming works
@@ -76,7 +78,7 @@ Every Pull Request MUST include:
 **Scenario:** User opens chat and asks AI to create a task.
 
 **Steps:**
-1. `todo chat` (starts REPL)
+1. `tgenie` (opens interactive TUI; chat-first once PR-003 is implemented)
 2. User types: `Add task "Review PR #123" for tomorrow`
 3. LLM parses intent and calls `create_task`
 4. Task saved to database
@@ -98,15 +100,15 @@ async def test_create_task_via_chat():
         response = await client.post("/api/v1/chat", json={
             "message": "Add task 'Review PR #123' for tomorrow"
         })
-        
+
         # Verify chat response
         assert response.status_code == 200
         data = await response.aread_json()
-        
+
         # Check for task creation action
         # This would be in suggested_actions or AI response
         # For integration test, we'd verify task was created
-        
+
         # Verify task exists in DB
         get_response = await client.get(f"/api/v1/tasks/REVIEW_PR_ID")
         assert get_response.status_code == 200
@@ -122,7 +124,7 @@ async def test_create_task_via_chat():
 **Scenario:** User creates a task with a GitHub/Gmail URL. System should auto-detect and attach.
 
 **Steps:**
-1. `todo add "Review code" -d "Check https://github.com/owner/repo/pull/123"`
+1. `tgenie add "Review code" -d "Check https://github.com/owner/repo/pull/123"`
 2. Link detection service parses URL from description
 3. GitHub provider fetches PR content
 4. Attachment created in database
@@ -144,14 +146,14 @@ async def test_auto_attach_github_url():
             "title": "Review code",
             "description": "Check https://github.com/owner/repo/pull/123"
         })
-        
+
         task_id = (await response.aread_json())["id"]
-        
+
         # Verify attachment was created
         attachments_response = await client.get(f"/api/v1/tasks/{task_id}/attachments")
         assert attachments_response.status_code == 200
         attachments = await attachments_response.aread_json()
-        
+
         # Verify it's a GitHub attachment
         assert len(attachments) == 1
         assert attachments[0]["type"] == "github"
@@ -183,7 +185,7 @@ from httpx import AsyncClient
 async def test_semantic_search_across_tasks_and_attachments():
     """Test semantic search across tasks and attachments"""
     # Setup: Create a task and an attachment with "authentication" in content
-    
+
     # Create test task
     async with AsyncClient(app="http://localhost:8080") as client:
         task_response = await client.post("/api/v1/tasks", json={
@@ -191,27 +193,27 @@ async def test_semantic_search_across_tasks_and_attachments():
             "description": "JWT token expiration handling"
         })
         task_id = (await task_response.aread_json())["id"]
-        
+
         # Create attachment
         att_response = await client.post("/api/v1/attachments", json={
             "task_id": task_id,
             "type": "github",
             "reference": "https://github.com/owner/repo/pull/123"
         })
-        
+
         # Semantic search query
         search_response = await client.get("/api/v1/search/semantic", params={
             "q": "authentication problems"
         })
-        
+
         assert search_response.status_code == 200
         results = await search_response.aread_json()
-        
+
         # Verify both task and attachment appear in results
         result_types = [r["type"] for r in results["results"]]
         assert "task" in result_types
         assert "attachment" in result_types
-        
+
         # Verify results are sorted by relevance
         relevance_scores = [r["relevance"] for r in results["results"]]
         assert relevance_scores == sorted(relevance_scores, reverse=True)
@@ -248,23 +250,23 @@ async def test_notification_scheduled_and_sent():
             "title": "Task due tomorrow",
             "eta": eta.isoformat()
         })
-        
+
         task_id = (await task_response.aread_json())["id"]
-        
+
         # Check notification was scheduled
         # In real test, this would require waiting for scheduler to run
         # For integration test, verify notification record exists
-        
+
         # Manually trigger notification (for testing)
         notify_response = await client.post(f"/api/v1/tasks/{task_id}/notify", json={})
-        
+
         assert notify_response.status_code == 200
-        
+
         # Verify notification record updated
         notifications_response = await client.get(f"/api/v1/tasks/{task_id}/notifications")
         assert notifications_response.status_code == 200
         notifications = await notifications_response.aread_json()
-        
+
         # Verify last notification was sent
         sent_notifications = [n for n in notifications if n["status"] == "sent"]
         assert len(sent_notifications) >= 1
@@ -304,18 +306,18 @@ async def test_full_task_lifecycle():
             "eta": eta.isoformat()
         })
         task_id = (await create_response.aread_json())["id"]
-        
+
         # Mark task as in progress (simulating user action)
         await client.patch(f"/api/v1/tasks/{task_id}", json={"status": "in_progress"})
-        
+
         # Mark task as done
         done_response = await client.patch(f"/api/v1/tasks/{task_id}", json={"status": "completed"})
         assert done_response.status_code == 200
-        
+
         # Verify final state
         final_response = await client.get(f"/api/v1/tasks/{task_id}")
         final_data = await final_response.aread_json()
-        
+
         assert final_data["status"] == "completed"
         assert "updated_at" in final_data
 ```
@@ -422,7 +424,7 @@ async def test_create_task_success():
             "title": "Test task",
             "description": "Integration test"
         })
-        
+
         assert response.status_code == 201
         data = await response.aread_json()
         assert "id" in data
@@ -435,7 +437,7 @@ async def test_create_task_validation_error():
             # Missing required field
             "description": "Test task"
         })
-        
+
         assert response.status_code == 422  # Unprocessable Entity
         data = await response.aread_json()
         assert "error" in data
@@ -460,19 +462,19 @@ def test_db():
 def test_task_crud_operations(test_db):
     """Test full CRUD cycle on database"""
     session = test_db()
-    
+
     # Create
     # (Your ORM create logic here)
-    
+
     # Read
     # (Your ORM read logic here)
-    
+
     # Update
     # (Your ORM update logic here)
-    
+
     # Delete
     # (Your ORM delete logic here)
-    
+
     session.close()
 ```
 
@@ -488,17 +490,17 @@ from playwright.async_api import async_playwright
 @pytest.mark.asyncio
 async def test_chat_create_task_flow(browser_page):
     """Test creating a task through chat interface"""
-    
+
     # Navigate to chat
     await page.goto("http://localhost:8080/")
-    
+
     # Type message
     await page.fill('[data-testid="chat-input"]', "Add task 'Write documentation'")
     await page.click('[data-testid="send-button"]')
-    
+
     # Wait for response
     await page.wait_for_selector('[data-testid="chat-response"]', timeout=5000)
-    
+
     # Verify task was created
     response_text = await page.text_content('[data-testid="chat-response"]')
     assert "Write documentation" in response_text
@@ -506,16 +508,16 @@ async def test_chat_create_task_flow(browser_page):
 @pytest.mark.asyncio
 async def test_task_list_navigation(browser_page):
     """Test navigating task list and filtering"""
-    
+
     await page.goto("http://localhost:8080/")
     await page.click('[data-testid="tasks-tab"]')
-    
+
     # Wait for tasks to load
     await page.wait_for_selector('[data-testid="task-item"]', timeout=3000)
-    
+
     # Verify filter works
     await page.click('[data-testid="filter-high-priority"]')
-    
+
     # Verify filtered results
     high_priority_tasks = await page.all('[data-testid="task-item"][data-priority="high"]')
     assert len(high_priority_tasks) >= 0
@@ -557,7 +559,7 @@ repos:
         language: system
         pass_files: ^backend/.*\.py$
         types: [python]
-      
+
       - id: coverage
         name: Check coverage
         entry: pytest --cov=backend/ --cov-fail-under=80
@@ -610,15 +612,15 @@ from httpx import AsyncClient
 async def test_chat_concurrent_requests():
     """Test that chat API handles multiple concurrent requests"""
     async with AsyncClient(app="http://localhost:8080") as client:
-        
+
         # Send 10 concurrent requests
         tasks = [
             client.post("/api/v1/chat", json={"message": f"Message {i}"})
             for i in range(10)
         ]
-        
+
         responses = await asyncio.gather(*tasks)
-        
+
         # Verify all succeeded
         for response in responses:
             assert response.status_code in [200, 429]  # 429 for rate limit
@@ -674,7 +676,7 @@ Before submitting a PR, verify:
 **Solution:**
 ```bash
 # Clean test database before running tests
-rm -f ~/.todo/test_*.db
+rm -f ~/.taskgenie/test_*.db
 pytest tests/ -v
 ```
 

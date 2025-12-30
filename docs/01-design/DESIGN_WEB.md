@@ -237,7 +237,7 @@ The web UI is a **secondary interface** to the CLI. It provides:
 ### Action Button
 
 ```html
-<button class="btn-action" 
+<button class="btn-action"
         hx-post="/api/tasks/{id}/progress"
         hx-target="#task-{id}"
         hx-swap="innerHTML">

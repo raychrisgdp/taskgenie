@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, Field
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -8,34 +7,24 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
 
     database_url: str = Field(
-        default="sqlite+aiosqlite:///./data/todo.db",
-        alias="DATABASE_URL"
+        default="sqlite+aiosqlite:///./data/taskgenie.db", alias="DATABASE_URL"
     )
 
     host: str = Field(default="127.0.0.1", alias="HOST")
     port: int = Field(default=8080, alias="PORT")
 
     llm_provider: str = Field(default="openrouter", alias="LLM_PROVIDER")
-    llm_api_key: Optional[str] = Field(default=None, alias="LLM_API_KEY")
-    llm_model: str = Field(
-        default="anthropic/claude-3-haiku",
-        alias="LLM_MODEL"
-    )
+    llm_api_key: str | None = Field(default=None, alias="LLM_API_KEY")
+    llm_model: str = Field(default="anthropic/claude-3-haiku", alias="LLM_MODEL")
 
     gmail_enabled: bool = Field(default=False, alias="GMAIL_ENABLED")
-    gmail_credentials_path: Optional[str] = Field(
-        default=None,
-        alias="GMAIL_CREDENTIALS_PATH"
-    )
+    gmail_credentials_path: str | None = Field(default=None, alias="GMAIL_CREDENTIALS_PATH")
 
-    github_token: Optional[str] = Field(default=None, alias="GITHUB_TOKEN")
-    github_username: Optional[str] = Field(default=None, alias="GITHUB_USERNAME")
+    github_token: str | None = Field(default=None, alias="GITHUB_TOKEN")
+    github_username: str | None = Field(default=None, alias="GITHUB_USERNAME")
 
     notifications_enabled: bool = Field(default=True, alias="NOTIFICATIONS_ENABLED")
-    notification_schedule: list[str] = Field(
-        default=["24h", "6h"],
-        alias="NOTIFICATION_SCHEDULE"
-    )
+    notification_schedule: list[str] = Field(default=["24h", "6h"], alias="NOTIFICATION_SCHEDULE")
 
     class Config:
         env_file = ".env"

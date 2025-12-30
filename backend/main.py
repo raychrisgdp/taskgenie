@@ -1,23 +1,15 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 import uvicorn
+from fastapi import FastAPI
+
 from .config import settings
-from .database import engine
-from .models.task import Task
-from .models.attachment import Attachment
-from .models.notification import Notification
-
-from .database import Base
-
-from .models.task import Task as TaskModel
-from .models.attachment import Attachment as AttachmentModel
-from .models.notification import Notification as NotificationModel
+from .database import Base, engine
 
 
 @asynccontextmanager
-async def lifespan(app):
-    from .models.task import Task
-    from .models.attachment import Attachment
-    from .models.notification import Notification
-
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -26,21 +18,15 @@ async def lifespan(app):
     await engine.dispose()
 
 
-from fastapi import FastAPI
-
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    lifespan=lifespan
-)
+app = FastAPI(title=settings.app_name, version=settings.app_version, lifespan=lifespan)
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     return {"status": "ok", "version": settings.app_version}
 
 
-def main():
+def main() -> None:
     uvicorn.run(
         "backend.main:app",
         host=settings.host,

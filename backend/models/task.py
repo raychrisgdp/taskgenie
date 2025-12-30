@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
-from sqlalchemy.orm import relationship
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, String, Text
+from sqlalchemy.orm import relationship
+
 from ..database import Base
 
 
@@ -21,7 +23,7 @@ class Task(Base):
 
     attachments = relationship("Attachment", back_populates="task", cascade="all, delete-orphan")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, str | int | None]:
         return {
             "id": self.id,
             "title": self.title,

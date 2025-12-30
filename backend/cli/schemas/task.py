@@ -1,39 +1,39 @@
-from typing import Optional
-from pydantic import BaseModel
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class TaskCreate(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str = "pending"
     priority: str = "medium"
-    eta: Optional[datetime] = None
-    tags: Optional[list] = None
-    metadata: Optional[dict] = None
+    eta: datetime | None = None
+    tags: list | None = None
+    metadata: dict | None = None
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    eta: Optional[datetime] = None
-    tags: Optional[list] = None
-    metadata: Optional[dict] = None
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    eta: datetime | None = None
+    tags: list | None = None
+    metadata: dict | None = None
 
 
 class TaskResponse(BaseModel):
     id: str
     title: str
-    description: Optional[str]
+    description: str | None
     status: str
     priority: str
-    eta: Optional[datetime]
+    eta: datetime | None
     created_at: datetime
     updated_at: datetime
-    tags: Optional[list]
-    metadata: Optional[dict]
+    tags: list | None
+    metadata: dict | None
     attachments: list = []
 
 

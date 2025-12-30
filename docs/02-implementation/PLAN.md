@@ -13,8 +13,9 @@
 ## User Requirements (Confirmed)
 
 ### 1. Primary Entry Point
-- **CLI as main interface** - Python application running locally (managed by systemd/launchd or manual start)
-- Accessible via `todo` command
+- **Interactive TUI as main interface** - Python application running locally (managed by systemd/launchd or manual start)
+- Accessible via `tgenie` command (defaults to interactive mode with chat)
+- Non-interactive subcommands (`tgenie add`, `tgenie list`, etc.) available for scripting
 
 ### 2. Task Entry & Information Management
 - **Document/email/PR attachment** - Link relevant emails (GMail), documents, GitHub PRs, etc. to tasks
@@ -57,7 +58,7 @@
 - [x] **Both** - CLI for commands, web for rich chat with attachments preview ← **DECISION: CONFIRMED**
 - [ ] **Slack/Discord integration** for chat access ← Future (Phase 3)
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 2. Document/Email Attachment ✅
 **How should attachments work?**
@@ -66,7 +67,7 @@
 - [x] **Hybrid** - Store links + cache content for search ← **DECISION: CONFIRMED**
 - [ ] **Manual paste** - Copy content and attach to task ← Supported via command
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 3. Authentication for GMail/etc ✅
 **How to access external services?**
@@ -75,7 +76,7 @@
 - [ ] **Service accounts** - For GMail API ← Future (Phase 3)
 - [ ] **User-provided tokens** - Manually input tokens ← LLM BYOK support
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 4. Task Metadata (Simplified) ✅
 **Required fields:**
@@ -91,7 +92,7 @@
 - [ ] Subtasks ← Future (Phase 2)
 - [ ] Dependencies ← Future (Phase 3)
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 5. Notification Click Action ⚠️
 **What should happen when clicking notification?**
@@ -102,7 +103,7 @@
 
 **Note:** Due to Docker isolation, desktop notifications are complex. MVP will use Web UI browser notifications. Phase 3 will explore native desktop notifications.
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 3. Notification System ✅
 **What notifications do you need?**
@@ -120,7 +121,7 @@
 - [ ] Slack/Discord ← Not planned
 - [ ] Native mobile app? ← Not planned
 
-**See:** [DECISIONS.md](01-design/DECISIONS.md) for detailed rationale
+**See:** [DECISIONS.md](../01-design/DECISIONS.md) for detailed rationale
 
 ### 4. Agent Integration
 **What does "spawn agent" mean to you?**
@@ -152,11 +153,10 @@
 - [ ] MongoDB
 - [ ] Redis for cache + another DB
 
-**Task queue (for notifications/agents):**
-- [ ] Redis/Celery
-- [ ] BullMQ
-- [ ] Sidekiq
-- [ ] Cron jobs
+**Background jobs (for notifications/integrations/embeddings):**
+- [x] In-process scheduler + DB persistence (APScheduler + SQLite tables) ← MVP
+- [ ] systemd timer / cron running a `tgenie worker` command ← Alternative
+- [ ] Redis/Celery ← Only if we need distributed workers later
 
 ### 6. User Interface Preferences
 **Visual style:**
@@ -247,17 +247,16 @@
                           │
                           ▼
                  ┌────────────────┐
-                 │ Task Queue     │
-                 │ (Redis/        │
-                 │  Background    │
-                 │  tasks for     │
-                 │  notifications)│
+                 │ Background Jobs│
+                 │ (APScheduler + │
+                 │  SQLite state  │
+                 │  tables)       │
                  └────────────────┘
                           │
                           ▼
                  ┌────────────────┐
-                 │ Desktop Notify │
-                 │ (Linux/Mac/Win)│
+                 │ Notifications  │
+                 │ (Desktop/Web)  │
                  └────────────────┘
 ```
 
@@ -269,7 +268,7 @@
 - **Backend**: Python 3.11+ with FastAPI (async, clean, extensible)
 - **CLI**: Typer (modern, type-safe CLI framework)
 - **Database**: SQLite (simple, local) + SQLAlchemy (ORM, easy to migrate to Postgres)
-- **Task Queue**: Redis + BackgroundTasks (simple) or Celery (if needed later)
+- **Background Jobs**: APScheduler (in-process) + SQLite state tables (no external queue for MVP; Redis/Celery optional later)
 
 ### AI/LLM
 - **LLM Provider**: OpenAI SDK (supports OpenRouter, BYOK, multiple models)
@@ -295,7 +294,8 @@
 ## Proposed Features - Phase 1 (MVP)
 
 ### Core Functionality
-- **CLI tool** - Primary interface for all operations (Typer-based)
+- **Interactive TUI** - Primary interface entered via `tgenie` command (Typer-based, chat-first)
+- **CLI subcommands** - Non-interactive commands for scripting (`tgenie add`, `tgenie list`, etc.)
 - **Web chat UI** - Secondary interface (localhost:8080, HTMX + Jinja2)
 - **Task CRUD** - Create, Read, Update, Delete, List tasks
 - **Task fields**:
@@ -310,7 +310,7 @@
 - **FastAPI backend** - Async, type-safe, Python-native
 
 ### Unique Differentiators (vs. Competitors)
-- ✅ **CLI-first** with AI chat (no other project has both)
+- ✅ **Interactive TUI-first** with AI chat as primary mode (no other project has both)
 - ✅ **RAG-powered search** across tasks and attachments (unique)
 - ✅ **Gmail + GitHub integration** for attachments (no CLI tool has this)
 - ✅ **Desktop notifications** from Docker container (completely missing)
@@ -321,33 +321,33 @@ See MARKET_RESEARCH.md for detailed competitor analysis.
 
 ### CLI Examples
 
-**Add task:**
+**Interactive mode (default):**
 ```bash
-todo add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15" --attach "github:owner/repo/pull/123"
-```
-
-**List tasks:**
-```bash
-todo list
-todo list --status pending
-```
-
-**Chat with TODO:**
-```bash
-todo chat
-# Then interact:
+tgenie
+# Opens interactive TUI with chat as primary mode
 # "What tasks are due this week?"
 # "Show me tasks related to frontend"
 ```
 
+**Add task (subcommand for scripting):**
+```bash
+tgenie add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15" --attach "github:owner/repo/pull/123"
+```
+
+**List tasks:**
+```bash
+tgenie list
+tgenie list --status pending
+```
+
 **Add attachment to task:**
 ```bash
-todo attach <task_id> --gmail "msg:abc123" --github "https://github.com/..."
+tgenie attach <task_id> --gmail "msg:abc123" --github "https://github.com/..."
 ```
 
 **Task details:**
 ```bash
-todo show <task_id>
+tgenie show <task_id>
 ```
 
 ### Web Chat UI Examples
@@ -420,7 +420,7 @@ LLM_PROVIDERS = {
 
 ### RAG System
 ```bash
-todo chat
+tgenie
 User: "Show me all tasks related to authentication"
 
 AI: [Searches task descriptions and cached attachment content]
@@ -433,14 +433,14 @@ Found 3 tasks:
 ### CLI Enhancements
 ```bash
 # Quick attach from clipboard
-todo attach <task_id> --paste
+tgenie attach <task_id> --paste
 
 # Search by content
-todo search "authentication bug"
+tgenie search "authentication bug"
 
 # Export tasks
-todo export --format json
-todo export --format markdown
+tgenie export --format json
+tgenie export --format markdown
 ```
 
 ---
@@ -526,7 +526,7 @@ personal-todo/
 │   ├── test_chat.py
 │   └── test_llm.py
 └── data/                    # SQLite and vector store
-    ├── todo.db
+    ├── taskgenie.db
     └── chroma/
 ```
 

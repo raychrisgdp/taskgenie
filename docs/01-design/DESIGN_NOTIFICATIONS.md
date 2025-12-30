@@ -144,30 +144,30 @@ scheduler = AsyncIOScheduler()
 async def check_due_tasks():
     """Check for tasks needing notification"""
     now = datetime.utcnow()
-    
+
     # Check 24h reminder
     tasks_24h = await db.fetch_tasks_due_between(
         start=now + timedelta(hours=24) - timedelta(minutes=5),
         end=now + timedelta(hours=24)
     )
-    
+
     for task in tasks_24h:
         if not await notification_exists(task.id, 'due_24h'):
             await create_notification(task.id, 'due_24h', task.eta)
-    
+
     # Check 6h reminder
     tasks_6h = await db.fetch_tasks_due_between(
         start=now + timedelta(hours=6) - timedelta(minutes=5),
         end=now + timedelta(hours=6)
     )
-    
+
     for task in tasks_6h:
         if not await notification_exists(task.id, 'due_6h'):
             await create_notification(task.id, 'due_6h', task.eta)
-    
+
     # Check overdue
     overdue_tasks = await db.fetch_overdue_tasks(limit=10)
-    
+
     for task in overdue_tasks:
         last_notif = await db.get_last_notification(task.id)
         if not last_notif or (now - last_notif.sent_at) > timedelta(hours=1):
@@ -182,23 +182,23 @@ async def create_notification(task_id, notif_type, scheduled_at):
         'scheduled_at': scheduled_at,
         'status': 'pending'
     })
-    
+
     # Get task details
     task = await db.get_task(task_id)
-    
+
     # Build notification content
     content = build_notification_content(task, notif_type)
-    
+
     # Send via plyer
     from plyer import notification
     notification.notify(
         title=content['title'],
         message=content['message'],
-        app_name='todo',
+        app_name='Personal TODO',
         app_icon='/path/to/icon.png',
         timeout=10
     )
-    
+
     # Update as sent
     await db.update_notification(notif_id, {
         'sent_at': datetime.utcnow(),
@@ -219,7 +219,7 @@ from plyer import notification
 
 def send_notification(task, notif_type):
     """Send desktop notification"""
-    
+
     titles = {
         'due_24h': '🔔 Task Due Tomorrow',
         'due_6h': '⏰ Task Due in 6 Hours',
@@ -227,7 +227,7 @@ def send_notification(task, notif_type):
         'created': '✅ Task Created',
         'completed': '✅ Task Completed'
     }
-    
+
     messages = {
         'due_24h': f'{task.title}\nDue: {format_date(task.eta)}\nPriority: {task.priority}',
         'due_6h': f'{task.title}\nDue in 6 hours\nPriority: {task.priority}',
@@ -235,7 +235,7 @@ def send_notification(task, notif_type):
         'created': f'Task: {task.title}\nETA: {format_date(task.eta)}',
         'completed': f'{task.title}\nCompleted at {format_datetime(datetime.now())}'
     }
-    
+
     # Send notification with actions
     notification.notify(
         title=titles[notif_type],
@@ -277,7 +277,7 @@ def send_notification_with_actions(task):
         message=f'{task.title}\nDue: {task.eta}',
         app_icon='/app/icon.png',
         open='http://localhost:8080/tasks/{task.id}',
-        execute=['todo', 'done', task.id]
+        execute=['tgenie', 'done', task.id]
     )
 ```
 
@@ -419,7 +419,7 @@ Notification History
 ```python
 async def send_notification_with_retry(notif_id, max_retries=3):
     notif = await db.get_notification(notif_id)
-    
+
     for attempt in range(max_retries):
         try:
             send_desktop_notification(notif)

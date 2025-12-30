@@ -32,8 +32,8 @@
         │                   │                   │
         ▼                   ▼                   ▼
 ┌───────────────┐   ┌──────────────┐   ┌──────────────┐
-│  SQLite DB    │   │ ChromaDB     │   │   Redis?     │
-│ (Tasks,       │   │ (Vectors)    │   │ (Queue)      │
+│  SQLite DB    │   │ ChromaDB     │   │ Scheduler    │
+│ (Tasks,       │   │ (Vectors)    │   │ (APScheduler)│
 │  Attachments) │   │              │   │              │
 └───────────────┘   └──────────────┘   └──────────────┘
                                 │
@@ -50,19 +50,21 @@
 
 ## Key Design Principles
 
-1. **CLI-first** - Everything accessible from terminal
-2. **AI-native** - Chat as primary interface, not bolted on
-3. **Simple architecture** - One language (Python), minimal services
-4. **Local-first** - All data stored locally, sync optional later
-5. **Extensible** - Easy to add new integrations/LLM providers
+1. **Interactive TUI-first** - Primary UX is interactive mode (entered via `tgenie`) with chat as main capability
+2. **CLI subcommands for scripting** - Non-interactive commands (`tgenie add`, `tgenie list`, etc.) for automation
+3. **AI-native** - Chat as primary interface within TUI, not bolted on
+4. **Simple architecture** - One language (Python), minimal services
+5. **Local-first** - All data stored locally, sync optional later
+6. **Extensible** - Easy to add new integrations/LLM providers
 
 ## Service Boundaries
 
 ### CLI Service
-- Commands: add, list, show, edit, delete, chat, attach
+- **Interactive TUI mode** (default): Entered via `tgenie`, chat-first interface
+- **Subcommands** (for scripting): `tgenie add`, `tgenie list`, `tgenie show`, `tgenie edit`, `tgenie delete`, `tgenie attach`
 - Output: formatted text (Rich library)
 - Input: command-line arguments, interactive prompts
-- State: None (stateless, calls API)
+- State: Session state for interactive mode (stateless for subcommands, calls API)
 
 ### Web UI Service
 - Pages: chat, tasks, task details, settings

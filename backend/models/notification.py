@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
-from datetime import datetime
 import uuid
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+
 from ..database import Base
 
 
@@ -17,7 +18,7 @@ class Notification(Base):
     status = Column(String(20), nullable=False, default="pending")
     retry_count = Column(Integer, nullable=False, default=0)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, str | int | None]:
         return {
             "id": self.id,
             "task_id": self.task_id,

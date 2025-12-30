@@ -1,5 +1,8 @@
 # Personal TODO - Setup Instructions
 
+**Status:** Spec Complete | Implementation In Progress  
+**Last Reviewed:** 2025-12-29
+
 ## Prerequisites
 - Python 3.11+
 - `uv` (modern Python package manager)
@@ -30,13 +33,13 @@ nano .env
 # Start the backend API server
 uv run backend.main:app
 
-# Run CLI commands
-uv run backend.cli.main:app
+# Run CLI commands (once implemented)
+tgenie
 
-# Example CLI commands
-uv run backend.cli.main:app list
-uv run backend.cli.main:app add "My first task"
-uv run backend.cli.main:app config
+# Example CLI commands (once implemented)
+tgenie list
+tgenie add "My first task"
+tgenie config
 ```
 
 ## Development
@@ -68,7 +71,7 @@ APP_VERSION=0.1.0
 DEBUG=true
 HOST=127.0.0.1
 PORT=8080
-DATABASE_URL=sqlite+aiosqlite:///./data/todo.db
+DATABASE_URL=sqlite+aiosqlite:///./data/taskgenie.db
 
 # LLM Configuration
 LLM_PROVIDER=openrouter
@@ -114,5 +117,5 @@ personal-todo/
 1. ✅ Install dependencies: `uv pip install -e .`
 2. ✅ Configure environment: Edit `.env` file
 3. ✅ Start backend: `uv run backend.main:app`
-4. ✅ Test CLI: `uv run backend.cli.main:app list`
+4. ✅ Test CLI: `tgenie list` (once implemented)
 5. ✅ Check health: `curl http://localhost:8080/health`

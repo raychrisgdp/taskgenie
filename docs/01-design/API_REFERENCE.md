@@ -1,5 +1,9 @@
 # API Reference
 
+**Status:** Spec Complete | Implementation In Progress  
+**Last Reviewed:** 2025-12-29  
+**Note:** This document describes the planned API specification. Actual implementation may differ. Once implemented, refer to the auto-generated OpenAPI docs at `/docs` endpoint.
+
 ## Overview
 
 This document provides a complete reference for all REST and WebSocket APIs in the Personal TODO system.
@@ -589,11 +593,11 @@ def test_get_task_not_found():
 def test_chat_flow():
     # 1. Create task
     task = create_task({"title": "Test task"})
-    
+
     # 2. Search for task
     results = search("test")
     assert task["id"] in [r["id"] for r in results]
-    
+
     # 3. Ask AI about task
     response = chat(f"What's in {task['id']}?")
     assert "content" in response

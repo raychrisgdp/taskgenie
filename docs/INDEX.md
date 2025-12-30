@@ -1,9 +1,15 @@
-# taskgenie Documentation Index
+# TaskGenie Documentation Index
+
+## Naming Conventions
+
+- **CLI binary:** `tgenie` (interactive TUI by default)
+- **Scripting:** `tgenie <command>` (e.g., `tgenie add`, `tgenie list`)
+- **Optional:** add a shell alias (e.g., `alias tg=tgenie` or `alias ti=tgenie`)
 
 ## Quick Start
 
 **New to the project?** Start here:
-1. Read [Quick Start Guide](README.md)
+1. Read [Setup Guide](SETUP.md) for installation and configuration
 2. Explore [Research Phase](00-research/) to understand project vision
 3. Review [Design Phase](01-design/) for technical specifications
 4. Follow [Implementation Plans](02-implementation/PR-PLANS.md) for development roadmap
@@ -23,19 +29,26 @@ Technical design specifications and architecture decisions.
 
 - [DOCS_STRUCTURE.md](01-design/DOCS_STRUCTURE.md) - Documentation organization guide
 - [DESIGN_ARCHITECTURE.md](01-design/DESIGN_ARCHITECTURE.md) - System architecture and service boundaries
+- [DESIGN_TUI.md](01-design/DESIGN_TUI.md) - Interactive TUI (Textual) UX and structure
 - [DESIGN_CLI.md](01-design/DESIGN_CLI.md) - CLI command design with examples
 - [DESIGN_DATA.md](01-design/DESIGN_DATA.md) - Database schemas and data models
 - [DESIGN_CHAT.md](01-design/DESIGN_CHAT.md) - AI/chat flow and RAG integration
 - [DESIGN_WEB.md](01-design/DESIGN_WEB.md) - Web UI pages and components
 - [DESIGN_NOTIFICATIONS.md](01-design/DESIGN_NOTIFICATIONS.md) - Notification system design
+- [DESIGN_BACKGROUND_JOBS.md](01-design/DESIGN_BACKGROUND_JOBS.md) - Scheduler/jobs approach (no queue for MVP)
 - [DESIGN_SUMMARY.md](01-design/DESIGN_SUMMARY.md) - Executive summary
+- [API_REFERENCE.md](01-design/API_REFERENCE.md) - REST/WebSocket API specification
+- [INTEGRATION_GUIDE.md](01-design/INTEGRATION_GUIDE.md) - Integration provider protocol
+- [DECISIONS.md](01-design/DECISIONS.md) - Design decisions log
 - [REQUIREMENTS_AUDIT.md](01-design/REQUIREMENTS_AUDIT.md) - Requirements and design audit
 
 ### [02-implementation/](02-implementation/)
 Implementation plans, pull request tracking, and development roadmap.
 
-- [PR-PLANS.md](02-implementation/PR-PLANS.md) - **START HERE** - Detailed PR plan with 14 planned PRs
+- [PR-PLANS.md](02-implementation/PR-PLANS.md) - **START HERE** - Detailed PR plan with roadmap
+- [pr-specs/INDEX.md](02-implementation/pr-specs/INDEX.md) - Specs + test scenarios for each PR
 - [PLAN.md](02-implementation/PLAN.md) - Original requirements and project planning
+- [TESTING_GUIDE.md](02-implementation/TESTING_GUIDE.md) - Testing policy and examples
 
 ---
 
@@ -56,16 +69,19 @@ Implementation plans, pull request tracking, and development roadmap.
 - [Notifications](01-design/DESIGN_NOTIFICATIONS.md)
 
 ### Development
-- [PR Plans](02-implementation/PR-PLANS.md) - Roadmap with 17 tracked PRs
-- [Testing Guide](02-implementation/TESTING_GUIDE.md) ⭐ NEW
+- [PR Plans](02-implementation/PR-PLANS.md) - Implementation roadmap
+- [Testing Guide](02-implementation/TESTING_GUIDE.md) - Testing policy and examples
 
 ---
 
 ## Status
 
 - **Project Status:** Phase 1 - Infrastructure Setup
-- **Documentation:** Complete
+- **Documentation Status:** Spec Complete (Implementation In Progress)
+- **Last Reviewed:** 2025-12-29
 - **Next Step:** Review PR plans and begin implementation
+
+> **Note:** Documentation reflects design specifications. Implementation status tracked in [PR-PLANS.md](02-implementation/PR-PLANS.md).
 
 ---
 
@@ -83,6 +99,6 @@ Implementation plans, pull request tracking, and development roadmap.
 
 ## Project Stats
 
-- **Total Planned PRs:** 17 (added 3: Attachments API, Link Detection, Base API Router)
+- **Total Planned PRs:** See [PR-PLANS.md](02-implementation/PR-PLANS.md) for current count
 - **Estimated Effort:** ~130 hours (~16 weeks for one developer)
 - **Current Status:** Planning phase complete, ready to implement

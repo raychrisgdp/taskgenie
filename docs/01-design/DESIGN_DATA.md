@@ -351,14 +351,14 @@ CREATE INDEX idx_notifications_status ON notifications(status);
 
 ### File System
 ```
-~/.todo/
+~/.taskgenie/
 ├── config.toml          # Configuration
 ├── credentials.json      # OAuth credentials (encrypted)
 ├── data/
-│   ├── todo.db          # SQLite database
+│   ├── taskgenie.db     # SQLite database
 │   └── chroma/         # ChromaDB vector store
 ├── logs/
-│   └── todo.log         # Application logs
+│   └── taskgenie.log    # Application logs
 └── cache/
     └── attachments/      # Cached attachment content
 ```
@@ -366,10 +366,10 @@ CREATE INDEX idx_notifications_status ON notifications(status);
 ### Docker Volumes
 ```
 docker volumes:
-  - todo-data:/app/data      # Database
-  - todo-chroma:/app/chroma   # Vector store
-  - todo-config:/app/config   # Configuration
-  - todo-logs:/app/logs       # Logs
+  - taskgenie-data:/app/data       # Database
+  - taskgenie-chroma:/app/chroma   # Vector store
+  - taskgenie-config:/app/config   # Configuration
+  - taskgenie-logs:/app/logs       # Logs
 ```
 
 ## Data Lifecycle
@@ -419,20 +419,64 @@ Created → Fetched → Cached → Periodic Refresh
 
 ## Backup Strategy
 
-### Automatic Backups
-- Daily backup to `~/.todo/backups/todo_YYYYMMDD.db`
+### SQLite Backup & Restore
+
+**Dump database to SQL file:**
+```bash
+# Default database location: ~/.taskgenie/data/taskgenie.db (or configured DATABASE_URL)
+sqlite3 ~/.taskgenie/data/taskgenie.db .dump > backup.sql
+
+# Or if using custom path
+sqlite3 /path/to/taskgenie.db .dump > backup.sql
+```
+
+**Restore from SQL file:**
+```bash
+# Restore into existing database (will overwrite)
+sqlite3 ~/.taskgenie/data/taskgenie.db < backup.sql
+
+# Restore into a new database
+sqlite3 new_taskgenie.db < backup.sql
+```
+
+**Create a backup copy of the database file:**
+```bash
+# Simple file copy (SQLite supports this while running)
+cp ~/.taskgenie/data/taskgenie.db ~/.taskgenie/data/taskgenie_backup_$(date +%Y%m%d).db
+```
+
+### Automatic Backups (Planned)
+- Daily backup to `~/.taskgenie/backups/taskgenie_YYYYMMDD.db`
 - Keep 7 days of backups
 - Compress old backups (gzip)
 
-### Manual Backup
+### Manual Backup via CLI (Planned)
 ```bash
-$ todo export --format sqlite --output backup.db
-✓ Exported 5 tasks to backup.db
+$ tgenie db dump --out backup.sql
+✓ Wrote backup.sql
 ```
 
-### Restore
+### Restore via CLI (Planned)
 ```bash
-$ todo import --file backup.db
+$ tgenie db restore --in backup.sql
 ⚠️  This will overwrite existing data. Continue? [y/N]: y
-✓ Restored 5 tasks
+✓ Restore complete
 ```
+
+### Database Migrations (Planned)
+
+**Recommended approach: Alembic migrations**
+
+Once implemented, migrations will be managed via:
+```bash
+# Create a new migration
+tgenie db revision -m "Add priority field"
+
+# Apply migrations
+tgenie db upgrade
+
+# Rollback one migration
+tgenie db downgrade -1
+```
+
+**Current status:** Schema changes are manual until migration system is implemented (see PR-001).

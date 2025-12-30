@@ -1,5 +1,13 @@
 # CLI Design
 
+## Entry Points
+
+The CLI provides three main interaction modes:
+
+- **Interactive TUI (Primary):** `tgenie` → full-screen Textual app with task list, detail view, and keyboard navigation. See `DESIGN_TUI.md` for full details.
+- **Non-interactive commands:** `tgenie add/list/show/...` → scripting-friendly subcommands (PR-009)
+- **Chat (Primary inside TUI):** Chat is a pane/workflow inside interactive mode; `tgenie chat` remains for chat-only/one-shot use if desired.
+
 ## Primary Interface
 
 The CLI is the **primary and recommended way** to interact with the system. It's designed to be:
@@ -11,13 +19,13 @@ The CLI is the **primary and recommended way** to interact with the system. It's
 ## Command Structure
 
 ```
-todo <command> [options] [arguments]
+tgenie <command> [options] [arguments]
 
 Examples:
-  todo add "Review PR" --attach github:owner/repo/pull/123
-  todo list --status pending
-  todo chat
-  todo show abc123
+  tgenie add "Review PR" --attach github:owner/repo/pull/123
+  tgenie list --status pending
+  tgenie chat
+  tgenie show abc123
 ```
 
 ## Commands
@@ -26,7 +34,7 @@ Examples:
 
 **Usage:**
 ```bash
-todo add "Task title" [options]
+tgenie add "Task title" [options]
 ```
 
 **Options:**
@@ -42,13 +50,13 @@ todo add "Task title" [options]
 
 **Simple task:**
 ```bash
-$ todo add "Buy groceries"
+$ tgenie add "Buy groceries"
 ✓ Task created: abc123
 ```
 
 **Task with details:**
 ```bash
-$ todo add "Review PR #123" \
+$ tgenie add "Review PR #123" \
   -d "Fix authentication bug in login flow" \
   -a github:owner/repo/pull/123 \
   -e "2025-01-15" \
@@ -62,7 +70,7 @@ $ todo add "Review PR #123" \
 
 **Task with Gmail attachment:**
 ```bash
-$ todo add "Respond to client" \
+$ tgenie add "Respond to client" \
   -a gmail:18e4f7a2b3c4d5e \
   -e "tomorrow 10am"
 ✓ Task created: abc123
@@ -71,7 +79,7 @@ $ todo add "Respond to client" \
 
 **Interactive mode:**
 ```bash
-$ todo add --interactive
+$ tgenie add --interactive
 Title: Prepare presentation
 Description (Ctrl+D to finish): Quarterly review slides
 Attachment (optional): github:owner/repo/issues/456
@@ -86,7 +94,7 @@ Priority [low/medium/high]:
 
 **Usage:**
 ```bash
-todo list [filters]
+tgenie list [filters]
 ```
 
 **Filters:**
@@ -103,7 +111,7 @@ todo list [filters]
 
 **List all pending tasks:**
 ```bash
-$ todo list
+$ tgenie list
 Pending Tasks (3):
 ─────────────────────────────────────────────────────────────
 abc123  ⏰ 2025-01-15  Review PR #123           [high]
@@ -117,7 +125,7 @@ Attachments:
 
 **List high-priority tasks:**
 ```bash
-$ todo list --priority high
+$ tgenie list --priority high
 High Priority Tasks (2):
 ─────────────────────────────────────────────────────────────
 abc123  ⏰ 2025-01-15  Review PR #123        [high]
@@ -126,7 +134,7 @@ ghi789  ⏰ 2025-01-18  Fix authentication bug [high]
 
 **List tasks due today:**
 ```bash
-$ todo list --due today
+$ tgenie list --due today
 Due Today (1):
 ─────────────────────────────────────────────────────────────
 abc123  ⏰ 2025-01-15  Review PR #123        [high]
@@ -134,7 +142,7 @@ abc123  ⏰ 2025-01-15  Review PR #123        [high]
 
 **List completed tasks:**
 ```bash
-$ todo list --status completed --limit 5
+$ tgenie list --status completed --limit 5
 Recently Completed (5):
 ─────────────────────────────────────────────────────────────
 xxx111  ✓ 2025-01-10  Update documentation
@@ -147,14 +155,14 @@ xxx222  ✓ 2025-01-09  Setup CI/CD
 
 **Usage:**
 ```bash
-todo show <task_id>
+tgenie show <task_id>
 ```
 
 **Examples:**
 
 **Simple task:**
 ```bash
-$ todo show abc123
+$ tgenie show abc123
 Task: abc123
 ─────────────────────────────────────────────────────────────
 Title: Review PR #123
@@ -175,7 +183,7 @@ Attachments:
 
 **Task with multiple attachments:**
 ```bash
-$ todo show def456
+$ tgenie show def456
 Task: def456
 ─────────────────────────────────────────────────────────────
 Title: Client meeting preparation
@@ -203,7 +211,7 @@ Attachments:
 
 **Usage:**
 ```bash
-todo edit <task_id> [options]
+tgenie edit <task_id> [options]
 ```
 
 **Options:** Same as `add` (only update specified fields)
@@ -212,25 +220,25 @@ todo edit <task_id> [options]
 
 **Update status:**
 ```bash
-$ todo edit abc123 --status in_progress
+$ tgenie edit abc123 --status in_progress
 ✓ Task abc123 updated: pending → in_progress
 ```
 
 **Update ETA:**
 ```bash
-$ todo edit abc123 --eta "2025-01-20"
+$ tgenie edit abc123 --eta "2025-01-20"
 ✓ Task abc123 updated: 2025-01-15 → 2025-01-20
 ```
 
 **Add attachment:**
 ```bash
-$ todo edit abc123 --attach gmail:msg-id-456
+$ tgenie edit abc123 --attach gmail:msg-id-456
 ✓ Task abc123: Gmail attachment added
 ```
 
 **Interactive edit:**
 ```bash
-$ todo edit abc123 --interactive
+$ tgenie edit abc123 --interactive
 Title [Review PR #123]: Review PR #124
 Description [Fix authentication...]:
 Status [pending]: in_progress
@@ -245,18 +253,18 @@ ETA [2025-01-15]: 2025-01-18
 
 **Usage:**
 ```bash
-todo done <task_id>       # Mark as completed
-todo delete <task_id>    # Delete task
+tgenie done <task_id>       # Mark as completed
+tgenie delete <task_id>    # Delete task
 ```
 
 **Examples:**
 
 ```bash
-$ todo done abc123
+$ tgenie done abc123
 ✓ Task abc123 marked as completed
   Review PR #123 (2025-01-10 → 2025-01-14)
 
-$ todo list
+$ tgenie list
 Active Tasks (2):
 ─────────────────────────────────────────────────────────────
 def456  ⏰ 2025-01-17  Send project update   [medium]
@@ -264,26 +272,26 @@ ghi789  ⏰ 2025-01-18  Fix authentication bug [high]
 ```
 
 ```bash
-$ todo delete def456
+$ tgenie delete def456
 ⚠️  Delete task "Send project update"? [y/N]: y
 ✓ Task def456 deleted
 ```
 
 ---
 
-### 6. `chat` - AI-powered chat interface (PRIMARY)
+### 6. `chat` - Chat interface (inside TUI; chat-only mode optional)
 
 **Usage:**
 ```bash
-todo chat
+tgenie chat
 ```
 
-**This is the main interface for interacting with tasks.**
+**Chat is the main mode inside the interactive TUI.** This subcommand is the chat-only interface (useful for smaller terminals or one-shot interactions).
 
 **Example Session:**
 
 ```bash
-$ todo chat
+$ tgenie chat
 🤖 AI Chat - Type 'exit' to quit, 'help' for commands
 
 You: What tasks do I have due this week?
@@ -391,7 +399,7 @@ You: exit
 
 **Usage:**
 ```bash
-todo attach <task_id> --type <type> --ref <reference>
+tgenie attach <task_id> --type <type> --ref <reference>
 ```
 
 **Types:**
@@ -403,15 +411,15 @@ todo attach <task_id> --type <type> --ref <reference>
 **Examples:**
 
 ```bash
-$ todo attach abc123 --type gmail --ref 18e4f7a2b3c4d5e
+$ tgenie attach abc123 --type gmail --ref 18e4f7a2b3c4d5e
 ✓ Gmail attachment added to task abc123
   Thread: "Client meeting request" (3 messages)
 
-$ todo attach abc123 --type github --ref owner/repo/pull/123
+$ tgenie attach abc123 --type github --ref owner/repo/pull/123
 ✓ GitHub PR attached to task abc123
   PR #123: Fix authentication in login flow
 
-$ todo attach abc123 --type url --ref https://docs.google.com/doc/abc123
+$ tgenie attach abc123 --type url --ref https://docs.google.com/doc/abc123
 ✓ URL attachment added to task abc123
   Google Docs: "Project documentation"
 ```
@@ -422,12 +430,12 @@ $ todo attach abc123 --type url --ref https://docs.google.com/doc/abc123
 
 **Usage:**
 ```bash
-todo ui [--port PORT]
+tgenie ui [--port PORT]
 ```
 
 **Examples:**
 ```bash
-$ todo ui
+$ tgenie ui
 🚀 Web UI starting on http://localhost:8080
 Press Ctrl+C to stop
 
@@ -440,20 +448,20 @@ Press Ctrl+C to stop
 
 **Usage:**
 ```bash
-todo config [options]
+tgenie config [options]
 ```
 
 **Examples:**
 
 **View current config:**
 ```bash
-$ todo config
+$ tgenie config
 Current Configuration:
 ─────────────────────────────────────────────────────────────
 LLM Provider: openrouter
 Model: anthropic/claude-3-haiku
 API Key: sk-or-******** (set)
-Database: ~/.todo/data/todo.db
+Database: ~/.taskgenie/data/taskgenie.db
 Gmail: Not configured
 GitHub: Not configured
 Notification: Enabled
@@ -461,24 +469,24 @@ Notification: Enabled
 
 **Set LLM provider:**
 ```bash
-$ todo config --llm openrouter --model anthropic/claude-3-haiku
+$ tgenie config --llm openrouter --model anthropic/claude-3-haiku
 ✓ LLM configuration updated
 
-$ todo config --api-key sk-or-v1-your-key-here
-✓ API key saved to ~/.todo/config.toml
+$ tgenie config --api-key sk-or-v1-your-key-here
+✓ API key saved to ~/.taskgenie/config.toml
 ```
 
 **Configure Gmail:**
 ```bash
-$ todo config --gmail-auth
+$ tgenie config --gmail-auth
 Opening browser for Gmail OAuth...
 ✓ Gmail authenticated successfully
-✓ Credentials saved to ~/.todo/credentials.json
+✓ Credentials saved to ~/.taskgenie/credentials.json
 ```
 
 **Configure notifications:**
 ```bash
-$ todo config --notify 24h,6h
+$ tgenie config --notify 24h,6h
 ✓ Notification schedule: 24 hours, 6 hours before ETA
 ```
 
@@ -488,14 +496,14 @@ $ todo config --notify 24h,6h
 
 **Usage:**
 ```bash
-todo search <query> [--attachments]
+tgenie search <query> [--attachments]
 ```
 
 **Examples:**
 
 **Search by keyword:**
 ```bash
-$ todo search "authentication bug"
+$ tgenie search "authentication bug"
 Found 2 tasks:
 ─────────────────────────────────────────────────────────────
 abc123  Review PR #123                [Match: description, title]
@@ -504,7 +512,7 @@ ghi789  Fix authentication bug            [Match: title]
 
 **Semantic search with RAG:**
 ```bash
-$ todo search "problems with logging in" --attachments
+$ tgenie search "problems with logging in" --attachments
 Found 3 results (semantic search):
 ─────────────────────────────────────────────────────────────
 1. Task: abc123 - Review PR #123 (0.95)
@@ -525,23 +533,24 @@ Found 3 results (semantic search):
 
 ---
 
-### 11. `export` / `import` - Backup and restore
+### 11. `db` - Migrations and backup/restore
 
 **Usage:**
 ```bash
-todo export --format json --output backup.json
-todo import --file backup.json
+tgenie db dump --out backup.sql
+tgenie db restore --in backup.sql
+tgenie db upgrade
 ```
 
 **Examples:**
 
 ```bash
-$ todo export
-✓ Exported 5 tasks to backup_2025-01-15.json
+$ tgenie db dump --out backup.sql
+✓ Wrote backup.sql
 
-$ todo import --file backup.json
-⚠️  This will merge 5 tasks into your current list. Continue? [y/N]: y
-✓ Imported 5 tasks
+$ tgenie db restore --in backup.sql
+⚠️  This will overwrite existing data. Continue? [y/N]: y
+✓ Restore complete
 ```
 
 ---
@@ -593,7 +602,7 @@ Generating embeddings... ━━━━━━━━━━━━━━━━ 50%
 When needed, CLI uses prompts for user input:
 
 ```bash
-$ todo add --interactive
+$ tgenie add --interactive
 Title: [User types]
 Description: [User types]
 ETA (optional): [User types or Ctrl+D to skip]
@@ -605,23 +614,24 @@ Priority [low/medium/high]: [User types or arrows to select]
 
 **Shell completion (bash/zsh/fish):**
 ```bash
-$ todo add "Fix"<TAB>
+$ tgenie add "Fix"<TAB>
 --attach      --description  --eta           --priority
 --status      --interactive   --help
 ```
 
 **Shell aliases:**
 ```bash
-# Suggested aliases for ~/.bashrc or ~/.zshrc
-alias t='todo'
-alias ta='todo add'
-alias tl='todo list'
-alias tc='todo chat'
+# Aliases are user preference; `tgenie` is the standard binary name.
+alias tg='tgenie'
+alias taskgenie='tgenie'  # Optional, if you prefer a longer name
+alias ta='tgenie add'
+alias tl='tgenie list'
+alias tc='tgenie chat'
 ```
 
 ## Configuration File
 
-**Location:** `~/.todo/config.toml`
+**Location:** `~/.taskgenie/config.toml`
 
 **Example:**
 ```toml
@@ -632,7 +642,7 @@ api_key = "sk-or-v1-..."
 
 [gmail]
 enabled = true
-credentials_path = "~/.todo/credentials.json"
+credentials_path = "~/.taskgenie/credentials.json"
 
 [github]
 token = "ghp_..."
@@ -643,7 +653,7 @@ enabled = true
 schedule = ["24h", "6h"]
 
 [database]
-path = "~/.todo/data/todo.db"
+path = "~/.taskgenie/data/taskgenie.db"
 
 [web]
 port = 8080

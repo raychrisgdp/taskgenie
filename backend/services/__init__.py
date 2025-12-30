@@ -1,7 +1,5 @@
-"""Backend schemas package.
+"""Backend services package.
 
 Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
-
-__all__: list[str] = []

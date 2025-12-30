@@ -1,25 +1,23 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+"""Database scaffolding (skeleton).
+
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Text, JSON
-from datetime import datetime
-
-from .config import settings
-
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    future=True
-)
-
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    expire_on_commit=False,
-    class_=AsyncSession
-)
 
 Base = declarative_base()
+engine: AsyncEngine | None = None
 
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Database session generator.
+
+    Intentionally unimplemented in this branch. PR-001 introduces database initialization,
+    migrations, and session lifecycle wiring.
+    """
+
+    raise NotImplementedError("Database wiring is not implemented yet (see PR-001).")

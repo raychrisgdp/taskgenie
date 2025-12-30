@@ -28,18 +28,23 @@ Technical design specifications and architecture decisions.
 
 **Files:**
 - `DESIGN_ARCHITECTURE.md` - System architecture, service boundaries
+- `DESIGN_TUI.md` - Interactive TUI UX and structure (Textual)
 - `DESIGN_CLI.md` - CLI command design with examples
 - `DESIGN_DATA.md` - Database schemas and data models
 - `DESIGN_CHAT.md` - AI/chat flow, RAG integration
 - `DESIGN_WEB.md` - Web UI pages and components
 - `DESIGN_NOTIFICATIONS.md` - Notification system design
+- `DESIGN_BACKGROUND_JOBS.md` - Scheduler/jobs approach (no queue for MVP)
 - `DESIGN_SUMMARY.md` - Executive summary
 
 ### 02-implementation/
 Implementation plans, pull request tracking, and development roadmap.
 
 **Files:**
-- `PR-PLANS.md` - Detailed PR plan with 14 planned PRs
+- `PR-PLANS.md` - Detailed PR plan with 12 planned PRs
+- `pr-specs/` - Mini-specs + test scenarios for each PR
+- `TESTING_GUIDE.md` - Testing policy and examples
+- `PLAN.md` - Original requirements and early planning notes
 
 ### INDEX.md
 Main navigation index with links to all documents and quick start guide.

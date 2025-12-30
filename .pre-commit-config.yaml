@@ -1,7 +1,12 @@
+default_language_version:
+  python: python3
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.13.1
     hooks:
+      - id: ruff-format
+        types_or: [python]
       - id: ruff
         types_or: [python]
         args: [--fix, --exit-non-zero-on-fix]
@@ -9,14 +14,21 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: trailing-whitespace
-        types_or: [python]
-      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-ast
         types_or: [python]
       - id: check-yaml
-        files: .yaml
       - id: check-toml
-        files: .toml
+      - id: check-json
+      - id: debug-statements
+        types_or: [python]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending
+      - id: fix-byte-order-marker
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0

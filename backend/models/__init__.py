@@ -1,9 +1,7 @@
-from .task import Task
-from .attachment import Attachment
-from .notification import Notification
+"""Backend models package.
 
-__all__ = [
-    "Task",
-    "Attachment",
-    "Notification",
-]
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
+__all__: list[str] = []

@@ -33,6 +33,12 @@ env/
 *.swo
 *~
 
+# Codex/OpenCode local artifacts
+.opencode/
+.cursor/
+PR_DESCRIPTION.md
+PR_TITLE.txt
+
 # Environment
 .env
 .env.local

@@ -1,4 +1,6 @@
-# Personal TODO List Application - Project Plan
+# TaskGenie - Project Plan
+
+> **Note:** This is the original planning doc. The current implementation roadmap lives in [PR-PLANS.md](PR-PLANS.md) and [pr-specs/](pr-specs/).
 
 ## Core Requirements
 - [ ] Task management with rich metadata (description, references, links, ETA)
@@ -13,8 +15,9 @@
 ## User Requirements (Confirmed)
 
 ### 1. Primary Entry Point
-- **CLI as main interface** - Python application running locally (managed by systemd/launchd or manual start)
-- Accessible via `todo` command
+- **Interactive TUI as main interface** - Python application running locally (managed by systemd/launchd or manual start)
+- Accessible via `tgenie` command (defaults to interactive mode with chat)
+- Non-interactive subcommands (`tgenie add`, `tgenie list`, etc.) available for scripting
 
 ### 2. Task Entry & Information Management
 - **Document/email/PR attachment** - Link relevant emails (GMail), documents, GitHub PRs, etc. to tasks
@@ -48,154 +51,9 @@
 
 ---
 
-## Clarifying Questions (Remaining)
+## Planning Q&A (Archived)
 
-### 1. Chat Interface Style
-**How do you want the chat interface to work?**
-- [ ] **Terminal-based chat** (like we're doing now, in the terminal)
-- [ ] **Web-based chat UI** (access at localhost:8080/chat)
-- [ ] **Both** - CLI for commands, web for rich chat with attachments preview
-- [ ] **Slack/Discord integration** for chat access
-
-### 2. Document/Email Attachment
-**How should attachments work?**
-- [ ] **Links/URLs only** - Store references to Gmail, GitHub PRs, documents
-- [ ] **Fetch and cache** - Download content and store in TODO system
-- [ ] **Hybrid** - Store links + cache content for search
-- [ ] **Manual paste** - Copy content and attach to task
-
-### 3. Authentication for GMail/etc
-**How to access external services?**
-- [ ] **OAuth flow** - Browser-based authentication
-- [ ] **API keys** - Store in environment variables
-- [ ] **Service accounts** - For GMail API
-- [ ] **User-provided tokens** - Manually input tokens
-
-### 4. Task Metadata (Simplified)
-**Required fields:**
-- [x] Title/summary
-- [x] Description
-- [x] ETA/due date
-- [x] Status (pending, in progress, completed)
-- [x] Links/attachments (Gmail, GitHub PRs, docs)
-
-**Optional fields:**
-- [ ] Priority level
-- [ ] Tags/categories
-- [ ] Subtasks
-- [ ] Dependencies
-
-### 5. Notification Click Action
-**What should happen when clicking notification?**
-- [ ] Open web UI to task details
-- [ ] Open attached documents/links
-- [ ] Show in terminal with option to mark complete
-- [ ] Open specific file/command
-
-### 3. Notification System
-**What notifications do you need?**
-- [ ] Due date reminders (how far in advance?)
-- [ ] Overdue task alerts
-- [ ] Task completion confirmations
-- [ ] Agent spawn status updates
-- [ ] Daily/weekly digest summaries
-
-**For mobile integration:**
-- [ ] Google Space (as mentioned)
-- [ ] Push notifications (via Firebase/APNs?)
-- [ ] Email alerts
-- [ ] SMS alerts
-- [ ] Slack/Discord
-- [ ] Native mobile app?
-
-### 4. Agent Integration
-**What does "spawn agent" mean to you?**
-- [ ] Create AI agent to work on the task (like this opencode session?)
-- [ ] Assign task to an external service/API
-- [ ] Generate subtasks automatically
-- [ ] Schedule automated reminders
-- [ ] Other?
-
-### 5. Tech Stack Preferences
-**Backend:**
-- [ ] Node.js/Express
-- [ ] Python/FastAPI
-- [ ] Go
-- [ ] Rust
-- [ ] No preference
-
-**Frontend:**
-- [ ] React
-- [ ] Vue
-- [ ] Svelte
-- [ ] Simple HTML/JS
-- [ ] No UI needed (CLI only)
-
-**Database:**
-- [ ] SQLite (simple, local)
-- [ ] PostgreSQL
-- [ ] MySQL
-- [ ] MongoDB
-- [ ] Redis for cache + another DB
-
-**Task queue (for notifications/agents):**
-- [ ] Redis/Celery
-- [ ] BullMQ
-- [ ] Sidekiq
-- [ ] Cron jobs
-
-### 6. User Interface Preferences
-**Visual style:**
-- [ ] Minimal/simple (like a text file)
-- [ ] Rich UI with drag-drop
-- [ ] Kanban board view
-- [ ] Calendar view
-- [ ] List view with filters
-- [ ] Multiple views?
-
-**Task management:**
-- [ ] Keyboard shortcuts
-- [ ] Bulk operations
-- [ ] Search/filter
-- [ ] Archive old tasks
-- [ ] Export/backup data
-
-### 7. Deployment & Infrastructure
-**Where will this run?**
-- [ ] Local machine only
-- [ ] Home server/NAS
-- [ ] Cloud (AWS/GCP/Azure?)
-- [ ] VPS/Dedicated server
-
-**Docker preferences:**
-- [ ] Docker Compose for easy local setup
-- [ ] Need to persist data volumes?
-- [ ] Environment variables for configuration?
-- [ ] Health checks for auto-restart?
-
-### 8. Data Management
-**Do you need:**
-- [ ] Backup/restore functionality
-- [ ] Export to CSV/JSON
-- [ ] Sync across multiple devices
-- [ ] API for programmatic access
-- [ ] Webhooks for integration
-
-### 9. Security & Access
-- [ ] Single user (you only)
-- [ ] Multi-user support (family/team)
-- [ ] Authentication (username/password, OAuth, etc.)
-- [ ] HTTPS/SSL
-- [ ] VPN/private network only?
-
-### 10. Email & Conversations Integration
-**How do you want to capture from emails/conversations?**
-- [ ] Forward emails to specific address
-- [ ] Browser extension to extract from Gmail/Outlook
-- [ ] Copy-paste text and auto-parse for task creation
-- [ ] Gmail API integration
-- [ ] Slack/Discord webhook
-- [ ] Other?
+The original “clarifying questions” planning notes have been moved to [PLAN_ARCHIVE.md](PLAN_ARCHIVE.md) to keep this document focused.
 
 ---
 
@@ -233,17 +91,16 @@
                           │
                           ▼
                  ┌────────────────┐
-                 │ Task Queue     │
-                 │ (Redis/        │
-                 │  Background    │
-                 │  tasks for     │
-                 │  notifications)│
+                 │ Background Jobs│
+                 │ (APScheduler + │
+                 │  SQLite state  │
+                 │  tables)       │
                  └────────────────┘
                           │
                           ▼
                  ┌────────────────┐
-                 │ Desktop Notify │
-                 │ (Linux/Mac/Win)│
+                 │ Notifications  │
+                 │ (Desktop/Web)  │
                  └────────────────┘
 ```
 
@@ -255,7 +112,7 @@
 - **Backend**: Python 3.11+ with FastAPI (async, clean, extensible)
 - **CLI**: Typer (modern, type-safe CLI framework)
 - **Database**: SQLite (simple, local) + SQLAlchemy (ORM, easy to migrate to Postgres)
-- **Task Queue**: Redis + BackgroundTasks (simple) or Celery (if needed later)
+- **Background Jobs**: APScheduler (in-process) + SQLite state tables (no external queue for MVP; Redis/Celery optional later)
 
 ### AI/LLM
 - **LLM Provider**: OpenAI SDK (supports OpenRouter, BYOK, multiple models)
@@ -281,7 +138,8 @@
 ## Proposed Features - Phase 1 (MVP)
 
 ### Core Functionality
-- **CLI tool** - Primary interface for all operations (Typer-based)
+- **Interactive TUI** - Primary interface entered via `tgenie` command (Typer-based, chat-first)
+- **CLI subcommands** - Non-interactive commands for scripting (`tgenie add`, `tgenie list`, etc.)
 - **Web chat UI** - Secondary interface (localhost:8080, HTMX + Jinja2)
 - **Task CRUD** - Create, Read, Update, Delete, List tasks
 - **Task fields**:
@@ -296,7 +154,7 @@
 - **FastAPI backend** - Async, type-safe, Python-native
 
 ### Unique Differentiators (vs. Competitors)
-- ✅ **CLI-first** with AI chat (no other project has both)
+- ✅ **Interactive TUI-first** with AI chat as primary mode (no other project has both)
 - ✅ **RAG-powered search** across tasks and attachments (unique)
 - ✅ **Gmail + GitHub integration** for attachments (no CLI tool has this)
 - ✅ **Desktop notifications** from Docker container (completely missing)
@@ -307,33 +165,33 @@ See MARKET_RESEARCH.md for detailed competitor analysis.
 
 ### CLI Examples
 
-**Add task:**
+**Interactive mode (default):**
 ```bash
-todo add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15" --attach "github:owner/repo/pull/123"
-```
-
-**List tasks:**
-```bash
-todo list
-todo list --status pending
-```
-
-**Chat with TODO:**
-```bash
-todo chat
-# Then interact:
+tgenie
+# Opens interactive TUI with chat as primary mode
 # "What tasks are due this week?"
 # "Show me tasks related to frontend"
 ```
 
+**Add task (subcommand for scripting):**
+```bash
+tgenie add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15" --attach "github:owner/repo/pull/123"
+```
+
+**List tasks:**
+```bash
+tgenie list
+tgenie list --status pending
+```
+
 **Add attachment to task:**
 ```bash
-todo attach <task_id> --gmail "msg:abc123" --github "https://github.com/..."
+tgenie attach <task_id> --gmail "msg:abc123" --github "https://github.com/..."
 ```
 
 **Task details:**
 ```bash
-todo show <task_id>
+tgenie show <task_id>
 ```
 
 ### Web Chat UI Examples
@@ -406,7 +264,7 @@ LLM_PROVIDERS = {
 
 ### RAG System
 ```bash
-todo chat
+tgenie
 User: "Show me all tasks related to authentication"
 
 AI: [Searches task descriptions and cached attachment content]
@@ -419,14 +277,14 @@ Found 3 tasks:
 ### CLI Enhancements
 ```bash
 # Quick attach from clipboard
-todo attach <task_id> --paste
+tgenie attach <task_id> --paste
 
 # Search by content
-todo search "authentication bug"
+tgenie search "authentication bug"
 
-# Export tasks
-todo export --format json
-todo export --format markdown
+# Backup / restore (DB-level)
+tgenie db dump --out backup.sql
+tgenie db restore --in backup.sql
 ```
 
 ---
@@ -512,7 +370,7 @@ personal-todo/
 │   ├── test_chat.py
 │   └── test_llm.py
 └── data/                    # SQLite and vector store
-    ├── todo.db
+    ├── taskgenie.db
     └── chroma/
 ```
 
@@ -520,25 +378,9 @@ personal-todo/
 
 ## Next Steps
 
-1. **Answer clarifying questions above** to refine requirements
-2. **Choose tech stack** based on preferences
-3. **Create MVP architecture** with specific implementation details
-4. **Set up development environment** (Docker Compose structure)
-5. **Implement core features** incrementally
-
----
-
-## Questions to Answer
-
-Please provide:
-1. Your preferred task entry methods (rank 1-5)
-2. Required task metadata fields
-3. Notification preferences and timing
-4. What "spawn agent" should do
-5. Tech stack preferences (or "no preference")
-6. UI preference (minimal vs rich)
-7. Where you'll host this
-8. How you want to capture from emails/conversations
+1. Start the implementation roadmap in `PR-PLANS.md` (begin with PR-001).
+2. Use the per-PR specs in `pr-specs/` (each includes a test plan).
+3. Keep decisions synchronized in `../01-design/DECISIONS.md`.
 
 ---
 

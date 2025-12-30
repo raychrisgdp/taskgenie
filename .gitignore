@@ -37,6 +37,7 @@ env/
 .opencode/
 .cursor/
 PR_DESCRIPTION.md
+PR_TITLE.txt
 
 # Environment
 .env

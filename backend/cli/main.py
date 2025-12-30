@@ -1,7 +1,13 @@
+"""TaskGenie CLI entrypoint.
+
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
 import typer
 from rich.console import Console
 
-app = typer.Typer(help="TaskGenie CLI (spec-only skeleton)")
+app = typer.Typer(help="TaskGenie CLI (implementation in progress)")
 console = Console()
 
 

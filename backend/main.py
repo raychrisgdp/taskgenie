@@ -1,3 +1,11 @@
+"""TaskGenie backend entrypoint.
+
+This branch keeps the backend as a skeleton; DB wiring/migrations land in PR-001.
+
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
 import uvicorn
 from fastapi import FastAPI
 

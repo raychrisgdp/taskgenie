@@ -63,6 +63,7 @@ select = [
     "W",
     "UP",
 ]
+extend-select = ["D100"]
 ignore = [
     "E501",  # Line too long
     "B008",  # Do not perform function calls in argument defaults
@@ -73,6 +74,9 @@ unfixable = ["F841"]
 known-first-party = ["personal_todo"]
 known-third-party = ["fastapi", "pydantic", "sqlalchemy", "typer"]
 split-on-trailing-comma = false
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.format]
 indent-style = "space"

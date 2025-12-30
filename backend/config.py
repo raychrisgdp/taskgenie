@@ -1,3 +1,9 @@
+"""Application configuration settings.
+
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 

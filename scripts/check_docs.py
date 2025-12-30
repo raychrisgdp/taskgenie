@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Documentation quality checker.
+
+Validates markdown links, naming consistency, and PR spec structure.
+
+Author:
+    Raymond Christopher (raymond.christopher@gdplabs.id)
+"""
+
 from __future__ import annotations
 
 import re

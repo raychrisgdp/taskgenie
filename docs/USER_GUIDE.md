@@ -96,8 +96,8 @@ Details: `docs/01-design/DESIGN_NOTIFICATIONS.md`
 ## Backup / Restore
 
 Planned CLI surface:
-- `tgenie export ...`
-- `tgenie import ...`
+- `tgenie db dump --out backup.sql`
+- `tgenie db restore --in backup.sql`
 - `tgenie db upgrade` (migrations)
 
 SQLite fallback (works today as a concept/spec):

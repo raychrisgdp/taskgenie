@@ -144,7 +144,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 - [x] Docs consistently use `tgenie` as the CLI entrypoint
 - [x] Interactive TUI is default mode
 - [x] Subcommands documented (`tgenie add`, `tgenie list`, etc.)
-- [x] Shortcut alias guidance exists (recommend shell alias)
+- [x] Optional shell alias guidance exists (user-chosen; `tgenie` remains the standard)
 
 ### Architecture Diagrams
 - [x] Canonical architecture diagram: `DESIGN_ARCHITECTURE.md`
@@ -185,7 +185,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 | Metric | Value |
 |--------|-------|
 | Total markdown files in `docs/` | 40 |
-| Total lines in `docs/` | 11,008 |
+| Total lines in `docs/` | 11,010 |
 | PR specs | 12 |
 | Design documents | 13 |
 | Test scenarios documented | 50+ |

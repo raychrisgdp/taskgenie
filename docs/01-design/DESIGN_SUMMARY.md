@@ -320,10 +320,11 @@ tgenie config --notify SCHEDULE     # Set notification schedule
 tgenie ui                           # Launch web interface
 tgenie ui --port 9000               # Specify port
 
-# Data
-tgenie export --format json         # Export tasks
-tgenie import --file backup.json    # Import tasks
-tgenie search <query>               # Search tasks
+# Data (backup/restore + migrations)
+tgenie db dump --out backup.sql
+tgenie db restore --in backup.sql
+tgenie db upgrade
+tgenie search <query>
 ```
 
 ## Design Documents Created

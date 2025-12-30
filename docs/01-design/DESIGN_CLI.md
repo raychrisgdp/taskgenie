@@ -533,23 +533,24 @@ Found 3 results (semantic search):
 
 ---
 
-### 11. `export` / `import` - Backup and restore
+### 11. `db` - Migrations and backup/restore
 
 **Usage:**
 ```bash
-tgenie export --format json --output backup.json
-tgenie import --file backup.json
+tgenie db dump --out backup.sql
+tgenie db restore --in backup.sql
+tgenie db upgrade
 ```
 
 **Examples:**
 
 ```bash
-$ tgenie export
-✓ Exported 5 tasks to backup_2025-01-15.json
+$ tgenie db dump --out backup.sql
+✓ Wrote backup.sql
 
-$ tgenie import --file backup.json
-⚠️  This will merge 5 tasks into your current list. Continue? [y/N]: y
-✓ Imported 5 tasks
+$ tgenie db restore --in backup.sql
+⚠️  This will overwrite existing data. Continue? [y/N]: y
+✓ Restore complete
 ```
 
 ---
@@ -620,9 +621,9 @@ $ tgenie add "Fix"<TAB>
 
 **Shell aliases:**
 ```bash
-# Suggested aliases for ~/.bashrc or ~/.zshrc
-alias tg='tgenie'     # If `tg` is already used, consider `alias ti=tgenie`
-alias ti='tgenie'
+# Aliases are user preference; `tgenie` is the standard binary name.
+alias tg='tgenie'
+alias taskgenie='tgenie'  # Optional, if you prefer a longer name
 alias ta='tgenie add'
 alias tl='tgenie list'
 alias tc='tgenie chat'

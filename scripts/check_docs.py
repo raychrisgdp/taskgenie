@@ -62,6 +62,32 @@ def check_naming(markdown_files: list[Path]) -> list[str]:
     return violations
 
 
+def check_pr_spec_structure() -> list[str]:
+    specs_dir = Path("docs/02-implementation/pr-specs")
+    if not specs_dir.exists():
+        return []
+
+    required_sections = [
+        "## Goal",
+        "## Scope",
+        "## Mini-Specs",
+        "## Acceptance Criteria",
+        "## Test Plan",
+    ]
+
+    issues: list[str] = []
+    for md in sorted(specs_dir.glob("PR-*.md")):
+        if md.name == "TEMPLATE.md":
+            continue
+
+        text = md.read_text(encoding="utf-8")
+        for section in required_sections:
+            if section not in text:
+                issues.append(f"{md}: missing required section: {section}")
+
+    return issues
+
+
 def main() -> int:
     markdown_files = iter_markdown_files()
     if not markdown_files:
@@ -70,8 +96,9 @@ def main() -> int:
 
     missing_links = check_relative_links(markdown_files)
     naming_issues = check_naming(markdown_files)
+    pr_spec_issues = check_pr_spec_structure()
 
-    if missing_links or naming_issues:
+    if missing_links or naming_issues or pr_spec_issues:
         if missing_links:
             print("Missing/invalid relative links:")
             for item in missing_links:
@@ -79,6 +106,10 @@ def main() -> int:
         if naming_issues:
             print("Naming consistency violations:")
             for item in naming_issues:
+                print(f"- {item}")
+        if pr_spec_issues:
+            print("PR spec completeness violations:")
+            for item in pr_spec_issues:
                 print(f"- {item}")
         return 1
 

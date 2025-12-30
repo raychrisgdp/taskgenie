@@ -452,15 +452,15 @@ cp ~/.taskgenie/data/taskgenie.db ~/.taskgenie/data/taskgenie_backup_$(date +%Y%
 
 ### Manual Backup via CLI (Planned)
 ```bash
-$ tgenie export --format sqlite --output backup.db
-✓ Exported 5 tasks to backup.db
+$ tgenie db dump --out backup.sql
+✓ Wrote backup.sql
 ```
 
 ### Restore via CLI (Planned)
 ```bash
-$ tgenie import --file backup.db
+$ tgenie db restore --in backup.sql
 ⚠️  This will overwrite existing data. Continue? [y/N]: y
-✓ Restored 5 tasks
+✓ Restore complete
 ```
 
 ### Database Migrations (Planned)

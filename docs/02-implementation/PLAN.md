@@ -282,9 +282,9 @@ tgenie attach <task_id> --paste
 # Search by content
 tgenie search "authentication bug"
 
-# Export tasks
-tgenie export --format json
-tgenie export --format markdown
+# Backup / restore (DB-level)
+tgenie db dump --out backup.sql
+tgenie db restore --in backup.sql
 ```
 
 ---

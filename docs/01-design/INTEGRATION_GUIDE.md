@@ -1,6 +1,6 @@
 # Integration Guide
 
-This guide explains how to add new integrations to the Personal TODO system, following the Provider Protocol pattern.
+This guide explains how to add new integrations to the TaskGenie system, following the Provider Protocol pattern.
 
 ---
 
@@ -639,7 +639,7 @@ Set appropriate user-agent for API requests:
 ```python
 import httpx
 
-USER_AGENT = "Personal TODO/1.0 (+https://github.com/user/personal-todo)"
+USER_AGENT = "TaskGenie/1.0 (+https://github.com/user/personal-todo)"
 
 async def fetch_content(self, reference: str) -> str:
     headers = {

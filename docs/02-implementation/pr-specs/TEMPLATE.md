@@ -18,6 +18,10 @@
 
 ### Out
 
+## Mini-Specs
+
+- Bullet list of concrete deliverables (sub-features) to ship in this PR.
+
 ## User Stories
 
 - As a user, I can …

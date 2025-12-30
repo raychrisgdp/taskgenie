@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** -  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** 2025-12-30
 
 ## Goal
 
@@ -35,6 +35,20 @@ Establish a reliable local-first foundation:
 - Building a full “admin console” for DB management.
 - Cross-database support (Postgres/MySQL). SQLite-first only.
 
+## Mini-Specs
+
+- Config:
+  - precedence and validation (env + `.env` + `~/.taskgenie/config.toml`).
+- Paths:
+  - canonical app data dir and subpaths (DB, cache, logs, vector store).
+- Migrations:
+  - Alembic initialized and runnable for SQLite.
+  - wrapper CLI surface (`tgenie db upgrade|downgrade|revision`).
+- Backup/restore:
+  - dump to `.sql` and restore from `.sql` with explicit overwrite confirmation.
+- Docs:
+  - backup/restore + migration commands documented with examples.
+
 ## References
 
 - `docs/01-design/DESIGN_DATA.md` (schema + backup/migration notes)
@@ -52,25 +66,29 @@ Establish a reliable local-first foundation:
 
 ### Config precedence
 
+- Use **Pydantic Settings** for validation and environment management.
 - Recommended precedence (highest wins):
   1. env vars
   2. `.env` file (dev convenience)
-  3. config file (e.g., `~/.taskgenie/config.toml`)
+  3. config file (default: `~/.taskgenie/config.toml`)
   4. built-in defaults
 
 ### Data locations
 
-- Define a canonical “app data dir” (configurable):
+- Define a canonical “app data dir” (configurable) for:
   - DB file
   - vector store
   - attachment cache
   - logs
+- Default to `~/.taskgenie/` to match the rest of the design docs.
+- (Optional) On Linux, consider XDG mappings later (config/data/state) if we want to be a better citizen.
 
 ### Migrations (Alembic)
 
-- Add Alembic configuration and an initial baseline migration.
+- Add Alembic configuration in `backend/migrations/`.
+- Ensure `env.py` is configured for SQLite (handling `PRAGMA foreign_keys=ON`).
 - Support:
-  - `tgenie db upgrade [--rev head]`
+  - `tgenie db upgrade [--rev head]` (wraps `alembic upgrade head`)
   - `tgenie db downgrade --rev <rev>|-1`
   - `tgenie db revision -m "..." --autogenerate`
 

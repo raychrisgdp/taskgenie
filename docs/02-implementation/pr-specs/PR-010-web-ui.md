@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-002 (chat optional: PR-003)  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** 2025-12-30
 
 ## Goal
 
@@ -32,6 +32,19 @@ Provide a secondary web interface for:
 - Authentication/multi-user (future).
 - Mobile-first polish beyond basic responsiveness (future iteration).
 
+## Mini-Specs
+
+- Pages:
+  - tasks list + task detail; create/edit flows (HTMX forms).
+- Chat (optional):
+  - if PR-003 is present, chat page streams responses and handles reconnects.
+- Notifications (optional):
+  - in-app notification feed view (if PR-011 exists).
+- Design:
+  - responsive layout; minimal JS (HTMX + Tailwind or equivalent).
+- Tests:
+  - basic route rendering + API integration smoke tests.
+
 ## References
 
 - `docs/01-design/DESIGN_WEB.md` (page layouts + HTMX interactions)
@@ -40,12 +53,20 @@ Provide a secondary web interface for:
 
 ## Technical Design
 
-- Use server-rendered templates (Jinja2) with HTMX for interactions.
-- Keep the UI thin:
+- **Backend:** FastAPI with Jinja2Templates
+- **Frontend:**
+  - **CSS:** Tailwind CSS (via CDN or standalone CLI)
+  - **JS:** HTMX for SPA-like feel without a full framework
+- **Patterns:**
+  - `GET /tasks` → returns full page
+  - `POST /tasks` → returns HTMX fragment (single task row) to be prepended to the list
+  - `GET /tasks/{id}/edit` → returns HTMX fragment (form) to swap into the row/modal
+- **Chat (optional):**
+  - Start with plain SSE via `EventSource` for streaming chat output.
+  - If we want tighter HTMX integration later, consider the `htmx-sse` extension.
+- **Thin Client:**
   - call the same backend services as the API (no duplicated business logic)
   - rely on the Task API for CRUD
-- Chat streaming (if enabled):
-  - use SSE and handle disconnects with a retry UX
 
 ## Acceptance Criteria
 

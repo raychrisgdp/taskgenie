@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains the testing strategy for the Personal TODO system, including unit tests, integration tests, and end-to-end (E2E) tests.
+This guide explains the testing strategy for the TaskGenie system, including unit tests, integration tests, and end-to-end (E2E) tests.
 
 **Coverage Target:** >80%
 **Frameworks:** Pytest (unit), HTTPX (integration), Playwright (E2E)

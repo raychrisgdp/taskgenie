@@ -271,26 +271,25 @@ host = "localhost"
 ## API Endpoints
 
 ### Tasks
-- `POST /api/tasks` - Create task
-- `GET /api/tasks` - List tasks (with filters)
-- `GET /api/tasks/{id}` - Get task details
-- `PATCH /api/tasks/{id}` - Update task
-- `DELETE /api/tasks/{id}` - Delete task
-- `POST /api/tasks/{id}/done` - Mark complete
+- `POST /api/v1/tasks` - Create task
+- `GET /api/v1/tasks` - List tasks (with filters)
+- `GET /api/v1/tasks/{id}` - Get task details
+- `PATCH /api/v1/tasks/{id}` - Update task
+- `DELETE /api/v1/tasks/{id}` - Delete task
 
 ### Attachments
-- `POST /api/attachments` - Create attachment
-- `GET /api/attachments/{id}` - Get attachment
-- `DELETE /api/attachments/{id}` - Delete attachment
+- `POST /api/v1/attachments` - Create attachment
+- `GET /api/v1/attachments/{id}` - Get attachment
+- `DELETE /api/v1/attachments/{id}` - Delete attachment
 
 ### Chat
-- `POST /api/chat` - Send chat message
-- `GET /api/chat/stream` - SSE stream
-- `GET /api/chat/history` - Get conversation
+- `POST /api/v1/chat` - Send chat message (streaming)
+- `GET /api/v1/chat/stream` - SSE stream
+- `GET /api/v1/chat/history/{session_id}` - Get conversation
 
 ### Search
-- `GET /api/search` - Keyword search
-- `GET /api/search/semantic` - RAG search
+- `GET /api/v1/search` - Keyword search
+- `GET /api/v1/search/semantic` - RAG search
 
 ## CLI Commands Reference
 

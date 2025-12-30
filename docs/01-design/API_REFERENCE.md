@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document provides a complete reference for all REST and WebSocket APIs in the Personal TODO system.
+This document provides a complete reference for all REST and WebSocket APIs in the TaskGenie system.
 
 **Base URL:** `http://localhost:8080/api/v1` (configurable)
 

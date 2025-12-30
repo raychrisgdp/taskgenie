@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-003, PR-004  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** 2025-12-30
 
 ## Goal
 
@@ -31,6 +31,20 @@ Add semantic recall across tasks and cached attachment content, and improve chat
 - Cross-user/multi-tenant search.
 - Remote vector DB.
 
+## Mini-Specs
+
+- Embeddings:
+  - choose default embedding model/provider (configurable).
+- Indexing:
+  - tasks + cached attachments are embedded and stored in ChromaDB.
+  - re-index on create/update and after attachment fetch.
+- Query:
+  - semantic search API (`GET /api/v1/search/semantic`) returns ranked results.
+- Chat augmentation:
+  - retrieve top snippets and inject into chat prompt (bounded by token limits).
+- Tests:
+  - small fixture corpus; validate top-k results for representative queries.
+
 ## References
 
 - `docs/01-design/DESIGN_CHAT.md` (RAG strategy + prompt assembly)
@@ -53,11 +67,14 @@ Add semantic recall across tasks and cached attachment content, and improve chat
 
 ### Embeddings
 
-- Use a sentence-transformer embedding model (local-first).
-- Store vectors in ChromaDB with metadata:
-  - `type: task|attachment`
-  - `task_id`, `attachment_id`
-  - title, timestamps
+- **Model:** `sentence-transformers/all-MiniLM-L6-v2` (via `sentence-transformers`; make configurable later)
+- **Vector Store:** ChromaDB (running in-process)
+- **Collection Naming:** `taskgenie_items`
+- **Document Metadata:**
+  - `id`: task or attachment ID
+  - `source_type`: `task | attachment`
+  - `parent_task_id`: ID of the task
+  - `text`: the chunked content
 
 ### Retrieval + response format
 

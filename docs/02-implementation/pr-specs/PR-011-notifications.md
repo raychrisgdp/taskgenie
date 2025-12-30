@@ -2,15 +2,15 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-002  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** 2025-12-30
 
 ## Goal
 
-Deliver early “daily value” by reminding the user about tasks with ETAs (24h/6h/overdue), with a path that works both locally and in Docker.
+Deliver early "daily value" by reminding user about tasks with ETAs (24h/6h/overdue), with a path that works both locally and in Docker.
 
 ## User Value
 
-- Users feel the app helping them without needing integrations or RAG.
+- Users feel app helping them without needing integrations or RAG.
 - Encourages regular usage (reminders + quick completion loop).
 
 ## Scope
@@ -21,16 +21,34 @@ Deliver early “daily value” by reminding the user about tasks with ETAs (24h
   - reminders at configured offsets (default 24h + 6h)
   - overdue alerts
   - quiet hours
-  - dedup (don’t spam the same notification)
-- Notification history persisted (so the UI can show “what was sent”).
+  - dedup (don't spam same notification)
+- Notification history persisted (so UI can show "what was sent").
 - Delivery mechanism (pragmatic):
   - **Local run:** desktop notifications (e.g., `plyer`)
   - **Docker run:** provide an in-app notification channel (Web UI / API), with desktop as optional later
+- Scheduler runs every 1-5 minutes (configurable).
 
 ### Out
 
 - Mobile notifications (future).
 - Multi-device sync (future).
+
+## Mini-Specs
+
+- Data model:
+  - `notifications` table to persist delivery history (type, task_id, sent_at, channel, status, error).
+- Scheduler:
+  - in-process tick loop (APScheduler or background task), configurable interval (default 60s).
+  - computes due reminders (24h/6h/overdue) for non-completed tasks with `eta`.
+  - deduplication via persisted history (no repeated sends for same task/type).
+- Delivery channels:
+  - local dev: desktop notifications (e.g., `plyer`)
+  - Docker: in-app notification feed (API-backed) as the reliable baseline
+- UX:
+  - quiet hours support (defer or suppress)
+  - clear “why did I get this?” content (task title + due time + shortcut to open task)
+- Tests:
+  - time-based computations, deduplication, quiet hours, and Docker/local channel selection.
 
 ## References
 
@@ -38,57 +56,55 @@ Deliver early “daily value” by reminding the user about tasks with ETAs (24h
 - `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
 - `docs/01-design/REQUIREMENTS_AUDIT.md` (Docker notification constraints)
 
-## User Stories
-
-- As a user, I get reminders before tasks are due (24h/6h) and when they are overdue.
-- As a user, I don’t get spammed (dedup + quiet hours).
-- As a user running in Docker, I still see reminders (in-app channel).
-
 ## Technical Design
 
-### Scheduler
+### Scheduler Implementation
 
-- Run a periodic job (every 1–5 minutes) to compute due reminders.
-- Use SQLite as the source of truth for what has already been sent.
+- **Background Worker:** Use `asyncio.create_task` or a separate process started on app startup.
+- **Precision:** Run every 60 seconds.
+- **Logic:**
+  1. Query `tasks` where `status != 'completed'` and `eta` is not null.
+  2. For each task, check if a notification of type (24h, 6h, overdue) has already been sent (check `notifications` table).
+  3. If not sent and `now() >= eta - offset`, trigger delivery.
+- **Delivery:**
+  - `DesktopNotifier`: wrapper around `plyer` for local notifications.
+  - `InAppNotifier`: inserts into `notifications` table with `status='unread'`.
 
-### Storage
+### Notification Delivery Channels
 
-- Store a `notifications` table with:
-  - `task_id`, `type`, `scheduled_for`, `sent_at`, `status`, `error`
-
-### Delivery channels
-
-- Local run: desktop notifications (plyer).
-- Docker run: in-app notifications surfaced via API and rendered in UI(s).
-
-### Dedup + quiet hours
-
-- Dedup by `(task_id, type, scheduled_for)` to prevent repeats.
-- Quiet hours delay delivery until the next allowed window.
+- Implement a `NotificationService` that exposes a single “tick” operation:
+  - query due tasks
+  - compute which reminder types should fire
+  - write delivery history (dedup)
+  - dispatch via the configured channel(s)
+- Implement channel adapters:
+  - `DesktopNotifier` (local) wraps `plyer`
+  - `InAppNotifier` persists a notification record for UI/TUI to display
 
 ## Acceptance Criteria
 
-- [ ] Reminders trigger at 24h/6h offsets and for overdue tasks.
-- [ ] Quiet hours are respected.
-- [ ] Notification history is queryable (for UI and debugging).
+- [ ] Reminders fire at default offsets (24h/6h) and for overdue tasks.
+- [ ] No duplicate notifications for the same task/type (dedup persisted).
+- [ ] Quiet hours are respected (defer or suppress, per config).
+- [ ] Docker mode uses in-app notifications as the baseline channel.
+- [ ] Notification history is persisted and queryable (for UI/TUI listing).
 
 ## Test Plan
 
 ### Automated
 
-- Unit: compute-next-notifications logic (boundary times, quiet hours, DST-safe behavior).
-- Integration:
-  1. Create task due in 24h → scheduler emits “due tomorrow”.
-  2. Mark task done → scheduler does not notify again.
-  3. Due time passes → overdue notification emitted once.
+- Unit (pure logic): given `(now, eta, offsets, history)` compute which notifications should fire.
+- Integration (DB): history persistence prevents duplicates across ticks/restarts.
+- Channel selection: local run uses desktop channel; Docker run uses in-app channel.
+- Quiet hours: notifications are suppressed/deferred during quiet window.
 
 ### Manual
 
 1. Create a task due in ~10 minutes; temporarily set schedule to `["10m"]` for testing.
-2. Run the scheduler job (or wait for interval).
+2. Run scheduler job (or wait for interval).
 3. Verify a notification appears and is recorded in history.
 4. Mark task complete; ensure no further reminders fire.
 
 ## Notes / Risks / Open Questions
 
-- Desktop notifications from Docker are non-trivial; plan for an “in-app notifications” channel as the reliable baseline.
+- Desktop notifications from Docker are non-trivial; plan for an "in-app notifications" channel as a reliable baseline.

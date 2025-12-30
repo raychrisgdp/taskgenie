@@ -238,7 +238,7 @@ The web UI is a **secondary interface** to the CLI. It provides:
 
 ```html
 <button class="btn-action"
-        hx-post="/api/tasks/{id}/progress"
+        hx-patch="/api/v1/tasks/{id}"
         hx-target="#task-{id}"
         hx-swap="innerHTML">
   Mark In Progress
@@ -315,7 +315,7 @@ The web UI is a **secondary interface** to the CLI. It provides:
 ### Task List Filter
 ```html
 <div id="task-list">
-  <form hx-get="/api/tasks" hx-target="#task-list">
+  <form hx-get="/api/v1/tasks" hx-target="#task-list">
     <select name="status">
       <option value="all">All</option>
       <option value="pending">Pending</option>
@@ -330,7 +330,7 @@ The web UI is a **secondary interface** to the CLI. It provides:
 ```html
 <div id="chat-messages"
      hx-ext="sse"
-     sse-connect="/api/chat/stream"
+     sse-connect="/api/v1/chat/stream"
      sse-swap="innerHTML">
   {messages}
 </div>
@@ -338,7 +338,7 @@ The web UI is a **secondary interface** to the CLI. It provides:
 
 ### Dynamic Task Update
 ```html
-<button hx-post="/api/tasks/abc123/progress"
+<button hx-patch="/api/v1/tasks/abc123"
         hx-indicator="#loading-abc123"
         hx-swap="outerHTML"
         hx-target="#task-abc123">

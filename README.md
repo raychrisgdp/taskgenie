@@ -1,6 +1,11 @@
-# Personal TODO
+# TaskGenie (personal-todo)
 
-CLI-first, AI-native personal task manager with RAG-powered search.
+CLI-first, AI-native personal task manager. This repo is **implementation in progress**; the `docs/` folder contains the full design + PR plan.
+
+## Naming
+
+- **Repo/package name:** `personal-todo`
+- **CLI name (preferred):** `tgenie` (also available as `taskgenie`)
 
 ## Quick Start
 
@@ -8,79 +13,46 @@ CLI-first, AI-native personal task manager with RAG-powered search.
 # Install uv
 pip install uv
 
-# Install dependencies
+# Install dependencies (creates/uses a project venv)
 uv pip install -e .
 
-# Copy environment file
+# Configure environment
 cp .env.example .env
-
-# Edit .env with your settings
 nano .env
 
-# Start backend
-uv run backend.main:main
+# Start the backend API (serves /health)
+uv run python -m backend.main
 
-# In another terminal, run CLI
-uv run backend.cli.main:app
+# In another terminal: run the CLI
+uv run tgenie --help
 ```
 
-## Features
+## What’s Implemented Today
 
-- ✅ CLI-first interface (Typer)
-- ✅ AI-powered chat interface
-- ✅ RAG semantic search across tasks and attachments
-- ✅ Desktop notifications (plyer)
-- ✅ Gmail integration (planned)
-- ✅ GitHub integration (planned)
-- ✅ BYOK + OpenRouter support
-- ✅ Local-first with SQLite
+- FastAPI app with `GET /health`
+- Settings via `.env` (`backend/config.py`)
+- SQLAlchemy models + DB bootstrap on startup
+- CLI entrypoint (`tgenie --help`)
 
-## Commands
+## What’s Planned (See `docs/`)
 
-```bash
-# Start interactive TUI (primary; includes chat)
-tgenie
-
-# List all tasks (non-interactive)
-tgenie list
-
-# Add a new task (non-interactive)
-tgenie add "Review PR #123" --description "Fix authentication bug" --eta "2025-01-15"
-
-# Show configuration
-tgenie config
-
-# Start web UI
-tgenie ui
-```
+- Interactive TUI (Textual) with chat as a primary workflow
+- RAG-powered semantic search (ChromaDB)
+- Desktop notifications, Gmail/GitHub integrations, web UI
 
 ## Development
 
 ```bash
-# Install dev dependencies
-uv pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run linting
-ruff check backend/
-
-# Format code
-ruff format backend/
-
-# Run type checking
-mypy backend/
-
-# Run tests
-pytest
+make dev
+make lint
+make format
+make typecheck
+make test
 ```
 
-## Configuration
+## Docs
 
-Configuration is managed via `.env` file. Copy `.env.example` and customize.
-
-See `docs/` directory for detailed requirements, design documents, and implementation plans.
+Start at `docs/INDEX.md`.
 
 ## License
 

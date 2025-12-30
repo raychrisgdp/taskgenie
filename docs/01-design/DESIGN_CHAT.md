@@ -456,7 +456,7 @@ async def chat_stream(request: ChatRequest):
 ### Frontend Handling (Web UI)
 
 ```javascript
-const eventSource = new EventSource('/api/chat/stream');
+const eventSource = new EventSource('/api/v1/chat/stream');
 eventSource.onmessage = (event) => {
     if (event.data === '[DONE]') {
         eventSource.close();

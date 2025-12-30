@@ -65,7 +65,7 @@
 
 ### 2. Chat Commands
 **Observation:** `tgenie` (interactive chat) and Web Chat share logic.
-**Status:** **Good.** Both should hit the same API endpoint (`POST /api/chat`).
+**Status:** **Good.** Both should hit the same API endpoint (`POST /api/v1/chat`).
 **Risk:** If CLI implements logic locally instead of calling API, logic will diverge.
 **Action:** Enforce "Thick Server, Thin Client" - CLI should just be an API client.
 

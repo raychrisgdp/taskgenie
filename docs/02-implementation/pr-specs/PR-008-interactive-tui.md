@@ -33,6 +33,21 @@ Ship a first-class interactive TUI as early as possible so we can iterate on UX 
 - LLM-backed chat (PR-003).
 - Full web UI (PR-010).
 
+## Mini-Specs
+
+- Entry point:
+  - `tgenie` starts the interactive TUI (tasks MVP).
+- Screens/widgets:
+  - task list + task detail pane, modal flows for add/edit/delete.
+- Keybindings:
+  - navigation + common actions (add/edit/done/delete/refresh/help/quit).
+- API client:
+  - calls PR-002 endpoints; clear API-down errors and retry flow.
+- Chat panel:
+  - placeholder UI until PR-003, but visible and non-crashing.
+- Tests:
+  - smoke test for app start + basic widget interactions (where feasible).
+
 ## References
 
 - `docs/01-design/DESIGN_TUI.md`

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help dev hooks precommit lint format typecheck test check
+.PHONY: help dev hooks precommit lint format typecheck test docs-check check
 
 help:
 	@echo "Usage:"
@@ -11,6 +11,7 @@ help:
 	@echo "  make format     Run ruff formatter"
 	@echo "  make typecheck  Run mypy"
 	@echo "  make test       Run pytest"
+	@echo "  make docs-check Validate docs links/naming"
 	@echo "  make check      Run lint + typecheck + test"
 
 dev:
@@ -33,5 +34,8 @@ typecheck:
 
 test:
 	pytest
+
+docs-check:
+	python scripts/check_docs.py
 
 check: lint typecheck test

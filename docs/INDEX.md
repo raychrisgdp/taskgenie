@@ -2,17 +2,19 @@
 
 ## Naming Conventions
 
-- **CLI binary:** `tgenie` (interactive TUI by default)
+- **CLI binary:** `tgenie` (interactive TUI planned; CLI scaffolding exists today)
 - **Scripting:** `tgenie <command>` (e.g., `tgenie add`, `tgenie list`)
+- **Alias (optional):** `taskgenie` (same CLI entrypoint)
 - **Optional:** add a shell alias (e.g., `alias tg=tgenie` or `alias ti=tgenie`)
 
 ## Quick Start
 
 **New to the project?** Start here:
-1. Read [Setup Guide](SETUP.md) for installation and configuration
-2. Explore [Research Phase](00-research/) to understand project vision
-3. Review [Design Phase](01-design/) for technical specifications
-4. Follow [Implementation Plans](02-implementation/PR-PLANS.md) for development roadmap
+1. Read [Developer Quickstart](DEVELOPER_QUICKSTART.md) for a 5-minute run-through
+2. Read [Setup Guide](SETUP.md) for installation and configuration
+3. Explore [Research Phase](00-research/) to understand project vision
+4. Review [Design Phase](01-design/) for technical specifications
+5. Follow [Implementation Plans](02-implementation/PR-PLANS.md) for development roadmap
 
 ---
 
@@ -47,7 +49,8 @@ Implementation plans, pull request tracking, and development roadmap.
 
 - [PR-PLANS.md](02-implementation/PR-PLANS.md) - **START HERE** - Detailed PR plan with roadmap
 - [pr-specs/INDEX.md](02-implementation/pr-specs/INDEX.md) - Specs + test scenarios for each PR
-- [PLAN.md](02-implementation/PLAN.md) - Original requirements and project planning
+- [PLAN.md](02-implementation/PLAN.md) - Original project plan (condensed; Q&A archived)
+- [PLAN_ARCHIVE.md](02-implementation/PLAN_ARCHIVE.md) - Archived planning Q&A / early questions
 - [TESTING_GUIDE.md](02-implementation/TESTING_GUIDE.md) - Testing policy and examples
 
 ---
@@ -56,6 +59,9 @@ Implementation plans, pull request tracking, and development roadmap.
 
 ### Setup
 - [Setup Guide](SETUP.md) - Installation and configuration
+- [Developer Quickstart](DEVELOPER_QUICKSTART.md) - 5-minute run-through
+- [User Guide](USER_GUIDE.md) - Daily workflows (end-user)
+- [Troubleshooting](TROUBLESHOOTING.md) - Common setup/runtime issues
 
 ### Architecture
 - [System Architecture](01-design/DESIGN_ARCHITECTURE.md)
@@ -78,7 +84,7 @@ Implementation plans, pull request tracking, and development roadmap.
 
 - **Project Status:** Phase 1 - Infrastructure Setup
 - **Documentation Status:** Spec Complete (Implementation In Progress)
-- **Last Reviewed:** 2025-12-29
+- **Last Reviewed:** 2025-12-30
 - **Next Step:** Review PR plans and begin implementation
 
 > **Note:** Documentation reflects design specifications. Implementation status tracked in [PR-PLANS.md](02-implementation/PR-PLANS.md).

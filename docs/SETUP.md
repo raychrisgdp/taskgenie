@@ -1,7 +1,7 @@
-# Personal TODO - Setup Instructions
+# TaskGenie (personal-todo) - Setup Instructions
 
 **Status:** Spec Complete | Implementation In Progress  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** 2025-12-30
 
 ## Prerequisites
 - Python 3.11+
@@ -29,17 +29,20 @@ nano .env
 
 ## Running the Application
 
+The CLI is `tgenie` (alias: `taskgenie`).
+
 ```bash
 # Start the backend API server
-uv run backend.main:app
+uv run python -m backend.main
 
-# Run CLI commands (once implemented)
-tgenie
+# Health check (in another terminal)
+curl http://127.0.0.1:8080/health
 
-# Example CLI commands (once implemented)
-tgenie list
-tgenie add "My first task"
-tgenie config
+# Run CLI commands (scaffolded; backend integration in progress)
+uv run tgenie --help
+uv run tgenie add "My first task"
+uv run tgenie list
+uv run tgenie config
 ```
 
 ## Development
@@ -66,7 +69,7 @@ pytest
 Edit `.env` file to configure:
 
 ```env
-APP_NAME=Personal TODO
+APP_NAME=TaskGenie
 APP_VERSION=0.1.0
 DEBUG=true
 HOST=127.0.0.1
@@ -107,8 +110,7 @@ personal-todo/
 │   ├── models/             # SQLAlchemy models
 │   ├── schemas/            # Pydantic schemas
 │   ├── services/            # Business logic
-│   ├── cli/               # CLI commands
-│   └── api/               # API routes (to be added)
+│   └── cli/               # CLI commands
 └── data/                   # SQLite database and ChromaDB vector store
 ```
 
@@ -116,6 +118,6 @@ personal-todo/
 
 1. ✅ Install dependencies: `uv pip install -e .`
 2. ✅ Configure environment: Edit `.env` file
-3. ✅ Start backend: `uv run backend.main:app`
-4. ✅ Test CLI: `tgenie list` (once implemented)
-5. ✅ Check health: `curl http://localhost:8080/health`
+3. ✅ Start backend: `uv run python -m backend.main`
+4. ✅ Test CLI: `uv run tgenie list`
+5. ✅ Check health: `curl http://127.0.0.1:8080/health`

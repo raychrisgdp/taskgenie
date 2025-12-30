@@ -35,6 +35,19 @@ Make the system easy to run, upgrade, and back up:
 - Cloud deployment (Kubernetes, etc.).
 - Multi-user auth/HTTPS termination (future).
 
+## Mini-Specs
+
+- Docker Compose:
+  - one-command local run with persisted data volumes.
+- Environment docs:
+  - `.env.example` and `docs/SETUP.md` aligned with the actual config keys.
+- Developer ergonomics:
+  - smoke checks (`/health`, basic task CRUD) documented.
+- Docs hygiene:
+  - docs link/name checks in CI (no `todo`/`taskgenie` command examples; no broken relative links).
+- Release:
+  - minimal “how to run” instructions and expected ports/paths.
+
 ## References
 
 - `docs/SETUP.md`

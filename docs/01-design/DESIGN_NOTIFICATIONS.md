@@ -194,7 +194,7 @@ async def create_notification(task_id, notif_type, scheduled_at):
     notification.notify(
         title=content['title'],
         message=content['message'],
-        app_name='Personal TODO',
+        app_name='TaskGenie',
         app_icon='/path/to/icon.png',
         timeout=10
     )
@@ -240,11 +240,11 @@ def send_notification(task, notif_type):
     notification.notify(
         title=titles[notif_type],
         message=messages[notif_type],
-        app_name='Personal TODO',
+        app_name='TaskGenie',
         app_icon='/app/icon.png',
         timeout=10,
         # Some OS support actions
-        app_name='Personal TODO'
+        app_name='TaskGenie'
     )
 ```
 
@@ -258,12 +258,12 @@ import subprocess
 def send_notification_with_actions(task):
     subprocess.run([
         'notify-send',
-        '-a', 'Personal TODO',
+        '-a', 'TaskGenie',
         '-i', '/app/icon.png',
         f'Task Due Tomorrow',
         f'{task.title}\nDue: {task.eta}',
         '--action=action:view,View Task,http://localhost:8080/tasks/{task.id}',
-        '--action=action:done,Mark Done,http://localhost:8080/api/tasks/{task.id}/done'
+        '--action=action:open,Open Task,http://localhost:8080/tasks/{task.id}'
     ])
 ```
 

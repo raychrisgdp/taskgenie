@@ -1,5 +1,7 @@
 # Troubleshooting
 
+> Note: This repo currently ships a skeleton. Feature-specific sections apply once the relevant PRs are implemented (see `docs/02-implementation/PR-PLANS.md`).
+
 ## `uv: command not found`
 
 - Install: `pip install uv`
@@ -22,6 +24,8 @@
 
 ## Database file/path issues
 
+Database wiring (migrations, tables, dump/restore) is planned in PR-001. Today, `DATABASE_URL` is reserved for that work.
+
 The default is `DATABASE_URL=sqlite+aiosqlite:///./data/taskgenie.db`, which is relative to your current working directory.
 
 - Run from repo root, or change `DATABASE_URL` to an absolute path.
@@ -29,7 +33,7 @@ The default is `DATABASE_URL=sqlite+aiosqlite:///./data/taskgenie.db`, which is 
 
 ## `NOTIFICATION_SCHEDULE` parsing errors
 
-`NOTIFICATION_SCHEDULE` is a list setting. Use a JSON-like list in `.env`, for example:
+`NOTIFICATION_SCHEDULE` is a list setting parsed at settings-load time. Use a JSON-like list in `.env`, for example:
 
 ```env
 NOTIFICATION_SCHEDULE=["24h", "6h"]
@@ -42,5 +46,7 @@ NOTIFICATION_SCHEDULE=["24h", "6h"]
 
 ## Missing LLM credentials
 
-- Most commands work without an API key, but LLM-backed features require `LLM_API_KEY` in `.env`.
-- If you are using OpenRouter, set `LLM_PROVIDER=openrouter` and `LLM_API_KEY=...`.
+LLM-backed features are planned in PR-003. When implemented:
+
+- Set `LLM_API_KEY` in `.env`.
+- If you are using OpenRouter, set `LLM_PROVIDER=openrouter`.

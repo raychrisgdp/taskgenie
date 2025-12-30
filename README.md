@@ -5,7 +5,7 @@ CLI-first, AI-native personal task manager. This repo is **implementation in pro
 ## Naming
 
 - **Repo/package name:** `personal-todo`
-- **CLI name (preferred):** `tgenie` (also available as `taskgenie`)
+- **CLI name (preferred):** `tgenie` (you can add a shell alias if you want)
 
 ## Quick Start
 
@@ -31,8 +31,7 @@ uv run tgenie --help
 
 - FastAPI app with `GET /health`
 - Settings via `.env` (`backend/config.py`)
-- SQLAlchemy models + DB bootstrap on startup
-- CLI entrypoint (`tgenie --help`)
+- CLI entrypoint (`tgenie`) with placeholder commands (no real functionality yet)
 
 ## What’s Planned (See `docs/`)
 

@@ -4,8 +4,7 @@
 
 - **CLI binary:** `tgenie` (interactive TUI planned; CLI scaffolding exists today)
 - **Scripting:** `tgenie <command>` (e.g., `tgenie add`, `tgenie list`)
-- **Alias (optional):** `taskgenie` (same CLI entrypoint)
-- **Optional:** add a shell alias (user preference), e.g. `alias tg=tgenie`
+- **Optional:** add a shell alias (user preference), e.g. `alias tg=tgenie` or `alias taskgenie=tgenie`
 
 ## Quick Start
 

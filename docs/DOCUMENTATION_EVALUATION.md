@@ -21,7 +21,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 | Information architecture | 4 | 4.5 | Clear entry point (`INDEX.md`), logical folder structure |
 | Onboarding (new dev) | 4 | 5 | `SETUP.md` + quickstart + troubleshooting = complete ramp-up |
 | Technical completeness | 5 | 5 | All services specified: DB, API, TUI, integrations, RAG |
-| Internal consistency | 4 | 4.5 | `tgenie` naming consistent; schema matches code |
+| Internal consistency | 4 | 4.5 | `tgenie` naming consistent; strong spec-to-spec alignment |
 | Maintainability | 4 | 4.5 | PR specs + docs checks reduce drift |
 | Actionability | N/A | 4.5 | Per-PR specs have concrete test scenarios |
 
@@ -100,7 +100,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 ### 4. Data Model Coverage
 - `DESIGN_DATA.md` (482 lines) includes:
   - SQLite schema with all tables
-  - Pydantic models matching code in `backend/schemas/`
+  - Pydantic models specified (implementation planned in PR-002)
   - JSON examples for tasks, attachments, chat
   - Backup/restore procedures
   - Migration strategy
@@ -142,7 +142,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 
 ### CLI Naming
 - [x] Docs consistently use `tgenie` as the CLI entrypoint
-- [x] Interactive TUI is default mode
+- [ ] Interactive TUI is default mode (planned in PR-008)
 - [x] Subcommands documented (`tgenie add`, `tgenie list`, etc.)
 - [x] Optional shell alias guidance exists (user-chosen; `tgenie` remains the standard)
 
@@ -169,8 +169,9 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 - [x] CI/CD configuration examples included
 
 ### Code Alignment
-- [x] `backend/schemas/task.py` matches `DESIGN_DATA.md` schemas
-- [x] `backend/models/task.py` matches SQL schema
+- [x] `backend/` remains a skeleton (no premature PR feature implementation)
+- [ ] `backend/models/task.py` implemented (PR-001/PR-002)
+- [ ] `backend/schemas/task.py` implemented (PR-002)
 - [ ] API routes not yet implemented (PR-002 pending)
 
 ### Onboarding
@@ -196,7 +197,7 @@ The documentation suite is **comprehensive and implementation-ready**. The docs 
 
 ### Immediate (Before PR-001)
 1. **Run docs checks**: `make docs-check` (validates markdown links + naming)
-2. **Verify schema alignment**: Ensure `backend/schemas/` matches docs exactly
+2. **Confirm skeleton-only backend**: keep PR-001/PR-002 work out of this branch
 
 ### After PR-001 (Database & Config)
 1. Update `SETUP.md` with actual CLI commands

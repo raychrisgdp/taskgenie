@@ -29,7 +29,7 @@ nano .env
 
 ## Running the Application
 
-The CLI is `tgenie` (alias: `taskgenie`).
+The CLI is `tgenie`.
 
 ```bash
 # Start the backend API server
@@ -42,7 +42,6 @@ curl http://127.0.0.1:8080/health
 uv run tgenie --help
 uv run tgenie add "My first task"
 uv run tgenie list
-uv run tgenie config
 ```
 
 ## Development

@@ -44,7 +44,7 @@ Make the system easy to run, upgrade, and back up:
 - Developer ergonomics:
   - smoke checks (`/health`, basic task CRUD) documented.
 - Docs hygiene:
-  - docs link/name checks in CI (no `todo`/`taskgenie` command examples; no broken relative links).
+  - docs link/name checks in CI (no `todo` command examples; consistent `tgenie` usage; no broken relative links).
 - Release:
   - minimal “how to run” instructions and expected ports/paths.
 

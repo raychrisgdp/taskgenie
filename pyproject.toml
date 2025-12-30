@@ -46,7 +46,6 @@ dev = [
 
 [project.scripts]
 tgenie = "backend.cli.main:app"
-taskgenie = "backend.cli.main:app"
 
 [tool.hatchling.scripts]
 # No custom build scripts needed

@@ -67,7 +67,9 @@ Rules of thumb:
 - Always enable SQLite foreign keys (`PRAGMA foreign_keys=ON`) on every session/connection.
 - Don't hardcode database paths; use settings-resolved paths/URLs.
 - Review Alembic autogenerate output; SQLite downgrades/ALTER TABLE are limited.
-- **Async context**: When calling sync Alembic commands from async code, use threading to avoid blocking the event loop.
+- **FastAPI lifespan**: Use `init_db_async()` (not `init_db()`) to avoid blocking the event loop.
+- **Query parameters**: `database_path` automatically strips query parameters (e.g., `?mode=ro`) from SQLite URLs.
+- **Migration URLs**: CLI and startup migrations convert `sqlite+aiosqlite://` to `sqlite://` to avoid asyncio conflicts (see `docs/02-implementation/MIGRATIONS.md`).
 
 Common migration commands:
 - `uv run tgenie db upgrade head`

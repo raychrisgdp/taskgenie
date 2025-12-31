@@ -202,8 +202,21 @@ schedule = ["24h", "6h"]
 ```python
 @property
 def database_path(self) -> Path:
+    """Get canonical database file path.
+    
+    Automatically strips query parameters (e.g., ?mode=ro) from SQLite URLs
+    before extracting the file path. This prevents invalid file paths when
+    URLs include query parameters.
+    """
+    if self.database_url and self.database_url.startswith("sqlite"):
+        # Strip query parameters before extracting path
+        url = self.database_url.split("?")[0] if "?" in self.database_url else self.database_url
+        # Extract path from sqlite:///path/to/db or sqlite+aiosqlite:///path/to/db
+        # ... path extraction logic ...
     return self.app_data_dir / "data" / "taskgenie.db"
 ```
+
+**Important:** The `database_path` property automatically strips query parameters from SQLite URLs (e.g., `sqlite:///db.sqlite?mode=ro` → `db.sqlite`). This ensures file system operations work correctly with URLs that include query parameters.
 
 ---
 
@@ -248,6 +261,8 @@ class Task(Base):
 
 **File:** `backend/database.py`
 
+**Pattern:** Use `init_db_async()` in FastAPI lifespan, `init_db()` for sync contexts:
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine, async_sessionmaker
 
@@ -255,39 +270,52 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 engine: AsyncEngine | None = None
 async_session_maker: async_sessionmaker[AsyncSession] | None = None
 
-async def init_db(run_migrations: bool = False) -> None:
-    """Initialize database engine and sessionmaker."""
+def init_db() -> None:
+    """Initialize database synchronously (for CLI, tests, etc.)."""
     global engine, async_session_maker
+    # ... creates engine and runs migrations synchronously ...
 
-    settings = backend.config.get_settings()
-    settings.ensure_app_dirs()
+async def init_db_async() -> None:
+    """Initialize database asynchronously (for FastAPI lifespan).
+    
+    Runs migrations in a threadpool using asyncio.to_thread() to avoid
+    blocking the event loop.
+    """
+    global engine, async_session_maker
+    # ... creates engine and runs migrations in threadpool ...
 
-    engine = create_async_engine(settings.database_url_resolved, echo=settings.debug)
-    async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-    if run_migrations:
-        await _run_alembic_migrations()
-
+# FastAPI lifespan example:
 @asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    await init_db_async()  # ✅ Use async version
+    yield
+    await close_db()
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for FastAPI to get a database session."""
     if async_session_maker is None:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
+        raise RuntimeError("Database not initialized. Call init_db() or init_db_async() first.")
 
     async with async_session_maker() as session:
         # Enable foreign keys for SQLite
         await session.execute(text("PRAGMA foreign_keys=ON"))
         try:
             yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
         finally:
             await session.close()
 ```
 
 **Key Points:**
+- **FastAPI lifespan**: Always use `init_db_async()` to avoid blocking the event loop
+- **Sync contexts**: Use `init_db()` for CLI commands and synchronous test code
 - Always enable `PRAGMA foreign_keys=ON` for SQLite
 - Use `async_sessionmaker` for session management
 - Use `expire_on_commit=False` to avoid lazy loading issues
-- Use `asynccontextmanager` for dependency injection
+- Migrations run automatically if database doesn't exist or `alembic_version` table is missing
 
 ### Alembic Migrations
 
@@ -334,6 +362,7 @@ def downgrade() -> None:
 - SQLite has limited `ALTER TABLE` support (some downgrades may fail)
 - Use `server_default` for defaults in migrations
 - Test migrations on a copy of production data
+- **Sync URL conversion**: Migrations always use sync URLs (`sqlite://`) even when runtime uses async URLs (`sqlite+aiosqlite://`). The CLI and startup code automatically convert URLs to avoid asyncio conflicts (see `docs/02-implementation/MIGRATIONS.md` for details).
 
 ---
 

@@ -33,9 +33,7 @@ jobs:
         run: uv pip install -e ".[dev]"
 
       - name: Lint
-        run: |
-          uv run ruff check backend tests
-          uv run ruff format --check backend tests
+        run: make lint
 
       - name: Tests
         run: make test-cov

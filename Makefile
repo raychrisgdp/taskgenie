@@ -29,7 +29,8 @@ precommit:
 	uv run pre-commit run --all-files
 
 lint:
-	uv run ruff check backend/
+	uv run ruff check backend tests
+	uv run ruff format --check backend tests
 
 format:
 	uv run ruff format backend/

@@ -22,7 +22,7 @@ Establish a reliable local-first foundation:
 
 ### In
 
-- Standardize config sources and precedence (e.g., `.env` → env vars → `~/.taskgenie/config.toml`).
+- Standardize config sources and precedence (e.g., env vars → `.env` → `~/.taskgenie/config.toml`).
 - Introduce migrations (recommended: Alembic) for SQLite schema evolution.
 - Add a simple DB CLI surface (either under `tgenie db ...` or a dedicated script):
   - upgrade/downgrade migrations
@@ -328,7 +328,7 @@ def test_config_precedence_env_overrides_toml(tmp_path, monkeypatch):
     """Test that env vars override config.toml."""
     # Create config.toml with one DB path
     config_file = tmp_path / "config.toml"
-    config_file.write_text('[app]\ndatabase_url = "sqlite+aiosqlite:///config.db"\n')
+    config_file.write_text('[database]\nurl = "sqlite+aiosqlite:///config.db"\n')
     monkeypatch.setenv("TASKGENIE_CONFIG_FILE", str(config_file))
 
     # Set env var to different path
@@ -348,8 +348,8 @@ def test_config_precedence_env_overrides_toml(tmp_path, monkeypatch):
 # 1. Create config.toml with custom DB path
 mkdir -p ~/.taskgenie
 cat > ~/.taskgenie/config.toml <<EOF
-[app]
-database_url = "sqlite+aiosqlite:///tmp/config_db.db"
+[database]
+url = "sqlite+aiosqlite:///tmp/config_db.db"
 EOF
 
 # 2. Set env var to override

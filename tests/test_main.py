@@ -53,6 +53,7 @@ def test_backend_main_startup_runs_migrations_fresh_db(
     """Test that FastAPI startup automatically runs migrations on fresh DB.
 
     This explicitly verifies AC1: migrations run automatically when DB doesn't exist.
+    Uses init_db_async() to match FastAPI lifespan behavior.
     """
     import sqlite3  # noqa: PLC0415
 
@@ -69,10 +70,10 @@ def test_backend_main_startup_runs_migrations_fresh_db(
     # Ensure DB doesn't exist
     assert not db_path.exists(), "Database should not exist before startup"
 
-    # Call init_db directly (same as lifespan does on startup)
-    from backend.database import init_db  # noqa: PLC0415
+    # Call init_db_async() (same as lifespan does on startup)
+    from backend.database import init_db_async  # noqa: PLC0415
 
-    init_db()
+    asyncio.run(init_db_async())
 
     # Get actual database path from settings (may differ from db_path due to resolution)
     settings = get_settings()

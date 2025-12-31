@@ -7,9 +7,13 @@ repos:
     hooks:
       - id: ruff-format
         types_or: [python]
+        # Match CI: check backend and tests directories
+        files: ^(backend|tests)/
       - id: ruff
         types_or: [python]
         args: [--fix, --exit-non-zero-on-fix]
+        # Match CI: check backend and tests directories
+        files: ^(backend|tests)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0

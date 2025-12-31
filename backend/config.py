@@ -227,11 +227,7 @@ class Settings(BaseSettings):
             url = self.database_url.split("?")[0] if "?" in self.database_url else self.database_url
             # Extract path from sqlite:///path/to/db or sqlite+aiosqlite:///path/to/db
             if "://" in url:
-                url_path = (
-                    url.split(":///", 1)[-1]
-                    if ":///" in url
-                    else url.split("://", 1)[-1]
-                )
+                url_path = url.split(":///", 1)[-1] if ":///" in url else url.split("://", 1)[-1]
                 if url_path.startswith("/") or (len(url_path) > 1 and url_path[1] == ":"):
                     return Path(url_path)
                 return Path(url_path)

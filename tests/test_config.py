@@ -45,6 +45,52 @@ def test_config_precedence_env_overrides_toml(
     assert settings.app_name == "EnvApp"
 
 
+def test_config_precedence_env_overrides_env_file_and_toml(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test full precedence chain: env vars → .env → config.toml → defaults.
+
+    This verifies AC4: Configuration precedence works correctly.
+    """
+    # Create config.toml with a value
+    config_file = tmp_path / "config.toml"
+    config_file.write_text('[app]\nname = "TOMLApp"\n')
+
+    # Create .env file with a different value
+    env_file = tmp_path / ".env"
+    env_file.write_text("APP_NAME=EnvFileApp\n")
+
+    # Set env var to override both
+    monkeypatch.setenv("TASKGENIE_CONFIG_FILE", str(config_file))
+    monkeypatch.setenv("TASKGENIE_ENV_FILE", str(env_file))
+    monkeypatch.setenv("APP_NAME", "EnvVarApp")
+
+    # Clear cache to pick up new config
+    from backend.config import get_settings  # noqa: PLC0415
+
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    # Env var should win (highest precedence)
+    assert settings.app_name == "EnvVarApp"
+
+    # Now test .env overrides TOML (remove env var)
+    monkeypatch.delenv("APP_NAME", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    # .env should win over TOML
+    assert settings.app_name == "EnvFileApp"
+
+    # Now test TOML overrides defaults (remove .env)
+    env_file.unlink()
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    # TOML should win over defaults
+    assert settings.app_name == "TOMLApp"
+
+
 def test_app_data_dir_creation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that app data directories can be created explicitly."""
     data_dir = tmp_path / "test_taskgenie"
@@ -358,6 +404,26 @@ def test_config_database_path_absolute_windows() -> None:
     settings.database_url = "sqlite+aiosqlite:///C:/path/to/db.sqlite"
     db_path = settings.database_path
     assert db_path == Path("C:/path/to/db.sqlite")
+
+
+def test_config_database_path_strips_query_parameters(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that database_path strips query parameters from SQLite URLs."""
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///test.db?mode=ro")
+    settings = Settings(_env_file=None)
+    assert settings.database_path == Path("test.db")
+    assert "?" not in str(settings.database_path)
+
+    # Test with multiple query parameters
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///path/to/db.sqlite?mode=rwc&cache=shared")
+    settings = Settings(_env_file=None)
+    assert settings.database_path == Path("path/to/db.sqlite")
+    assert "?" not in str(settings.database_path)
+
+    # Test with relative path and query parameters
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///relative.db?mode=ro")
+    settings = Settings(_env_file=None)
+    assert settings.database_path == Path("relative.db")
+    assert "?" not in str(settings.database_path)
 
 
 def test_config_expand_gmail_credentials_path_with_path() -> None:

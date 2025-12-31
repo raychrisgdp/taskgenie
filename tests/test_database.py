@@ -4,6 +4,7 @@ Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
+import asyncio
 import shutil
 import sqlite3
 import time
@@ -21,6 +22,7 @@ from backend.database import (
     close_db,
     get_db,
     init_db,
+    init_db_async,
 )
 
 
@@ -42,7 +44,7 @@ def temp_settings(temp_db_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_init_db(temp_settings: None) -> None:
     """Test database initialization."""
-    init_db()
+    await init_db_async()
     assert database.engine is not None
     await close_db()
 
@@ -55,17 +57,18 @@ _INIT_DB_TIMEOUT_SECONDS = 5.0
 async def test_init_db_runs_migrations_and_completes_promptly(
     temp_db_path: Path, temp_settings: None
 ) -> None:
-    """Test that init_db() completes promptly and leaves migrated schema.
+    """Test that init_db_async() completes promptly and leaves migrated schema.
 
     Regression test for DB-1: ensures migrations don't hang and alembic_version table exists.
+    Uses async version to match FastAPI lifespan behavior.
     """
     start_time = time.time()
-    init_db()
+    await init_db_async()
     elapsed = time.time() - start_time
 
     # Should complete quickly (within timeout)
     assert elapsed < _INIT_DB_TIMEOUT_SECONDS, (
-        f"init_db() took {elapsed:.2f}s, expected < {_INIT_DB_TIMEOUT_SECONDS}s"
+        f"init_db_async() took {elapsed:.2f}s, expected < {_INIT_DB_TIMEOUT_SECONDS}s"
     )
 
     # Verify alembic_version table exists (proves migrations ran)
@@ -75,7 +78,7 @@ async def test_init_db_runs_migrations_and_completes_promptly(
     has_version_table = cursor.fetchone() is not None
     conn.close()
 
-    assert has_version_table, "alembic_version table should exist after init_db()"
+    assert has_version_table, "alembic_version table should exist after init_db_async()"
 
     await close_db()
 
@@ -83,7 +86,7 @@ async def test_init_db_runs_migrations_and_completes_promptly(
 @pytest.mark.asyncio
 async def test_get_db_session(temp_settings: None) -> None:
     """Test getting a database session."""
-    init_db()
+    await init_db_async()
     async for session in get_db():
         # Test that we can execute a query
         result = await session.execute(text("SELECT 1"))
@@ -107,22 +110,41 @@ async def test_get_db_raises_if_not_initialized() -> None:
 
 @pytest.mark.asyncio
 async def test_init_db_idempotent(temp_settings: None) -> None:
-    """Test that init_db can be called multiple times safely."""
-    init_db()
+    """Test that init_db_async can be called multiple times safely."""
+    await init_db_async()
     assert database.engine is not None
     original_engine = database.engine
 
     # Call again
-    init_db()
+    await init_db_async()
     # Should be the same engine instance
     assert database.engine is original_engine
     await close_db()
 
 
+def test_init_db_idempotent_sync(temp_settings: None) -> None:
+    """Test that init_db() can be called multiple times safely (synchronous version)."""
+    # Reset database state
+    database.engine = None
+    database.async_session_maker = None
+
+    init_db()
+    assert database.engine is not None
+    original_engine = database.engine
+
+    # Call again - should return early without reinitializing
+    init_db()
+    # Should be the same engine instance
+    assert database.engine is original_engine
+
+    # Cleanup
+    asyncio.run(close_db())
+
+
 @pytest.mark.asyncio
 async def test_get_db_session_commit(temp_settings: None) -> None:
     """Test that database session commits properly."""
-    init_db()
+    await init_db_async()
     db_session = asynccontextmanager(get_db)
 
     async with db_session() as session:
@@ -140,7 +162,7 @@ async def test_get_db_session_commit(temp_settings: None) -> None:
 @pytest.mark.asyncio
 async def test_get_db_session_rollback(temp_settings: None) -> None:
     """Test that database session rolls back on error."""
-    init_db()
+    await init_db_async()
     db_session = asynccontextmanager(get_db)
 
     with pytest.raises(ValueError, match="Test error"):
@@ -169,7 +191,7 @@ async def test_get_db_session_rollback(temp_settings: None) -> None:
 @pytest.mark.asyncio
 async def test_close_db_idempotent(temp_settings: None) -> None:
     """Test that close_db can be called multiple times safely."""
-    init_db()
+    await init_db_async()
     await close_db()
     # Call again - should not raise
     await close_db()
@@ -178,7 +200,7 @@ async def test_close_db_idempotent(temp_settings: None) -> None:
 @pytest.mark.asyncio
 async def test_get_db_foreign_keys_enabled(temp_settings: None) -> None:
     """Test that foreign keys are enabled in SQLite."""
-    init_db()
+    await init_db_async()
     async for session in get_db():
         # Check foreign keys are enabled
         result = await session.execute(text("PRAGMA foreign_keys"))

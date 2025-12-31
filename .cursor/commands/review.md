@@ -228,9 +228,9 @@ Brief summary paragraph describing the PR's status, key accomplishments, and ove
 
 **Risk Level:** Low/Medium/High/Critical (brief explanation in parentheses)
 
-**Stats:** X files changed, +Y/-Z lines, N tests passing
+**Stats:** X files changed, +Y/-Z lines, N tests passing (or test status if applicable)
 
-**Baseline:** `main <hash>, target <branch|working tree>, merge base <hash>, compare <method>`
+**Baseline:** `main <short-hash>, target <branch|working tree> <short-hash>, merge base <short-hash>, compare <method>`
 
 ---
 
@@ -253,7 +253,7 @@ Brief summary paragraph describing the PR's status, key accomplishments, and ove
 **Concise Format (Low Priority):**
 - `[ID][Severity][Tag]` file:line – Description.
   **Change:** Recommendation.
-  **Validate:** How to test (optional).
+  **Validate:** How to test (optional - typically omitted for Low priority).
 
 **Comprehensive Format (Medium+ Priority):**
 - Use structured format with code examples:
@@ -358,7 +358,7 @@ OR (for complex issues):
 
 OR
 
-- **[Tag-N][Low][Tag]** file:line – Description.
+- `[Tag-N][Low][Tag]` file:line – Description.
   **Change:** Recommendation.
 
 **Review Completion Message** (when `Total Findings | 0`)
@@ -384,62 +384,65 @@ Congratulations @<author>, you are good to go!
 ## Testing Results
 
 ```
+pytest -q --timeout=20 tests/test_database.py -k "init_db"
+✅ 3 passed, 14 deselected
+
+pytest -q --timeout=20 tests/cli/test_db.py -k "upgrade or downgrade"
+❌ 3 failed, 2 passed, 18 deselected (pytest-timeout inside Alembic env asyncio.run/aiosqlite path)
+```
+
+OR (if all tests pass):
+
+```
 ✅ N tests passed in X.XXs
 ✅ Ruff linting passed
 ✅ No critical or high-severity issues
 ```
 
-Test breakdown:
-- Category tests: N (e.g., Config tests: 30+, Database tests: 15+)
-- Category tests: N
-- Category tests: N
-
-OR (if minimal testing):
-
-- One line: what was run/added; if N/A (docs-only), say so
+Keep format simple: show actual test command output with pass/fail status. Include test breakdown only if helpful for context.
 
 ---
 
-## Security Considerations
+## Optional Sections (Include only if relevant)
 
-(Include this section only if security-related findings exist or security review is relevant)
+**Note:** The following sections are optional and should only be included when they add meaningful value. Most reviews will not need these sections.
+
+### Security Considerations
+
+(Include only if security-related findings exist or security review is relevant)
 
 1. ✅ **SQL Injection**: Using parameterized queries
 2. ⚠️ **Path Traversal**: CLI accepts arbitrary paths (low risk for local tool)
 3. ✅ **Secret Management**: Config supports env vars (no hardcoded secrets)
 4. ✅ **Input Validation**: Proper validation on all inputs
 
----
+### Performance Considerations
 
-## Performance Considerations
-
-(Include this section only if performance-related findings exist or performance review is relevant)
+(Include only if performance-related findings exist or performance review is relevant)
 
 1. ✅ **Indexed Queries**: Proper indexes on key tables
 2. ✅ **Connection Pooling**: Using async engine
 3. ⚠️ **Migration Threading**: Slight overhead from thread spawning (negligible)
 4. ✅ **Lazy Directory Creation**: Directories created only when needed
 
----
+### Compatibility
 
-## Compatibility
-
-(Include this section only if compatibility concerns exist)
+(Include only if compatibility concerns exist)
 
 - ✅ **Python**: >=3.11 (as specified in pyproject.toml)
 - ✅ **Cross-Platform**: Path expansion handles Windows/Unix
 - ⚠️ **Database**: SQLite-only (as designed, not a bug)
 
----
+### Questions for Author
 
-## Questions for Author
+(Include only if clarification is needed)
 
 - Add as many as needed; concise clarifications/spec asks
 - Include recommendations when appropriate (e.g., "Should auth-derived headers merge with `config["headers"]` or override them? What is the expected precedence? **Change:** Merge with auth headers taking precedence for conflicts")
 
----
+### Conclusion
 
-## Conclusion
+(Include only if summary beyond Executive Summary is needed)
 
 This PR is **ready to merge** / **needs work** / **blocked**. Brief summary of why, including key tradeoffs or considerations.
 
@@ -450,7 +453,7 @@ The branch successfully implements all acceptance criteria from PR-XXX:
 - ✅ Criterion 2
 - ⚠️ Criterion 3 (partial, if applicable)
 
-## Detailed Analysis (Optional - include when comparing against baseline PR or for complex changes)
+### Detailed Analysis (Optional - include when comparing against baseline PR or for complex changes)
 
 This section is optional and intended for richer human-readable context (tables, multi-paragraph analysis, and code snippets). Tools that auto-post findings may ignore this section.
 
@@ -494,7 +497,7 @@ Use this format only in the optional appendix (not in the main "Findings" list):
 **Should Fix (Low Priority):**
 3. Fix issue Z (`file.py:line`): Description
 
-## Metrics Summary
+### Metrics Summary (Optional - include only if helpful for complex reviews)
 
 | Metric | Count |
 |--------|-------|
@@ -510,7 +513,7 @@ Use this format only in the optional appendix (not in the main "Findings" list):
 | Test Failures | N |
 | Spec Compliance Issues | N |
 
-### Optional Appendix (use when needed)
+### Optional Appendix (use only when needed for large change sets)
 
 - Use when the change set is large or the user requests detail; add a `Details` column with `[details](#detail-1)` anchors if deeper context is needed, and create matching `### Detail 1` sections below.
 

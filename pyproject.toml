@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Development dependencies
+# Development dependencies (includes FastAPI for backend and tests)
 dev = [
     "pytest>=7.4.3",
     "pytest-asyncio>=0.21.1",
@@ -34,15 +34,7 @@ dev = [
     "mypy>=1.7.1",
     "pre-commit>=3.5.0",
     "ipython>=8.12.0",
-    "httpx>=0.25.0",  # Required for FastAPI TestClient
-]
-
-# Feature-specific optional dependencies grouped by PR number.
-# Each PR adds a feature set with its own dependencies.
-# See docs/02-implementation/pr-specs/INDEX.md for PR specifications.
-# These groups remain separate to allow selective installation of features.
-# After all PRs are merged, these groups will remain as feature flags for optional functionality.
-pr002_api = [  # PR-002: Task CRUD API
+    # FastAPI dependencies (required for backend/main.py and tests)
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "python-multipart>=0.0.6",
@@ -50,32 +42,9 @@ pr002_api = [  # PR-002: Task CRUD API
     "httpx>=0.25.0",  # Required for FastAPI TestClient
 ]
 
-pr003_llm = [  # PR-003: LLM Service & Chat Backbone
-    "openai>=1.3.0",
-    "httpx>=0.25.0",
-]
-
-pr005_rag = [  # PR-005: RAG + Semantic Search
-    "chromadb>=0.4.18",
-    "sentence-transformers>=2.2.2",
-]
-
-pr006_gmail = [  # PR-006: Gmail Integration
-    "google-api-python-client>=2.100.0",
-]
-
-pr007_github = [  # PR-007: GitHub Integration
-    "PyGithub>=1.59",
-]
-
-pr011_notifications = [  # PR-011: Notifications Service
-    "apscheduler>=3.10.4",
-    "plyer>=0.1.2",
-]
-
 # Install all optional dependencies
 all = [
-    "personal-todo[dev,pr002_api,pr003_llm,pr005_rag,pr006_gmail,pr007_github,pr011_notifications]",
+    "personal-todo[dev]",
 ]
 
 [project.scripts]

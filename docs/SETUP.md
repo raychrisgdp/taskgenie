@@ -16,20 +16,15 @@ cd personal-todo
 # Install uv if not already installed
 pip install uv
 
-# Install core dependencies (PR-001: Database & Configuration)
+# Install dependencies (PR-001: Database & Configuration)
+# This installs all development dependencies including FastAPI (needed for backend and tests)
 make dev
 
-# For subsequent PRs, install specific dependencies:
-# make pr002  # PR-002: Task CRUD API
-# make pr003  # PR-003: LLM Chat Backbone
-# make pr005  # PR-005: RAG Semantic Search
-# make pr006  # PR-006: Gmail Integration
-# make pr007  # PR-007: GitHub Integration
-# make pr011  # PR-011: Notifications
-# make install-all  # Install all dependencies
-
 # Or manually install with extras:
-# uv pip install -e ".[dev,pr002_api,pr003_llm,pr005_rag,pr006_gmail,pr007_github,pr011_notifications]"
+# uv pip install -e ".[dev]"
+
+# To install all available optional dependencies:
+# make install-all
 
 # Copy environment file
 cp .env.example .env

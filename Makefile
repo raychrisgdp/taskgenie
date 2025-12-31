@@ -17,7 +17,7 @@ help:
 	@echo "  make check      Run lint + typecheck + test"
 
 dev:
-	uv pip install -e ".[dev,pr002_api]"
+	uv pip install -e ".[dev]"
 
 install-all:
 	uv pip install -e ".[all]"

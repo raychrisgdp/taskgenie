@@ -118,7 +118,7 @@ class TaskGenieTomlSettingsSource(PydanticBaseSettingsSource):
 
 
 class Settings(BaseSettings):
-    """Application settings with precedence: init_settings → env vars → .env → config.toml → file_secrets → defaults."""
+    """Application settings with precedence: init_settings → env vars → .env → config.toml → file_secret_settings → defaults."""
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True

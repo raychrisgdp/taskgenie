@@ -29,6 +29,7 @@ dev = [
     "pytest>=7.4.3",
     "pytest-asyncio>=0.21.1",
     "pytest-cov>=5.0.0",
+    "pytest-xdist>=3.5.0",  # Parallel test execution
     "ruff>=0.1.8",
     "mypy>=1.7.1",
     "pre-commit>=3.5.0",
@@ -46,6 +47,7 @@ pr002_api = [  # PR-002: Task CRUD API
     "uvicorn[standard]>=0.24.0",
     "python-multipart>=0.0.6",
     "jinja2>=3.1.2",
+    "httpx>=0.25.0",  # Required for FastAPI TestClient
 ]
 
 pr003_llm = [  # PR-003: LLM Service & Chat Backbone

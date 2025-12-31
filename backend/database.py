@@ -6,10 +6,8 @@ Author:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import sqlite3
-import threading
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
@@ -134,9 +132,12 @@ def _run_migrations_if_needed(settings: backend.config.Settings, database_url: s
 def _run_migrations_sync(settings: backend.config.Settings, database_url: str) -> None:
     """Run migrations synchronously using Alembic command interface.
 
+    Uses a synchronous SQLite engine for migrations to avoid asyncio conflicts.
+    This allows migrations to run reliably even when called from async contexts.
+
     Args:
-        settings: Application settings
-        database_url: Database URL string
+        settings: Application settings (used for fail-fast behavior)
+        database_url: Database URL string (may be async URL like sqlite+aiosqlite://)
     """
     backend_dir = Path(__file__).resolve().parent
     project_root = backend_dir.parent
@@ -147,26 +148,29 @@ def _run_migrations_sync(settings: backend.config.Settings, database_url: str) -
         # If alembic.ini doesn't exist, skip migrations
         return
 
+    # Convert async URL to sync URL for migrations
+    # sqlite+aiosqlite:///path -> sqlite:///path
+    sync_url = database_url.replace("sqlite+aiosqlite://", "sqlite://", 1)
+
     cfg = alembic.config.Config(str(alembic_ini))
     cfg.set_main_option("prepend_sys_path", str(project_root))
     cfg.set_main_option("script_location", str(migrations_dir))
-    cfg.set_main_option("sqlalchemy.url", database_url)
+    cfg.set_main_option("sqlalchemy.url", sync_url)
 
     def _upgrade() -> None:
         try:
             alembic.command.upgrade(cfg, "head")
-        except Exception:
-            # Log error but don't fail startup
-            logger.warning("Failed to run automatic migrations on startup", exc_info=True)
+        except Exception as exc:
+            # Fail-fast in production, warn-and-continue in dev
+            if settings.debug:
+                logger.warning("Failed to run automatic migrations on startup", exc_info=True)
+                # In debug mode, continue despite migration failure
+            else:
+                logger.error("Failed to run automatic migrations on startup", exc_info=True)
+                raise RuntimeError("Database migration failed") from exc
 
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        _upgrade()
-    else:
-        thread = threading.Thread(target=_upgrade, name="taskgenie-alembic-upgrade")
-        thread.start()
-        thread.join()
+    # Always run synchronously - no threading needed since we use sync engine
+    _upgrade()
 
 
 async def close_db() -> None:

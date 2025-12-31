@@ -4,14 +4,8 @@
 
 help:
 	@echo "Usage:"
-	@echo "  make dev        Install dev dependencies (PR-001 core)"
-	@echo "  make pr002      Install PR-002 API dependencies"
-	@echo "  make pr003      Install PR-003 LLM dependencies"
-	@echo "  make pr005      Install PR-005 RAG dependencies"
-	@echo "  make pr006      Install PR-006 Gmail dependencies"
-	@echo "  make pr007      Install PR-007 GitHub dependencies"
-	@echo "  make pr011      Install PR-011 notifications dependencies"
-	@echo "  make install-all Install all dependencies"
+	@echo "  make dev        Install dev dependencies (includes API for tests)"
+	@echo "  make install-all Install all optional dependencies"
 	@echo "  make hooks      Install pre-commit git hooks"
 	@echo "  make precommit  Run pre-commit on all files"
 	@echo "  make lint       Run ruff lint"
@@ -23,25 +17,7 @@ help:
 	@echo "  make check      Run lint + typecheck + test"
 
 dev:
-	uv pip install -e ".[dev]"
-
-pr002: dev
-	uv pip install -e ".[pr002_api]"
-
-pr003: dev
-	uv pip install -e ".[pr003_llm]"
-
-pr005: dev
-	uv pip install -e ".[pr005_rag]"
-
-pr006: dev
-	uv pip install -e ".[pr006_gmail]"
-
-pr007: dev
-	uv pip install -e ".[pr007_github]"
-
-pr011: dev
-	uv pip install -e ".[pr011_notifications]"
+	uv pip install -e ".[dev,pr002_api]"
 
 install-all:
 	uv pip install -e ".[all]"
@@ -62,10 +38,10 @@ typecheck:
 	uv run mypy backend/
 
 test:
-	uv run pytest
+	uv run pytest -n 4
 
 test-cov:
-	uv run pytest --cov=backend --cov-report=term-missing
+	uv run pytest -n 4 --cov=backend --cov-report=term-missing
 
 docs-check:
 	uv run python scripts/check_docs.py

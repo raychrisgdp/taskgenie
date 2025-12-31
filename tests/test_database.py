@@ -6,6 +6,7 @@ Author:
 
 import shutil
 import sqlite3
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -43,6 +44,39 @@ async def test_init_db(temp_settings: None) -> None:
     """Test database initialization."""
     init_db()
     assert database.engine is not None
+    await close_db()
+
+
+# Maximum time allowed for init_db() to complete (in seconds)
+_INIT_DB_TIMEOUT_SECONDS = 5.0
+
+
+@pytest.mark.asyncio
+async def test_init_db_runs_migrations_and_completes_promptly(
+    temp_db_path: Path, temp_settings: None
+) -> None:
+    """Test that init_db() completes promptly and leaves migrated schema.
+
+    Regression test for DB-1: ensures migrations don't hang and alembic_version table exists.
+    """
+    start_time = time.time()
+    init_db()
+    elapsed = time.time() - start_time
+
+    # Should complete quickly (within timeout)
+    assert elapsed < _INIT_DB_TIMEOUT_SECONDS, (
+        f"init_db() took {elapsed:.2f}s, expected < {_INIT_DB_TIMEOUT_SECONDS}s"
+    )
+
+    # Verify alembic_version table exists (proves migrations ran)
+    conn = sqlite3.connect(str(temp_db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'")
+    has_version_table = cursor.fetchone() is not None
+    conn.close()
+
+    assert has_version_table, "alembic_version table should exist after init_db()"
+
     await close_db()
 
 
@@ -284,12 +318,16 @@ def test_run_migrations_sync_no_alembic_ini(
             shutil.move(str(backup_path), str(alembic_ini_path))
 
 
-def test_run_migrations_sync_upgrade_exception(
+def test_run_migrations_sync_upgrade_exception_debug_mode(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test _run_migrations_sync when alembic.command.upgrade raises exception (covers lines 158-160)."""
+    """Test _run_migrations_sync when alembic.command.upgrade raises exception in debug mode.
+
+    In debug mode, should warn and continue (not fail-fast).
+    """
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
     monkeypatch.setenv("DATABASE_URL", db_url)
+    monkeypatch.setenv("DEBUG", "true")
     config.get_settings.cache_clear()
     settings = config.get_settings()
 
@@ -298,10 +336,38 @@ def test_run_migrations_sync_upgrade_exception(
         "backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")
     ):
         with patch("backend.database.logger") as mock_logger:
-            # Should not raise, but should log warning
+            # Should not raise, but should log warning (debug mode)
             _run_migrations_sync(settings, db_url)
             # Verify warning was logged
             mock_logger.warning.assert_called_once()
             call_args = mock_logger.warning.call_args
+            assert "Failed to run automatic migrations on startup" in call_args[0][0]
+            assert call_args[1]["exc_info"] is True
+
+
+def test_run_migrations_sync_upgrade_exception_production_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test _run_migrations_sync when alembic.command.upgrade raises exception in production mode.
+
+    In production mode (debug=False), should fail-fast.
+    """
+    db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    monkeypatch.setenv("DEBUG", "false")
+    config.get_settings.cache_clear()
+    settings = config.get_settings()
+
+    # Mock alembic.command.upgrade to raise an exception
+    with patch(
+        "backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")
+    ):
+        with patch("backend.database.logger") as mock_logger:
+            # Should raise RuntimeError (fail-fast in production)
+            with pytest.raises(RuntimeError, match="Database migration failed"):
+                _run_migrations_sync(settings, db_url)
+            # Verify error was logged
+            mock_logger.error.assert_called_once()
+            call_args = mock_logger.error.call_args
             assert "Failed to run automatic migrations on startup" in call_args[0][0]
             assert call_args[1]["exc_info"] is True

@@ -1,5 +1,8 @@
 """Alembic environment configuration for async SQLAlchemy.
 
+Supports both sync and async database URLs. When a sync URL is provided
+(e.g., sqlite://), migrations run synchronously to avoid asyncio conflicts.
+
 Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
@@ -8,7 +11,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import create_engine, pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
@@ -37,8 +40,17 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    """Get database URL from settings."""
+    """Get database URL from settings or config override."""
+    # Allow URL override from Alembic config (used by _run_migrations_sync)
+    url_override = config.get_main_option("sqlalchemy.url")
+    if url_override:
+        return str(url_override)
     return get_settings().database_url_resolved
+
+
+def is_sync_url(url: str) -> bool:
+    """Check if URL is synchronous (not async)."""
+    return not url.startswith(("sqlite+aiosqlite://", "postgresql+asyncpg://"))
 
 
 def run_migrations_offline() -> None:
@@ -89,13 +101,38 @@ async def run_async_migrations() -> None:
     await connectable.dispose()
 
 
+def run_sync_migrations() -> None:
+    """Run migrations synchronously (for sync URLs like sqlite://)."""
+    url = get_url()
+
+    # Create synchronous engine
+    connectable = create_engine(url, poolclass=pool.NullPool)
+
+    with connectable.begin() as connection:
+        # Enable foreign keys for SQLite
+        if url.startswith("sqlite"):
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+        # Run migrations synchronously
+        do_run_migrations(connection)
+
+    connectable.dispose()
+
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
+    Detects sync vs async URL and uses appropriate engine.
+    Sync URLs (e.g., sqlite://) are used to avoid asyncio conflicts
+    when migrations are called from async contexts.
     """
-    asyncio.run(run_async_migrations())
+    url = get_url()
+    if is_sync_url(url):
+        # Use synchronous engine to avoid asyncio conflicts
+        run_sync_migrations()
+    else:
+        # Use async engine - asyncio.run() will fail if loop is already running
+        # This path should only be used when migrations are run directly via CLI
+        asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():

@@ -6,7 +6,6 @@ Author:
 
 import asyncio
 import importlib.util
-import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -59,9 +58,6 @@ def test_backend_main_function(mock_uvicorn: MagicMock) -> None:
 
 def test_backend_main_name_main() -> None:
     """Test backend main module when run as __main__ (covers line 53)."""
-    import importlib.util
-    from unittest.mock import patch
-
     # Load the module and execute it as __main__ to trigger line 53
     main_path = Path("backend/main.py")
     spec = importlib.util.spec_from_file_location("__main__", main_path)

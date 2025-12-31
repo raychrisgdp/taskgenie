@@ -5,6 +5,7 @@ Author:
 """
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -233,8 +234,6 @@ def test_config_flatten_toml_without_mapping() -> None:
 
 def test_config_load_toml_os_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _load_toml_config with OSError (covers lines 89-91)."""
-    from unittest.mock import patch
-
     config_file = tmp_path / "config.toml"
     config_file.write_text('app_name = "Test"')  # Create file first
     monkeypatch.setenv("TASKGENIE_CONFIG_FILE", str(config_file))

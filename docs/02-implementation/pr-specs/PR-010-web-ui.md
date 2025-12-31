@@ -73,8 +73,6 @@ Provide a secondary web interface for:
 - [ ] Task pages work end-to-end against the API.
 - [ ] Basic responsive layout (desktop + narrow viewport).
 - [ ] If PR-003 is present: chat page streams responses correctly and handles disconnects gracefully.
-- [ ] Automated tests cover core pages (see Test Plan).
-- [ ] Manual smoke checklist completed (see Test Plan).
 
 ## Test Plan
 
@@ -89,22 +87,6 @@ Provide a secondary web interface for:
 2. Open tasks page; verify list renders.
 3. Create a task; verify it appears and detail page loads.
 4. If chat is enabled, open chat page and send a message; verify streaming.
-
-### Manual Test Checklist
-
-- [ ] `GET /tasks` renders with an empty state and a non-empty state.
-- [ ] Create/update/delete from the UI calls the API and updates the UI correctly.
-- [ ] Basic responsive checks (narrow viewport) keep actions usable.
-- [ ] Chat page (if enabled) streams and handles disconnect/retry gracefully.
-- [ ] No secrets are rendered into HTML or logs.
-
-### Run Commands
-
-```bash
-make test
-# or
-uv run pytest -v
-```
 
 ## Notes / Risks / Open Questions
 

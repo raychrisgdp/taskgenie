@@ -37,20 +37,20 @@ This sequence prioritizes **something usable early** (good UX) and then adds cap
 | 3 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 | tui-dev |
 | 4 | PR-003a | LLM Provider Abstraction | Provider configuration foundation | PR-001 | - |
 | 5 | PR-003b | Streaming Chat API | API surface for chat | PR-001, PR-002, PR-003a | api-testing |
-| 6 | PR-003c | TUI Chat Integration | Make chat real inside TUI | PR-002, PR-003a, PR-003b | tui-dev |
+| 6 | PR-003-3 | TUI Chat Integration | Make chat real inside TUI | PR-002, PR-003-1, PR-003-2 | tui-dev |
 | 7 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows | PR-002 | task-workflow |
 | 8 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 | task-workflow |
 | 9 | PR-011 | Notifications | Early "daily value" | PR-002 | task-workflow |
 | 10 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 | integration-setup |
 | 11 | PR-006 | Gmail Integration | High-value, higher complexity | PR-004 | integration-setup |
-| 12 | PR-005a | ChromaDB + Embeddings | Vector store foundation | PR-001, PR-004 | rag-testing |
-| 13 | PR-005b | Semantic Search + RAG | Better recall + better chat | PR-001, PR-003b, PR-004, PR-005a | rag-testing, context-optimization, context-compression |
-| 14 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003c) | - |
+| 12 | PR-005-1 | ChromaDB + Embeddings | Vector store foundation | PR-001, PR-004 | rag-testing |
+| 13 | PR-005-2 | Semantic Search + RAG | Better recall + better chat | PR-001, PR-003-2, PR-004, PR-005-1 | rag-testing, context-optimization, context-compression |
+| 14 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003-2) | - |
 | 15 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 | - |
 
 Notes:
 - You can swap **Seq 7–9** based on what you can test earliest (notifications vs integrations).
-- PR-010 can be started earlier for task pages, but chat streaming needs PR-003.
+- PR-010 can be started earlier for task pages, but chat streaming needs PR-003-2.
 - Specs (with test scenarios): `pr-specs/INDEX.md`
 
 ## PR Dependency Diagram
@@ -315,15 +315,15 @@ This phase is intentionally flexible: pick what’s easiest to validate early fr
 ### PR-010: Web UI (Chat & Tasks)
 **Branch:** `feature/web-ui`
 **Status:** ⬜ Not Started
-**Dependency:** PR-002 (chat optional: PR-003)
-**Description:** HTMX + Jinja2 Web Interface (tasks first; chat streaming once PR-003 exists).
+**Dependency:** PR-002 (chat optional: PR-003-2)
+**Description:** HTMX + Jinja2 Web Interface (tasks first; chat streaming once PR-003-2 exists).
 **Spec:** `pr-specs/PR-010-web-ui.md`
 **Files to modify:**
 - `backend/templates/*`
 - `backend/api/web.py`
 **Acceptance Criteria:**
 - [ ] Task management pages
-- [ ] Chat interface with streaming (if PR-003 is implemented)
+- [ ] Chat interface with streaming (if PR-003-2 is implemented)
 - [ ] Responsive design
 
 ---

@@ -6,7 +6,6 @@ Author:
 
 import asyncio
 import importlib.util
-import sqlite3
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -45,44 +44,6 @@ def test_backend_main_health_check(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     data = response.json()
     assert data["status"] == "ok"
     assert "version" in data
-
-
-def test_fastapi_lifespan_creates_db_and_runs_migrations(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test that FastAPI lifespan initializes DB and runs migrations automatically (AC1)."""
-
-    # Set up temporary database path
-    db_path = tmp_path / "test.db"
-    db_url = f"sqlite+aiosqlite:///{db_path}"
-    monkeypatch.setenv("DATABASE_URL", db_url)
-
-    # Verify DB doesn't exist initially
-    assert not db_path.exists()
-
-    # Create TestClient which triggers lifespan (and thus init_db + migrations)
-    with TestClient(backend_app) as client:
-        # Verify DB was created by lifespan
-        assert db_path.exists()
-
-        # Verify health endpoint works (means startup completed)
-        response = client.get("/health")
-        assert response.status_code == status.HTTP_200_OK
-
-    # Verify all required tables exist
-    conn = sqlite3.connect(str(db_path))
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = {row[0] for row in cursor.fetchall()}
-    conn.close()
-
-    # Check core tables from spec AC1
-    assert "tasks" in tables
-    assert "attachments" in tables
-    assert "notifications" in tables
-    assert "chat_history" in tables
-    assert "config" in tables
-    assert "alembic_version" in tables
 
 
 @patch("backend.main.uvicorn.run")

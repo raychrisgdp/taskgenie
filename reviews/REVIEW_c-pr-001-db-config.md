@@ -1,57 +1,73 @@
 # Review: `c/pr-001-db-config`
 
-## Review Summary
+**Review Summary**
 
-- **Decision:** ✅ Ready (with the staged `backend/migrations/env.py` fix included)
-- **Risk:** Medium (foundational config/DB/migrations wiring)
-- **Scope:** PR-001 spec (`docs/02-implementation/pr-specs/PR-001-db-config.md`)
-- **Baseline:** Branch tip `3dc7b98` + staged fixes in working tree
+- Decision: needs work
+- Risk: low
+- Exec summary: Solid implementation of configuration, database, migrations, and CLI commands. All spec requirements met with good code quality and test coverage. Minor gaps in automated testing for FastAPI startup auto-migrations, and documentation beyond spec scope.
+- Baseline: main 7e43b0a, target c/pr-001-db-config 4e0030f, merge base 7e43b0a, compare main...c/pr-001-db-config, files: 38 +10022/−135
 
-## What This PR Delivers
+**Key Recommendations (Top Priority)**
 
-- Settings + precedence (`backend/config.py`)
-  - env vars → `.env` → `~/.taskgenie/config.toml` → defaults
-  - canonical app paths (DB, cache, logs, vector store)
-- Async SQLite lifecycle (`backend/database.py`)
-- Alembic migrations (`backend/migrations/` + initial revision)
-- DB CLI (`backend/cli/db.py`): `upgrade`, `downgrade`, `revision`, `dump`, `restore`, `reset`
-- Docs (`docs/SETUP.md`, `docs/02-implementation/MIGRATIONS.md`)
-- CI + coverage (`.github/workflows/ci.yml`, `pytest-cov`, `[tool.coverage.*]`)
+- Add automated test for AC1 that verifies FastAPI startup runs migrations automatically when DB doesn't exist.
+- Update .env.example with all new environment variables introduced in this PR (TASKGENIE_DATA_DIR, TASKGENIE_CONFIG_FILE, DATABASE_URL).
+- Consider whether .cursor/commands/ directory (4 markdown files) is in scope for PR-001 or should be moved to a separate infrastructure/tooling PR.
 
-## Findings (Merged + Updated)
+**Findings (ordered by severity)**
 
 ### Critical
 
-- **[Critical][Fix] Alembic downgrade broken (stamping missing)** – After `upgrade`, the DB had an empty `alembic_version` table, making `downgrade --rev -1` fail with “Relative revision -1 didn't produce 1 migrations”.
-  - **Fix (staged):** `backend/migrations/env.py` uses `async with connectable.begin()` so version stamping is committed.
-  - **Validate:** `tgenie db upgrade` then `tgenie db downgrade --rev -1` succeeds; `tests/test_cli_db_extended.py::test_db_downgrade` passes.
+- None.
 
 ### High
 
-- **[High][Resolved] Unstaged `pyproject.toml` cleanup** – No longer applicable; `pyproject.toml` is clean in the current branch state.
+- None.
 
 ### Medium
 
-- **[Medium][Resolved] Downgrade test was too permissive** – `tests/test_cli_db_extended.py::test_db_downgrade` now asserts `upgrade` succeeds before `downgrade` and expects deterministic success (now enabled by the Alembic stamping fix).
-
-- **[Medium][Resolved] `.cursor` commands were gitignored** – `.gitignore` now keeps `.cursor/commands/**` tracked while still ignoring other `.cursor/*` artifacts.
-
-- **[Medium][Optional] TOML flattening special case** – `_load_toml_config()` still has a `notifications.schedule` → `notification_schedule` mapping. It’s acceptable for now, but consider a small mapping table if additional nested TOML keys are expected.
-
-- **[Medium][Optional] SQLite URL parsing robustness** – `database_path` uses simple string splitting; current tests cover absolute/relative paths. Add `:memory:` and query-param cases if we expect them in real usage.
+- [Test-1][Medium][Test] tests/test_main.py – Missing automated test for AC1 "FastAPI startup automatically runs migrations". Current `test_backend_main_health_check` only verifies `/health` returns 200, not that migrations ran or tables were created.
+  **Change:** Add test that creates fresh DB path, starts FastAPI via TestClient (triggers lifespan), verifies DB file created, and asserts all required tables exist (`tasks`, `attachments`, `notifications`, `chat_history`, `config`, `alembic_version`).
+  **Validate:** Run `pytest tests/test_main.py::test_fastapi_lifespan_creates_db_and_runs_migrations` -v and verify it passes on fresh database.
 
 ### Low
 
-- **[Low][Resolved] Migration guide troubleshooting** – `docs/02-implementation/MIGRATIONS.md` includes troubleshooting content now.
+- [Docs-1][Low][Docs] .cursor/commands/review.md, .cursor/commands/pr-desc.md, .cursor/commands/post-review.md, .cursor/commands/test-ac.md – Development tooling documentation not mentioned in PR-001 spec. Spec scope includes config, database, migrations, CLI, and docs for backup/restore/migrations.
+  **Change:** Either remove .cursor/commands/ files from this PR or document justification for including development workflow tools in a database/config PR.
+  **Validate:** Check PR-001 spec `Scope > In` section - does it mention development tooling or agent workflow documentation?
 
-## Validation
+- [Env-1][Low][Env] .env.example – Environment variables TASKGENIE_DATA_DIR, TASKGENIE_CONFIG_FILE, DATABASE_URL are documented in AGENTS.md but .env.example is not created or updated in this PR.
+  **Change:** Create or update .env.example with all configuration options from Settings class, marking required/optional and adding comments explaining purpose.
+  **Validate:** Run `grep TASKGENIE_ DATABASE_URL LLM_ GMAIL_ GITHUB_ .env.example` and verify all environment variables from backend/config.py are documented.
 
-- Lint: `ruff check backend tests`
-- Format: `ruff format --check backend tests`
-- Tests: `pytest` → **51 passed**
-- Coverage: `make test-cov` → **89%** total coverage (term-missing report)
+**Strengths**
 
-## Notes
+- Solid end-to-end implementation: configuration loading with correct precedence (env vars > .env > TOML > defaults), database initialization, Alembic migrations, CLI commands for all required operations.
+- Proper SQLite foreign key handling in both runtime sessions (`get_db`) and Alembic migration connections (`run_async_migrations`).
+- Clean project structure with clear separation of concerns: models, config, database, CLI, migrations.
+- Good test coverage for configuration, database, CLI commands, and models with proper isolation using `tmp_path` and `monkeypatch`.
+- Well-documented code with Google-style docstrings, type hints throughout, and clear inline comments.
+- Makefile enhancements provide convenient targets for installing dependencies by PR number.
 
-- `pyproject.toml` includes `[tool.hatch.build.targets.wheel] packages = ["backend"]` so built wheels include the `backend/` package.
-- Tests are hermetic (they disable implicit `.env` + local `~/.taskgenie/config.toml` via fixtures); no committed `.env` is required for CI/tests.
+**Tests**
+
+- Tests added/modified: 10 test files covering config, database, CLI commands, models, and backend main. Test coverage for all core functionality including migrations, backup/restore, configuration precedence.
+
+**Questions for Author**
+
+- Should .cursor/commands/ directory (review.md, pr-desc.md, post-review.md, test-ac.md) be part of PR-001, or moved to a separate infrastructure/development-tooling PR?
+- Should .env.example be created/updated as part of this PR to document all environment variables?
+- Is the missing integration test for AC1 (FastAPI startup auto-migrations) an intentional gap or oversight?
+
+## Metrics Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Findings | 3 |
+| Critical | 0 |
+| High | 0 |
+| Medium | 1 |
+| Low | 2 |
+| Files Changed | 38 |
+| Lines Added | +10022 |
+| Lines Removed | -135 |
+| Spec Compliance Issues | 1 |

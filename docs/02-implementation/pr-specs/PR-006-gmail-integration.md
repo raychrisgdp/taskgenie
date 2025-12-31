@@ -87,8 +87,10 @@ Given a Gmail URL attached to a task, authenticate via OAuth and fetch the email
 - [ ] Gmail URL is normalized and fetch succeeds.
 - [ ] Email content is cached and viewable from task attachment.
 - [ ] Credentials stored securely with file permissions (0600).
+- [ ] Automated tests cover URL normalization + fetch/cache pipeline (see Test Plan).
+- [ ] Manual smoke checklist completed (see Test Plan).
 
-## Technical Design
+## Appendix: Implementation Sketch
 
 ### OAuth Flow Implementation
 
@@ -306,6 +308,129 @@ class TestGmailMessageParsing:
 2. Create task containing a Gmail URL.
 3. Trigger fetch and verify attachment shows subject/from/date/body excerpt.
 
+### Manual Test Checklist
+
+- [ ] OAuth credentials are stored outside SQLite with `0600` permissions.
+- [ ] Gmail URL normalization is stable across common Gmail URL variants.
+- [ ] Fetch populates `attachment.content` and does not leak secrets into logs.
+- [ ] Missing/expired credentials produce actionable errors and a re-auth path.
+- [ ] Update `.env.example` to add `GMAIL_ENABLED`, `GMAIL_CREDENTIALS_PATH` variables.
+
+### Run Commands
+
+```bash
+make test
+# or
+uv run pytest -v
+```
+
 ## Notes / Risks / Open Questions
 
 - Gmail URL formats vary; normalization rules should be tested against real examples.
+
+---
+
+## Skill Integration: integration-setup
+
+### Gmail OAuth Setup Guide
+
+This PR should follow **integration-setup** skill patterns:
+
+**Step 1: Google Cloud Console**
+1. Create project: `personal-todo-gmail`
+2. Enable Gmail API (APIs & Services → Library)
+3. Create OAuth credentials (Desktop app)
+4. Configure OAuth consent screen (External, add test user email)
+5. Download client_secret.json
+
+**Step 2: Token Storage**
+- Store tokens in `~/.taskgenie/credentials/gmail_token.json`
+- Set file permissions: `0600` (owner read/write only)
+- Never commit tokens to repository
+
+**Step 3: CLI Authentication Command**
+```bash
+tgenie config --gmail-auth
+```
+Opens browser, captures authorization code, stores token.
+
+**Environment Variables**
+```bash
+# .env (optional for development)
+GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your-client-secret
+```
+
+### Security Best Practices
+
+| Practice | Implementation |
+|----------|----------------|
+| Minimum scopes | Only `gmail.readonly` |
+| Token refresh | Auto-rotate on expiry |
+| No secrets in logs | Mask tokens in debug output |
+| Secure storage | File permissions 0600 |
+| Never commit | Add `*.json` to `.gitignore` |
+
+### Troubleshooting
+
+**Error: `invalid_grant`**
+- Delete `~/.taskgenie/credentials/gmail_token.json`
+- Re-run `tgenie config --gmail-auth`
+- Check if access was revoked in Google Account settings
+
+**Error: `access_denied`**
+- Add your email to OAuth consent screen test users
+- Verify redirect URI matches configuration
+
+**Error: `Failed to load credentials`**
+- Check client_secret.json exists in correct location
+- Verify file is valid JSON
+- Ensure app has file read permissions
+
+### Testing Patterns
+
+**Mock Gmail Service**
+```python
+# Use unittest.mock for Gmail API calls
+@pytest.fixture
+def mock_gmail_service():
+    mock = MagicMock()
+    mock.get_message.return_value = {
+        "id": "msg-123",
+        "subject": "Test Email",
+        "from": "sender@example.com",
+        "body": "Email content",
+    }
+    return mock
+```
+
+**Test URL Parsing**
+```python
+# Test various Gmail URL formats
+"https://mail.google.com/mail/u/0/#inbox/18e4f7a2b3c4d5e" → extract message ID
+"mailto:?messageId=18e4f7a2b3c4d5e" → extract message ID
+```
+
+**Test OAuth Flow**
+- Mock `InstalledAppFlow.run_local_server()`
+- Verify token saved to correct path
+- Check file permissions (0o600)
+
+**Test Message Parsing**
+- Simple message (plain text body)
+- Multipart message (text/plain and text/html)
+- Missing body (handle gracefully)
+
+### Integration Test Coverage
+
+| Scenario | Test Type |
+|-----------|-----------|
+| OAuth flow completes | Mock + manual |
+| Token refreshes automatically | Mock |
+| Message fetches correctly | Mock |
+| URL normalization | Unit |
+| Error handling (401, 403) | Mock |
+
+**See Also**
+- Skill doc: `.opencode/skill/integration-setup/`
+- Gmail API: https://developers.google.com/gmail/api

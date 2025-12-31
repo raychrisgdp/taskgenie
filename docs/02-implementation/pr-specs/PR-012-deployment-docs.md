@@ -75,6 +75,8 @@ Make the system easy to run, upgrade, and back up:
 - [ ] `docker compose up` starts successfully and `/health` returns ok.
 - [ ] Data persists across container restarts.
 - [ ] Docs are accurate and consistent with the chosen CLI name and UX.
+- [ ] Automated tests cover a deploy smoke path (see Test Plan).
+- [ ] Manual smoke checklist completed (see Test Plan).
 
 ## Test Plan
 
@@ -88,6 +90,22 @@ Make the system easy to run, upgrade, and back up:
 2. Create a task (via TUI or API).
 3. Restart containers; verify task persists.
 4. Run `tgenie db upgrade` inside container context and verify no errors.
+
+### Manual Test Checklist
+
+- [ ] `docker compose up -d` reaches healthy state (`/health` is 200).
+- [ ] Volumes persist SQLite DB, attachment cache, and vector store across restarts.
+- [ ] Docs include env var overrides (`TASKGENIE_DATA_DIR`, `DATABASE_URL`) and where data lives in Docker.
+- [ ] Upgrade workflow is documented (`tgenie db upgrade head`) and succeeds on an existing volume.
+- [ ] Logs show no permission/path errors for mounted volumes.
+
+### Run Commands
+
+```bash
+make test
+# or
+uv run pytest -v
+```
 
 ## Notes / Risks / Open Questions
 

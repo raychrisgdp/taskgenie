@@ -110,6 +110,8 @@ Provide the minimal API surface to create, read, update, and delete tasks (plus 
 - [ ] List supports `status`, `priority`, `due_before`, `due_after`, `limit`, `offset`.
 - [ ] 404s return the standard error shape and code.
 - [ ] OpenAPI docs render the endpoints + schemas.
+- [ ] Automated tests cover CRUD + filters + validation (see Test Plan).
+- [ ] Manual smoke checklist completed (see Test Plan).
 
 ## Test Plan
 
@@ -183,10 +185,69 @@ class TestTasksCRUD:
    - `curl -X PATCH http://localhost:8080/api/v1/tasks/<id> -H 'content-type: application/json' -d '{"status":"in_progress"}'`
 6. Delete:
    - `curl -X DELETE http://localhost:8080/api/v1/tasks/<id>`
-3. `curl .../tasks` to list and verify filters.
-4. `curl -X PATCH .../tasks/{id}` to update.
-5. `curl -X DELETE .../tasks/{id}` then `GET` to confirm 404.
+
+### Manual Test Checklist
+
+- [ ] Create → list → get → update → delete works end-to-end.
+- [ ] Filters (`status`, `priority`, `due_before`, `due_after`) behave as documented.
+- [ ] Validation errors are 422s with useful messages.
+- [ ] 404 returns standard error shape (`{"error": "...", "code": "..."}`).
+- [ ] OpenAPI docs show request/response schemas for all endpoints.
+- [ ] Verify `.env.example` still documents all relevant environment variables (no new env vars in this PR).
+
+### Run Commands
+
+```bash
+make test
+# or
+uv run pytest -v
+```
 
 ## Notes / Risks / Open Questions
 
 - Decide whether list endpoints should default-sort (e.g., ETA ascending, then created_at).
+
+---
+
+## Skill Integration: api-testing
+
+### Testing Guidance
+
+This PR benefits significantly from the **api-testing** skill. Follow these patterns:
+
+**Fixtures Setup**
+- Use in-memory SQLite for test isolation
+- Create `client` fixture with `httpx.AsyncClient` + `ASGITransport`
+- Implement `task_factory` fixture for rapid test data generation
+- Override `get_db` dependency for test sessions
+
+**Test Coverage Goals**
+| Module | Target Coverage |
+|--------|---------------|
+| `backend/api/tasks.py` | 90%+ |
+| `backend/schemas/task.py` | 85%+ |
+| Overall CRUD | 80%+ |
+
+**Testing Patterns**
+1. **CRUD Happy Path**: Create → Read → Update → Delete sequence
+2. **Validation Errors**: Test 422 responses for invalid inputs (empty title, wrong enums)
+3. **Filter Logic**: Verify status/priority filters return correct subsets
+4. **Pagination**: Test limit/offset behavior
+5. **Error Handling**: 404 for missing tasks, 400 for malformed requests
+
+**Coverage Commands**
+```bash
+# Run with coverage
+pytest tests/test_api/test_tasks_crud.py --cov=backend.api.tasks --cov-report=term-missing
+
+# Check minimum coverage threshold
+pytest --cov=backend --cov-fail-under=80
+```
+
+**Mocking External Services**
+- No external services in this PR (DB is primary dependency)
+- Use test database fixture instead of mocking DB layer
+
+**See Also**
+- Skill doc: `.opencode/skill/api-testing/`
+- Reference: docs/02-implementation/TESTING_GUIDE.md

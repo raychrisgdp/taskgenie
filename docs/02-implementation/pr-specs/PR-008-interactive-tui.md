@@ -145,6 +145,8 @@ backend/cli/tui/
 - [ ] Task list shows priority colors and status styling.
 - [ ] Task detail panel shows formatted table with attachments.
 - [ ] Destructive actions (delete) show confirmation modal.
+- [ ] Automated tests cover core widget/app behavior (see Test Plan).
+- [ ] Manual smoke checklist completed (see Test Plan).
 
 ## Test Plan
 
@@ -168,6 +170,14 @@ tests/test_tui/
 ```bash
 pytest tests/test_tui/ -v
 textual run --dev backend.cli.tui.app:TodoApp
+```
+
+### Run Commands
+
+```bash
+make test
+# or
+uv run pytest -v
 ```
 
 ### Manual
@@ -196,6 +206,241 @@ textual run --dev backend.cli.tui.app:TodoApp
    - g/G jump to top/bottom
    - Enter shows task details
 
+### Manual Test Checklist
+
+- [ ] Task CRUD flows work via the TUI without leaving the app.
+- [ ] API-down state is recoverable and clearly messaged (retry works).
+- [ ] Filters and search produce correct subsets.
+- [ ] Destructive actions prompt for confirmation.
+- [ ] TUI remains responsive with a moderate number of tasks (no obvious jank).
+
 ## Notes / Risks / Open Questions
 
 - If Textual is adopted, we should ensure a non-interactive mode still exists (`tgenie add`, etc.) for scripting (PR-009).
+
+---
+
+## Skill Integration: tui-dev
+
+### Textual Framework Setup
+
+This PR should follow **tui-dev** skill patterns:
+
+**Dependencies**
+```bash
+uv add textual
+uv add --dev textual-dev
+```
+
+**Project Structure**
+```
+backend/cli/tui/
+├── __init__.py
+├── app.py              # TodoApp (main app class)
+├── client.py           # TaskAPIClient (async HTTP wrapper)
+├── styles.tcss         # TCSS styling
+├── screens/
+│   ├── __init__.py
+│   ├── main.py         # MainScreen (list + detail split view)
+│   ├── task_form.py    # TaskFormScreen (add/edit modal)
+│   └── help.py         # HelpScreen
+└── widgets/
+    ├── __init__.py
+    ├── task_list.py    # TaskListView + TaskItem + TaskRow
+    ├── task_detail.py  # TaskDetailPanel (rich table)
+    ├── filter_bar.py   # FilterBar (filter buttons)
+    └── status_bar.py   # StatusBar (bottom status)
+```
+
+### Keybindings Implementation
+
+**Global Bindings**
+| Key | Action | Show in UI |
+|-----|--------|-------------|
+| `q` | Quit app | Yes |
+| `?` | Help screen | Yes |
+| `r` | Refresh tasks | Yes |
+| `/` | Search input | Yes |
+| `Escape` | Cancel/close | No |
+
+**Task List Bindings**
+| Key | Action | Description |
+|-----|--------|-------------|
+| `a` | Add task | Open add task form |
+| `e` | Edit task | Open edit task form |
+| `d` | Mark done | Set status to "completed" |
+| `D` | Delete task | Confirm then delete |
+| `Enter` | View details | Show task detail panel |
+| `j/k` or `↑/↓` | Navigate | Select next/previous task |
+| `g/G` | Jump | First/last task |
+
+**Implementation Pattern**
+```python
+BINDINGS = [
+    Binding("q", "quit", "Quit", show=True),
+    Binding("a", "add_task", "Add"),
+    Binding("d", "complete_task", "Done"),
+    # ...
+]
+
+async def action_add_task(self):
+    from .task_form import TaskFormScreen
+    await self.push_screen(TaskFormScreen(mode="add"))
+```
+
+### Layout Design
+
+**Main Screen Split View**
+```
+┌─────────────────────────┬─────────────────────────┐
+│ Task List (50%)        │ Task Detail (50%)       │
+│                         │                         │
+│ ● [HIGH] Fix auth      │ Title: Fix auth        │
+│   Login failing...       │ Status: pending         │
+│                         │ Priority: high          │
+│ ○ [MED] Update docs     │ ETA: 2025-01-15       │
+│   API examples          │                         │
+│                         │ Attachments:            │
+├─────────────────────────┴─────────────────────────┤
+│ [a]dd [e]dit [d]one [D]elete [/]search [?]help [q]uit│
+└──────────────────────────────────────────────────────────┘
+```
+
+**Color Coding**
+| Priority | Symbol | Color |
+|----------|---------|-------|
+| critical | `!` | red |
+| high | `●` | orange |
+| medium | `◐` | yellow |
+| low | `○` | dim |
+
+| Status | Style |
+|--------|-------|
+| pending | normal |
+| in_progress | blue text |
+| completed | dim + strikethrough |
+
+### API Client Pattern
+
+**Async HTTP Client**
+```python
+class TaskAPIClient:
+    def __init__(self, base_url: str = "http://localhost:8080"):
+        self.client = httpx.AsyncClient(
+            base_url=base_url, timeout=30.0
+        )
+
+    async def list_tasks(self, **params) -> list[dict]:
+        resp = await self.client.get("/api/v1/tasks", params=params)
+        resp.raise_for_status()
+        return resp.json()["tasks"]
+```
+
+**Error Handling**
+- Catch `httpx.ConnectError` → show "cannot connect" banner
+- Catch `httpx.HTTPStatusError` → show error notification
+- Implement retry with 'r' key
+
+### State Management
+
+**Reactive State**
+```python
+from textual.reactive import reactive
+
+class MainScreen(Screen):
+    status_filter: reactive[str | None] = reactive(None)
+
+    def watch_status_filter(self, value):
+        self._apply_filters()
+```
+
+**App State Container**
+```python
+@dataclass
+class AppState:
+    tasks: list[dict] = field(default_factory=list)
+    selected_task_id: str | None = None
+    loading: bool = False
+```
+
+### Testing Patterns
+
+**Widget Testing**
+```python
+# tests/test_tui/test_widgets.py
+@pytest.mark.asyncio
+async def test_task_row_rendering():
+    task = {"id": "1", "title": "Test", "priority": "high"}
+    row = TaskRow(task)
+    rendered = row.render()
+    assert "●" in str(rendered)
+```
+
+**App Integration Testing**
+```python
+@pytest.mark.asyncio
+async def test_app_keybindings():
+    app = TodoApp()
+    async with app.run_test() as pilot:
+        await pilot.press("q")
+        # App exits
+```
+
+**Running Tests**
+```bash
+# Run TUI tests
+pytest tests/test_tui/ -v
+
+# Dev mode for debugging
+textual run --dev backend.cli.tui.app:TodoApp
+```
+
+### TCSS Styling
+
+**Key Style Classes**
+```css
+#task-list {
+    width: 50%;
+    border: solid $primary;
+}
+
+#task-detail {
+    width: 50%;
+    padding: 1;
+}
+
+.priority-critical { color: $error; }
+.priority-high { color: $warning; }
+.status-completed { text-style: strike; opacity: 0.6; }
+
+.empty-state {
+    align: center middle;
+    color: $text-muted;
+}
+```
+
+### Error Handling Patterns
+
+**Empty State**
+- Show friendly message when no tasks exist
+- Display hint: "Press 'a' to add your first task"
+
+**Connection Error**
+- Show banner: "Cannot connect to API"
+- Display: "Start backend: uv run backend"
+- 'r' key retries connection
+
+**Loading State**
+- Show spinner during API calls
+- Disable interactions while loading
+
+### Performance Considerations
+
+- Lazy-load large attachment lists
+- Debounce search input (200ms delay)
+- Cache task list during filter changes
+- Use reactive variables to minimize re-renders
+
+**See Also**
+- Skill doc: `.opencode/skill/tui-dev/`
+- Textual docs: https://textual.textualize.io/

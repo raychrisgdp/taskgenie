@@ -93,6 +93,8 @@ Make chat real:
 - [ ] TUI can send a message and display a streamed reply.
 - [ ] Missing/invalid API key results in a clear error message (in TUI and API).
 - [ ] Provider selection (model/base_url) works via config.
+- [ ] Automated tests cover SSE + error mapping (see Test Plan).
+- [ ] Manual smoke checklist completed (see Test Plan).
 
 ## Test Plan
 
@@ -214,6 +216,21 @@ class TestRAGContext:
    - verify response streams and renders correctly
 3. Unset API key and retry:
    - verify UI explains how to configure LLM and does not crash
+
+### Manual Test Checklist
+
+- [ ] Streaming response emits `data:` lines and ends with `[DONE]`.
+- [ ] Missing/invalid API key yields actionable messaging (no stack traces).
+- [ ] Rate limit and network errors are mapped to user-friendly messages.
+- [ ] No prompt/response content is logged by default.
+
+### Run Commands
+
+```bash
+make test
+# or
+uv run pytest -v
+```
 
 ## Notes / Risks / Open Questions
 

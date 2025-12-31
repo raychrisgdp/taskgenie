@@ -59,6 +59,7 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 5. **Code Quality Analysis**
 
    **Overengineering & Simplification Review** (CRITICAL FOCUS):
+   - **Cleanest path check**: Given the current spec/objective, is this implementation the simplest/cleanest way to achieve it? If not, recommend the smallest change-set that reduces complexity while preserving behavior and spec compliance.
    - **Minimum viable implementation**: Does the code implement the spec requirements with the least complexity? Could simpler code satisfy the same requirements?
    - **Excessive helper function fragmentation**: Count helper functions per file; identify single-use wrappers that add no value
    - **Single-consumer helpers**: Inline or delete helper modules/functions used by a single caller unless they are intended to be shared
@@ -194,6 +195,8 @@ Provide clear, high-impact review findings that keep the implementation simple, 
     **Token Efficiency**: Limit findings to maximum 25 items. If more issues are found, prioritize by severity and aggregate remaining items in a summary statement.
     - Keep each finding concise (this will be posted as an inline PR comment; long multi-paragraph findings are hard to read and may hit comment limits).
 
+    **Per-Finding Validation Required**: Each finding must include a `**Validate:**` line with the exact commands or checks needed to verify the fix. Keep it short and scoped to that finding; use `n/a` only when validation is not applicable (e.g., doc-only notes).
+
     **Deterministic IDs**: Assign stable IDs to each finding using format `[Tag-N]` where Tag is a descriptive category prefix and N is a sequential number within that category. Use descriptive category names:
     - `[Config-N]` for configuration issues
     - `[DB-N]` for database issues
@@ -221,6 +224,8 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 
 Brief summary paragraph describing the PR's status, key accomplishments, and overall quality. Keep concise; expand when the PR is complex (a short paragraph is fine when many issues exist).
 
+**Simplicity / MVP Fit:** Pass / Needs simplification (1–2 sentences; call out the biggest simplification lever if applicable)
+
 **Key Strengths:**
 - Bullet 1: Major positive aspect
 - Bullet 2: Another strength
@@ -244,47 +249,28 @@ Brief summary paragraph describing the PR's status, key accomplishments, and ove
 
 **Finding Format Guidelines:**
 
-- **For Low Priority Findings:** Use concise format (single bullet with **Change:** and optional **Validate:**)
-- **For Medium+ Priority Findings:** Use comprehensive format with inline code examples (see format below)
-- Use exactly **one** markdown list item per finding (single bullet).
-- Use `file:line` or `file:line-range` without backticks (parser is tolerant, but don't rely on it).
-- Use an en dash `–` between `file:line` and the description (parser accepts `-` too).
+- **For Low Priority Findings:** Use concise format (single bullet with **Change:** and **Validate:**)
+- **For Medium+ Priority Findings:** Use one bullet per finding, and use indented multiline fields for context and code examples (see format below).
+- Use exactly **one** markdown list item per finding (single bullet), but feel free to add indented multiline details under that bullet (including code blocks).
+- Use file:line or file:line-range without backticks on the finding's first line (parser is tolerant, but don't rely on it).
+- Use an en dash `–` between file:line and the description (parser accepts `-` too).
 
 **Concise Format (Low Priority):**
 - `[ID][Severity][Tag]` file:line – Description.
   **Change:** Recommendation.
-  **Validate:** How to test (optional - typically omitted for Low priority).
+  **Validate:** How to test (use `n/a` when not applicable).
 
 **Comprehensive Format (Medium+ Priority):**
-- Use structured format with code examples:
-
-#### [Tag-N] Issue Title
-
-**Location:** `file.py:42-50`
-
-**Issue:** Detailed explanation of the problem, why it matters, and potential impact.
-
-**Example scenario:**
-```python
-# Problematic code showing the issue
-def problematic_function():
-    # Code that demonstrates the problem
-    ...
-```
-
-**Recommendation:** Suggested fix with code example.
-```python
-# Better approach
-def improved_function():
-    # Code showing the fix
-    ...
-```
-
-**Severity:** Medium/High/Critical (explanation of why this severity)
-
-**Change:** Specific actionable recommendation.
-
-**Validate:** Command(s) + pass criteria (required for Critical/High, optional for Medium).
+- **[Tag-N][Severity][Tag]** file.py:42-50 – Issue title / short summary.
+  **Issue:** Detailed explanation of the problem, why it matters, and potential impact.
+  **Example:**
+  ```python
+  # Problematic code showing the issue
+  def problematic_function() -> None:
+      ...
+  ```
+  **Change:** Specific actionable recommendation (include code snippet if helpful).
+  **Validate:** Command(s) + pass criteria (required for all severities; use `n/a` if not applicable).
 
 ### 🔴 Critical Issues
 
@@ -296,30 +282,6 @@ OR
   **Change:** Recommendation.
   **Validate:** How to test.
 
-OR (for complex issues):
-
-#### [Tag-N] Issue Title
-
-**Location:** `file.py:42-50`
-
-**Issue:** Detailed explanation.
-
-**Example scenario:**
-```python
-# Problematic code
-```
-
-**Recommendation:**
-```python
-# Fixed code
-```
-
-**Severity:** Critical (explanation)
-
-**Change:** Specific recommendation.
-
-**Validate:** Command(s) + pass criteria.
-
 ### 🟠 High Priority Issues
 
 **None.** (if no findings)
@@ -330,12 +292,6 @@ OR
   **Change:** Recommendation.
   **Validate:** How to test.
 
-OR (for complex issues):
-
-#### [Tag-N] Issue Title
-
-[Use comprehensive format with code examples as shown above]
-
 ### 🟡 Medium Priority Issues
 
 **None.** (if no findings)
@@ -344,13 +300,7 @@ OR
 
 - **[Tag-N][Medium][Tag]** file:line – Brief description.
   **Change:** Recommendation.
-  **Validate:** How to test (optional).
-
-OR (for complex issues):
-
-#### [Tag-N] Issue Title
-
-[Use comprehensive format with code examples as shown above]
+  **Validate:** How to test (use `n/a` if not applicable).
 
 ### 🟢 Low Priority Issues
 
@@ -360,6 +310,7 @@ OR
 
 - `[Tag-N][Low][Tag]` file:line – Description.
   **Change:** Recommendation.
+  **Validate:** How to test (use `n/a` if not applicable).
 
 **Review Completion Message** (when `Total Findings | 0`)
 
@@ -371,7 +322,7 @@ Congratulations @<author>, you are good to go!
 
 **Tags**: `[Spec] [Security] [Perf] [Quality] [Test] [Docs] [Env] [Arch]`
 
-**Note**: Use deterministic IDs `[Tag-N]` format with descriptive category names (e.g., `[Config-1]`, `[DB-2]`, `[Security-3]`). Limit to 25 findings max; aggregate remaining in summary if more issues found. For **Critical** and **High** findings, always include a `Validate:` clause with test file path, command, and pass criterion. For **Medium+** findings, use comprehensive format with inline code examples when the issue benefits from code demonstration.
+**Note**: Use deterministic IDs `[Tag-N]` format with descriptive category names (e.g., `[Config-1]`, `[DB-2]`, `[Security-3]`). Limit to 25 findings max; aggregate remaining in summary if more issues found. For **all findings**, include a `Validate:` clause with test file path/command and pass criterion (or `n/a`). For **Medium+** findings, use comprehensive format with inline code examples when the issue benefits from code demonstration.
 
 ---
 
@@ -605,7 +556,7 @@ Use this format only in the optional appendix (not in the main "Findings" list):
 - Compare against `main`; record baseline hash; include staged + unstaged when reviewing working tree; use three-dot for branches by default.
 - Require a spec for feature work; if absent, ask for it before deep review. When specs change, check template compliance.
 - Keep the implementation minimal (YAGNI); flag over-engineering and beyond-spec scope.
-- Findings must cite `file:line`, be ordered by impact, and include specific recommendations.
+- Findings must cite file:line, be ordered by impact, and include specific recommendations.
 - Use multiline findings: keep the issue on the first line and put **Change** / **Validate** on their own indented lines to avoid long run-on bullets.
 - Use severity consistently: **Critical** (release/security/data risk), **High** (likely correctness/maintainability/perf issue), **Medium** (quality gaps or minor bugs), **Low** (polish/best-practice).
 - Avoid false positives; verify before raising. Recognize strengths where notable.

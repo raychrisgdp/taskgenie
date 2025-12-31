@@ -6,6 +6,21 @@ This guide covers database migrations, backup, and restore procedures for TaskGe
 
 TaskGenie uses [Alembic](https://alembic.sqlalchemy.org/) for database schema migrations. The database is SQLite, stored by default at `~/.taskgenie/data/taskgenie.db`.
 
+### Why Migrations Use Sync SQLite URLs
+
+**Important:** Even though TaskGenie's runtime database usage is async (`sqlite+aiosqlite://`), migrations always run synchronously using a sync SQLite URL (`sqlite://`).
+
+**Reason:** Running migrations with async drivers (`aiosqlite`) can cause `asyncio.run()` conflicts when migrations are executed from:
+- The CLI (`tgenie db upgrade`)
+- Application startup (`init_db()`)
+
+**Implementation:**
+- The CLI (`backend/cli/db.py`) automatically converts async URLs to sync URLs before passing them to Alembic
+- Startup migrations (`backend/database.py`) also use sync URLs for reliable execution
+- This ensures migrations run reliably without asyncio conflicts while maintaining async runtime database operations
+
+**Pattern to follow:** When creating new migration commands or modifying migration execution, always convert `sqlite+aiosqlite://` URLs to `sqlite://` before passing to Alembic.
+
 ## Migration Commands
 
 ### Upgrade Database

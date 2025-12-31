@@ -23,7 +23,12 @@ db_app = Typer(help="Database management commands")
 
 
 def get_alembic_cfg() -> alembic.config.Config:
-    """Get Alembic configuration."""
+    """Get Alembic configuration.
+
+    Converts async database URLs (e.g., sqlite+aiosqlite://) to sync URLs
+    (e.g., sqlite://) for migrations to avoid asyncio conflicts when running
+    migrations from the CLI.
+    """
     backend_dir = Path(__file__).resolve().parents[1]
     project_root = backend_dir.parent
     migrations_dir = backend_dir / "migrations"
@@ -39,7 +44,10 @@ def get_alembic_cfg() -> alembic.config.Config:
     cfg.set_main_option("script_location", str(migrations_dir))
 
     # Override database URL from settings
-    cfg.set_main_option("sqlalchemy.url", backend.config.get_settings().database_url_resolved)
+    # Convert async URL to sync URL for migrations to avoid asyncio conflicts
+    database_url = backend.config.get_settings().database_url_resolved
+    sync_url = database_url.replace("sqlite+aiosqlite://", "sqlite://", 1)
+    cfg.set_main_option("sqlalchemy.url", sync_url)
     return cfg
 
 

@@ -6,6 +6,7 @@ Author:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sqlite3
 from collections.abc import AsyncGenerator
@@ -41,6 +42,9 @@ def init_db() -> None:
 
     This should be called once at application startup.
     Automatically runs migrations if database doesn't exist or alembic_version table is missing.
+
+    Note: When called from async context (e.g., FastAPI lifespan), use init_db_async() instead
+    to avoid blocking the event loop.
     """
     global engine, async_session_maker
 
@@ -59,6 +63,34 @@ def init_db() -> None:
 
     # Run migrations automatically if DB doesn't exist or alembic_version table is missing
     _run_migrations_if_needed(settings, database_url)
+
+
+async def init_db_async() -> None:
+    """Initialize database engine and sessionmaker asynchronously.
+
+    This is the async version of init_db() that runs migrations in a threadpool
+    to avoid blocking the event loop. Use this when called from async contexts
+    like FastAPI lifespan.
+
+    Automatically runs migrations if database doesn't exist or alembic_version table is missing.
+    """
+    global engine, async_session_maker
+
+    if engine is not None:
+        return  # Already initialized
+
+    settings = backend.config.get_settings()
+    settings.ensure_app_dirs()
+    database_url = settings.database_url_resolved
+
+    # Create async engine
+    engine = create_async_engine(database_url, echo=settings.debug)
+
+    # Create sessionmaker
+    async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    # Run migrations in threadpool to avoid blocking event loop
+    await asyncio.to_thread(_run_migrations_if_needed, settings, database_url)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -134,6 +166,12 @@ def _run_migrations_sync(settings: backend.config.Settings, database_url: str) -
 
     Uses a synchronous SQLite engine for migrations to avoid asyncio conflicts.
     This allows migrations to run reliably even when called from async contexts.
+
+    Migration failure behavior:
+        - In production (debug=False): Fails fast with RuntimeError to prevent
+          running with an unknown schema.
+        - In development (debug=True): Logs warning and continues, allowing
+          development to proceed even if migrations fail.
 
     Args:
         settings: Application settings (used for fail-fast behavior)

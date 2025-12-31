@@ -7,11 +7,16 @@ Author:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
+
+if TYPE_CHECKING:
+    from backend.models.attachment import Attachment
+    from backend.models.notification import Notification
 
 
 class Task(Base):
@@ -42,9 +47,9 @@ class Task(Base):
     meta_data: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
 
     # Relationships
-    attachments: Mapped[list[Attachment]] = relationship(  # noqa: F821
+    attachments: Mapped[list[Attachment]] = relationship(
         "Attachment", back_populates="task", cascade="all, delete-orphan"
     )
-    notifications: Mapped[list[Notification]] = relationship(  # noqa: F821
+    notifications: Mapped[list[Notification]] = relationship(
         "Notification", back_populates="task", cascade="all, delete-orphan"
     )

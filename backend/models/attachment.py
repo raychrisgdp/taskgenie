@@ -7,11 +7,15 @@ Author:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
+
+if TYPE_CHECKING:
+    from backend.models.task import Task
 
 
 class Attachment(Base):
@@ -33,4 +37,4 @@ class Attachment(Base):
     )
 
     # Relationships
-    task: Mapped[Task] = relationship("Task", back_populates="attachments")  # noqa: F821
+    task: Mapped[Task] = relationship("Task", back_populates="attachments")

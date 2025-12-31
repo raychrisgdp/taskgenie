@@ -7,11 +7,15 @@ Author:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
+
+if TYPE_CHECKING:
+    from backend.models.task import Task
 
 
 class Notification(Base):
@@ -31,4 +35,4 @@ class Notification(Base):
     )
 
     # Relationships
-    task: Mapped[Task] = relationship("Task", back_populates="notifications")  # noqa: F821
+    task: Mapped[Task] = relationship("Task", back_populates="notifications")

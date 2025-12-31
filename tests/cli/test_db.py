@@ -6,6 +6,7 @@ Author:
 
 import importlib
 import sqlite3
+import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,6 +16,9 @@ from typer.testing import CliRunner
 import backend.cli.db as cli_db
 from backend import config, database
 from backend.cli.db import db_app
+
+# Maximum time allowed for CLI upgrade command to complete (in seconds)
+_CLI_UPGRADE_TIMEOUT_SECONDS = 5.0
 
 
 @pytest.fixture
@@ -122,6 +126,47 @@ def test_db_upgrade(temp_settings_with_db: None) -> None:
 
     assert result.exit_code == 0
     assert "upgraded" in result.stdout.lower() or "✓" in result.stdout
+
+
+def test_db_upgrade_completes_promptly_and_creates_alembic_version(
+    temp_db_path: Path, temp_settings: None
+) -> None:
+    """Regression test for DB-1: ensures CLI upgrade completes promptly and creates alembic_version.
+
+    This test explicitly validates that:
+    1. The upgrade command completes within a reasonable time (prevents hangs)
+    2. The alembic_version table is created after upgrade
+    """
+    import sqlite3  # noqa: PLC0415
+
+    from backend.config import get_settings  # noqa: PLC0415
+
+    runner = CliRunner()
+    start_time = time.time()
+    result = runner.invoke(db_app, ["upgrade"])
+    elapsed = time.time() - start_time
+
+    # Should complete quickly (within timeout)
+    assert elapsed < _CLI_UPGRADE_TIMEOUT_SECONDS, (
+        f"Upgrade command took {elapsed:.2f}s, expected < {_CLI_UPGRADE_TIMEOUT_SECONDS}s. "
+        "This may indicate the async URL hang issue."
+    )
+
+    # Verify command succeeded
+    assert result.exit_code == 0, f"Upgrade failed: {result.stdout}"
+
+    # Verify alembic_version table exists (proves migrations ran)
+    settings = get_settings()
+    db_path = settings.database_path
+    assert db_path.exists(), "Database should exist after upgrade"
+
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'")
+    has_version_table = cursor.fetchone() is not None
+    conn.close()
+
+    assert has_version_table, "alembic_version table should exist after upgrade"
 
 
 def test_db_upgrade_with_revision(temp_settings_with_db: None) -> None:

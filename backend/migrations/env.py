@@ -3,6 +3,11 @@
 Supports both sync and async database URLs. When a sync URL is provided
 (e.g., sqlite://), migrations run synchronously to avoid asyncio conflicts.
 
+Note: The CLI (backend/cli/db.py) automatically converts async URLs
+(e.g., sqlite+aiosqlite://) to sync URLs (e.g., sqlite://) before passing
+them to Alembic, ensuring migrations always run synchronously and avoid
+asyncio conflicts.
+
 Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """

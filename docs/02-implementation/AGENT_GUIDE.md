@@ -172,7 +172,7 @@ settings = get_settings()
 
 ```toml
 [app]
-app_name = "My TaskGenie"
+name = "My TaskGenie"
 debug = false
 
 [database]

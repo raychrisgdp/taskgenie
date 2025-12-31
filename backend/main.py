@@ -13,7 +13,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from backend.config import get_settings
-from backend.database import close_db, init_db
+from backend.database import close_db, init_db_async
 
 
 @asynccontextmanager
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application lifespan events."""
     # Startup
     get_settings().ensure_app_dirs()
-    init_db()
+    await init_db_async()  # Use async version to avoid blocking event loop
     yield
     # Shutdown
     await close_db()

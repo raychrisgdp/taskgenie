@@ -47,8 +47,10 @@ def _flatten_toml_data(data: dict[str, Any]) -> dict[str, Any]:
     but Pydantic Settings expects flat field names (e.g., `notification_schedule`).
 
     This function handles the mapping:
-    - Uses explicit mapping table for known nested keys (e.g., `notifications.schedule` → `notification_schedule`)
-    - Falls back to underscore-separated keys for other nested structures (e.g., `app.name` → `app_name`)
+    - Uses explicit mapping table for known nested keys
+      (e.g., `notifications.schedule` → `notification_schedule`)
+    - Falls back to underscore-separated keys for other nested structures
+      (e.g., `app.name` → `app_name`)
 
     Args:
         data: Nested TOML data dictionary.
@@ -118,7 +120,11 @@ class TaskGenieTomlSettingsSource(PydanticBaseSettingsSource):
 
 
 class Settings(BaseSettings):
-    """Application settings with precedence: init_settings → env vars → .env → config.toml → file_secret_settings → defaults."""
+    """Application settings.
+
+    Precedence order: init_settings → env vars → .env → config.toml →
+    file_secret_settings → defaults.
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True
@@ -212,14 +218,19 @@ class Settings(BaseSettings):
 
     @property
     def database_path(self) -> Path:
-        """Get canonical database file path."""
+        """Get canonical database file path.
+
+        Strips query parameters (e.g., ?mode=ro) from the URL before extracting the path.
+        """
         if self.database_url and self.database_url.startswith("sqlite"):
+            # Strip query parameters (e.g., ?mode=ro) before extracting path
+            url = self.database_url.split("?")[0] if "?" in self.database_url else self.database_url
             # Extract path from sqlite:///path/to/db or sqlite+aiosqlite:///path/to/db
-            if "://" in self.database_url:
+            if "://" in url:
                 url_path = (
-                    self.database_url.split(":///", 1)[-1]
-                    if ":///" in self.database_url
-                    else self.database_url.split("://", 1)[-1]
+                    url.split(":///", 1)[-1]
+                    if ":///" in url
+                    else url.split("://", 1)[-1]
                 )
                 if url_path.startswith("/") or (len(url_path) > 1 and url_path[1] == ":"):
                     return Path(url_path)
@@ -258,9 +269,18 @@ def get_settings() -> Settings:
 
     Note: Changing TASKGENIE_ENV_FILE environment variable between calls
     will return cached settings. Use cache_clear() to force reinitialization.
+
+    Implementation note:
+        This function uses `_env_file`, which is an internal parameter in
+        pydantic-settings that allows overriding the env file path at runtime.
+        This is not part of the public API but is the only way to dynamically
+        set the env file based on TASKGENIE_ENV_FILE. If pydantic-settings
+        adds a supported public API for this in the future, we should migrate
+        to that approach.
     """
     env_file = os.getenv("TASKGENIE_ENV_FILE", ".env")
-    return Settings(_env_file=env_file or None)
+    # _env_file is a valid internal parameter in pydantic-settings but not recognized by mypy
+    return Settings(_env_file=env_file or None)  # type: ignore[call-arg]
 
 
 def __getattr__(name: str) -> Any:

@@ -43,14 +43,27 @@ def _get_config_file_path() -> Path | None:
 def _flatten_toml_data(data: dict[str, Any]) -> dict[str, Any]:
     """Flatten nested TOML structure for Pydantic Settings.
 
+    TOML files can have nested structures (e.g., `[notifications] schedule = [...]`),
+    but Pydantic Settings expects flat field names (e.g., `notification_schedule`).
+
+    This function handles the mapping:
+    - Uses explicit mapping table for known nested keys (e.g., `notifications.schedule` → `notification_schedule`)
+    - Falls back to underscore-separated keys for other nested structures (e.g., `app.name` → `app_name`)
+
     Args:
         data: Nested TOML data dictionary.
 
     Returns:
         Flattened dictionary with underscore-separated keys.
+
+    Note:
+        The `field_name_mapping` dictionary is intentionally hardcoded for MVP.
+        If more nested TOML keys are needed, add them to this mapping table.
     """
-    # Mapping of TOML nested keys to Settings field names
-    # e.g., {"notifications": {"schedule": [...]}} -> {"notification_schedule": [...]}
+    # Explicit mapping of TOML nested keys to Settings field names.
+    # This is intentional and documented. If more nested keys are needed,
+    # add them here rather than relying on automatic underscore flattening.
+    # Example: {"notifications": {"schedule": [...]}} → {"notification_schedule": [...]}
     field_name_mapping: dict[str, dict[str, str]] = {
         "notifications": {"schedule": "notification_schedule"}
     }

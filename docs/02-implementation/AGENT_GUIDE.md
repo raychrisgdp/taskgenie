@@ -563,6 +563,136 @@ async with async_session_maker() as session:
 
 ---
 
+## Precommit Workflow & Code Quality
+
+### Always Run `make precommit` Before Committing
+
+The `make precommit` command runs all code quality checks:
+- Formatting (ruff format)
+- Linting (ruff check)
+- Type checking (mypy)
+- Test syntax validation
+
+**Workflow:**
+```bash
+# 1. Make your changes
+# 2. Run precommit
+make precommit
+
+# 3. Fix any issues reported
+# 4. Commit
+```
+
+### Common Precommit Issues & Fixes
+
+#### 1. Duplicate Test Functions (F811)
+
+**Error:** `F811 redefinition of unused 'test_function_name'`
+
+**Fix:** Remove duplicate test functions. Check for duplicate function names:
+```bash
+grep -n "^def test_" tests/test_*.py | sort | uniq -d
+```
+
+#### 2. Incomplete Test Functions
+
+**Error:** Syntax error with `async` without `def`
+
+**Fix:** Complete the function definition:
+```python
+# ❌ Wrong
+@pytest.mark.asyncio
+async
+
+def test_something():
+    ...
+
+# ✅ Correct
+@pytest.mark.asyncio
+async def test_something():
+    ...
+```
+
+#### 3. Unused Variables (F841)
+
+**Error:** `F841 local variable 'result' is assigned to but never used`
+
+**Fix:** Prefix with `_` if intentionally unused:
+```python
+# ❌ Wrong
+result = subprocess.run(...)
+
+# ✅ Correct
+_ = subprocess.run(...)
+```
+
+#### 4. Import Inside Function (PLC0415)
+
+**Error:** `PLC0415 Import used inside function or method`
+
+**Fix:** Add `# noqa: PLC0415` if intentional (common in tests):
+```python
+def test_something():
+    # Intentional import to avoid circular dependency
+    from backend.config import _load_toml_config  # noqa: PLC0415
+    ...
+```
+
+#### 5. Type Errors with Mocks
+
+**Error:** `Argument of type "object" cannot be assigned to parameter ...`
+
+**Fix:** Use specific type ignore comment:
+```python
+# ❌ Wrong
+def failing_open(self: Path, *args: object, **kwargs: object) -> object:
+    return original_open(self, *args, **kwargs)
+
+# ✅ Correct
+def failing_open(self: Path, *args: object, **kwargs: object) -> object:
+    return original_open(self, *args, **kwargs)  # type: ignore[call-overload]
+```
+
+#### 6. Mutable Default Arguments
+
+**Error:** `B006 Mutable default argument`
+
+**Fix:** Use `default_factory`:
+```python
+# ❌ Wrong
+notification_schedule: list[str] = Field(default=["24h", "6h"])
+
+# ✅ Correct
+notification_schedule: list[str] = Field(default_factory=lambda: ["24h", "6h"])
+```
+
+### Async Migration Handling
+
+When calling synchronous Alembic commands from async context (e.g., FastAPI startup), use threading to avoid blocking:
+
+```python
+def _run_migrations_sync(database_url: str) -> None:
+    """Synchronously run Alembic migrations."""
+    def _upgrade() -> None:
+        try:
+            alembic.command.upgrade(cfg, "head")
+        except Exception:
+            logger.warning("Failed to run automatic migrations", exc_info=True)
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # No event loop, run directly
+        _upgrade()
+    else:
+        # Event loop exists, run in thread
+        thread = threading.Thread(target=_upgrade, name="taskgenie-alembic-upgrade")
+        thread.start()
+        thread.join()
+```
+
+---
+
 ## Key Learnings
 
 ### From PR-001 Implementation
@@ -634,7 +764,8 @@ uv run pytest tests/test_config.py         # Run specific test file
 uv run pytest -v                           # Verbose output
 uv run pytest --cov=backend                # With coverage
 
-# Linting
+# Linting & Code Quality
+make precommit                              # Run all checks (format, lint, typecheck)
 uv run ruff check .                        # Check code
 uv run ruff format .                       # Format code
 uv run mypy backend                        # Type checking

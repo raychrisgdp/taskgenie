@@ -134,15 +134,43 @@ def test_db_upgrade_with_revision(temp_settings_with_db: None) -> None:
 
 def test_db_downgrade(temp_settings_with_db: None) -> None:
     """Test database downgrade command."""
+    import sqlite3  # noqa: PLC0415
+
+    from backend.config import get_settings  # noqa: PLC0415
+
     runner = CliRunner()
     # First upgrade to head
     upgrade_result = runner.invoke(db_app, ["upgrade"])
     assert upgrade_result.exit_code == 0, "Upgrade should succeed before downgrade test"
+
+    # Verify we're at head before downgrading
+    settings = get_settings()
+    db_path = settings.database_path
+    if db_path.exists():
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT version_num FROM alembic_version")
+        version_before = cursor.fetchone()
+        conn.close()
+        assert version_before is not None, "Should be at a migration version before downgrade"
+
     # Then downgrade one step
     result = runner.invoke(db_app, ["downgrade", "--rev", "-1"])
 
     # After upgrade to head, downgrade should succeed
     assert result.exit_code == 0, f"Downgrade should succeed after upgrade. Output: {result.stdout}"
+
+    # Verify version changed (if we had a version before)
+    if db_path.exists() and version_before:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT version_num FROM alembic_version")
+        version_after = cursor.fetchone()
+        conn.close()
+        # Version should be different (or None if downgraded to base)
+        assert version_after != version_before or version_after is None, (
+            "Migration version should change after downgrade"
+        )
 
 
 def test_db_revision(

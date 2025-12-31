@@ -6,8 +6,10 @@ Author:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sqlite3
+import threading
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
@@ -150,11 +152,21 @@ def _run_migrations_sync(settings: backend.config.Settings, database_url: str) -
     cfg.set_main_option("script_location", str(migrations_dir))
     cfg.set_main_option("sqlalchemy.url", database_url)
 
+    def _upgrade() -> None:
+        try:
+            alembic.command.upgrade(cfg, "head")
+        except Exception:
+            # Log error but don't fail startup
+            logger.warning("Failed to run automatic migrations on startup", exc_info=True)
+
     try:
-        alembic.command.upgrade(cfg, "head")
-    except Exception:
-        # Log error but don't fail startup
-        logger.warning("Failed to run automatic migrations on startup", exc_info=True)
+        asyncio.get_running_loop()
+    except RuntimeError:
+        _upgrade()
+    else:
+        thread = threading.Thread(target=_upgrade, name="taskgenie-alembic-upgrade")
+        thread.start()
+        thread.join()
 
 
 async def close_db() -> None:

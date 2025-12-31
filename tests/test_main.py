@@ -25,7 +25,8 @@ def test_backend_main_lifespan() -> None:
     # Test that lifespan can be entered and exited
     async def test_lifespan() -> None:
         async with lifespan(app_mock):
-            pass
+            # Lifespan context manager should enter and exit without errors
+            ...
 
     asyncio.run(test_lifespan())
 
@@ -44,6 +45,66 @@ def test_backend_main_health_check(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     data = response.json()
     assert data["status"] == "ok"
     assert "version" in data
+
+
+def test_backend_main_startup_runs_migrations_fresh_db(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that FastAPI startup automatically runs migrations on fresh DB.
+
+    This explicitly verifies AC1: migrations run automatically when DB doesn't exist.
+    """
+    import sqlite3  # noqa: PLC0415
+
+    from backend.config import get_settings  # noqa: PLC0415
+
+    # Set up temporary database (fresh, doesn't exist yet)
+    db_path = tmp_path / "fresh.db"
+    db_url = f"sqlite+aiosqlite:///{db_path}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+
+    # Clear settings cache to pick up new DATABASE_URL
+    get_settings.cache_clear()
+
+    # Ensure DB doesn't exist
+    assert not db_path.exists(), "Database should not exist before startup"
+
+    # Call init_db directly (same as lifespan does on startup)
+    from backend.database import init_db  # noqa: PLC0415
+
+    init_db()
+
+    # Get actual database path from settings (may differ from db_path due to resolution)
+    settings = get_settings()
+    actual_db_path = settings.database_path
+
+    # Verify database was created (check both paths)
+    assert db_path.exists() or actual_db_path.exists(), (
+        f"Database should be created after startup. Expected: {db_path}, Actual: {actual_db_path}"
+    )
+
+    # Use the actual path that exists
+    check_path = actual_db_path if actual_db_path.exists() else db_path
+
+    # Verify alembic_version table exists (migrations ran)
+    conn = sqlite3.connect(str(check_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'")
+    version_table = cursor.fetchone()
+    conn.close()
+
+    assert version_table is not None, "alembic_version table should exist after migrations"
+    assert version_table[0] == "alembic_version"
+
+    # Verify version is set (migrations actually ran)
+    conn = sqlite3.connect(str(check_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT version_num FROM alembic_version")
+    version = cursor.fetchone()
+    conn.close()
+
+    assert version is not None, "Migration version should be set"
+    assert len(version[0]) > 0, "Migration version should not be empty"
 
 
 @patch("backend.main.uvicorn.run")

@@ -482,9 +482,8 @@ pytest -v
 
 ## Related Test Documentation
 
-- **Comprehensive Test Plan:** [`TEST_PLAN_POST_PR001.md`](../TEST_PLAN_POST_PR001.md) - Full E2E test scenarios
-- **Quick Win Tests:** [`TESTING_QUICK_WINS.md`](../TESTING_QUICK_WINS.md) - High-value, low-effort tests
 - **Migrations Guide:** [`MIGRATIONS.md`](../MIGRATIONS.md) - How to create and manage migrations
+- **Testing Guide:** [`TESTING_GUIDE.md`](../TESTING_GUIDE.md) - General testing patterns and practices
 
 ## Notes / Risks / Open Questions
 

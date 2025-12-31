@@ -37,12 +37,10 @@ env/
 *.swo
 *~
 
-# Codex/OpenCode local artifacts
-.opencode/
-# Cursor local artifacts
-.cursor/
-PR_DESCRIPTION.md
-PR_TITLE.txt
+# local artifacts
+.opencode/skill
+.uv-cache/
+.tmp/
 
 # Environment
 .env

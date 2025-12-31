@@ -326,6 +326,29 @@ async def test_full_task_lifecycle():
 
 ## Unit Testing Best Practices
 
+### Test Organization
+
+**Avoid common pitfalls:**
+- **Duplicate tests**: Check for duplicate test function names before adding new tests
+- **Incomplete test functions**: Ensure all test functions have complete definitions (no broken `async` without `def`)
+- **Test isolation**: Use `tmp_path` + `monkeypatch` to ensure tests don't interfere with each other
+- **Import patterns**: When importing inside test functions (to avoid circular imports), add `# noqa: PLC0415`
+
+**Example:**
+```python
+def test_config_load_toml_os_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test _load_toml_config with OSError."""
+    config_file = tmp_path / "config.toml"
+    monkeypatch.setenv("TASKGENIE_CONFIG_FILE", str(config_file))
+
+    # Intentional import inside function to avoid circular import
+    from backend.config import _load_toml_config  # noqa: PLC0415
+
+    with patch.object(Path, "open", side_effect=OSError("Permission denied")):
+        config = _load_toml_config()
+        assert config == {}
+```
+
 ### Test Structure
 
 ```
@@ -638,8 +661,10 @@ Before submitting a PR, verify:
 - [ ] Manual testing completed (if applicable)
 - [ ] Test coverage >80%
 - [ ] No tests skipped without comment
-- [ ] Linting passes (`ruff check`)
-- [ ] Type checking passes (`mypy backend/`)
+- [ ] **Precommit passes**: `make precommit` (checks formatting, linting, type checking)
+- [ ] No duplicate test functions
+- [ ] All test functions are complete (no broken definitions)
+- [ ] Unused variables prefixed with `_` or removed
 
 ---
 
@@ -668,6 +693,34 @@ Before submitting a PR, verify:
 ---
 
 ## Troubleshooting
+
+### Precommit Failures
+
+**Issue:** `make precommit` fails with linting/type errors
+
+**Common fixes:**
+```bash
+# 1. Format code
+make format
+
+# 2. Fix linting issues
+ruff check --fix .
+
+# 3. Fix type errors (add type: ignore comments if needed)
+mypy backend/ tests/
+
+# 4. Remove duplicate tests
+# Check for duplicate test function names and remove duplicates
+
+# 5. Fix incomplete test functions
+# Ensure all test functions have complete definitions
+```
+
+**Common error patterns:**
+- `PLC0415`: Import inside function → Add `# noqa: PLC0415` if intentional
+- `F841`: Unused variable → Prefix with `_` or remove
+- `F811`: Duplicate function → Remove duplicate
+- `call-overload`: Type error with Path.open mock → Add `# type: ignore[call-overload]`
 
 ### Tests Failing Locally but Passing in CI
 

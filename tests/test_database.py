@@ -67,7 +67,8 @@ async def test_get_db_raises_if_not_initialized() -> None:
 
     with pytest.raises(RuntimeError, match="Database not initialized"):
         async for _ in get_db():
-            pass
+            # Should raise RuntimeError before yielding
+            ...
 
 
 @pytest.mark.asyncio
@@ -281,3 +282,26 @@ def test_run_migrations_sync_no_alembic_ini(
         # Restore alembic.ini
         if backup_path.exists():
             shutil.move(str(backup_path), str(alembic_ini_path))
+
+
+def test_run_migrations_sync_upgrade_exception(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test _run_migrations_sync when alembic.command.upgrade raises exception (covers lines 158-160)."""
+    db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    config.get_settings.cache_clear()
+    settings = config.get_settings()
+
+    # Mock alembic.command.upgrade to raise an exception
+    with patch(
+        "backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")
+    ):
+        with patch("backend.database.logger") as mock_logger:
+            # Should not raise, but should log warning
+            _run_migrations_sync(settings, db_url)
+            # Verify warning was logged
+            mock_logger.warning.assert_called_once()
+            call_args = mock_logger.warning.call_args
+            assert "Failed to run automatic migrations on startup" in call_args[0][0]
+            assert call_args[1]["exc_info"] is True

@@ -194,7 +194,20 @@ Provide clear, high-impact review findings that keep the implementation simple, 
     **Token Efficiency**: Limit findings to maximum 25 items. If more issues are found, prioritize by severity and aggregate remaining items in a summary statement.
     - Keep each finding concise (this will be posted as an inline PR comment; long multi-paragraph findings are hard to read and may hit comment limits).
 
-    **Deterministic IDs**: Assign stable IDs to each finding using format `[Tag-N]` where Tag is the category prefix (Spec, Security, Perf, Quality, Test, Docs, Env, Arch) and N is a sequential number within that category. Example: `[Spec-1]`, `[Quality-2]`, `[Security-3]`.
+    **Deterministic IDs**: Assign stable IDs to each finding using format `[Tag-N]` where Tag is a descriptive category prefix and N is a sequential number within that category. Use descriptive category names:
+    - `[Config-N]` for configuration issues
+    - `[DB-N]` for database issues
+    - `[CLI-N]` for CLI issues
+    - `[Security-N]` for security issues
+    - `[Perf-N]` for performance issues
+    - `[Test-N]` for testing issues
+    - `[Docs-N]` for documentation issues
+    - `[Arch-N]` for architecture issues
+    - `[Spec-N]` for spec compliance issues
+    - `[Quality-N]` for code quality issues
+    - `[Env-N]` for environment/config issues
+
+    Examples: `[Config-1]`, `[DB-2]`, `[Security-3]`, `[CLI-1]`.
 
 - Use the core template below. Add the optional appendix only if the change set is large or the user asked for detailed tables.
 - Save/overwrite the report in `reviews/` as `REVIEW_<target>.md` (use the branch name; if detached, `REVIEW_HEAD.md`; if branch missing, `REVIEW_main.md`).
@@ -202,51 +215,150 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 
 ### Core Report Template
 
-**Review Summary**
+## Executive Summary
 
-- Decision (approve/needs work/block) and risk (low/medium/high/critical)
-- Exec summary: keep concise; expand when the PR is complex (a short paragraph is fine when many issues exist)
-- Baseline (single line): `main <hash>, target <branch|working tree>, merge base <hash>, compare <method>, files:<n> +<adds>/−<dels>`
+**Overall Assessment:** ✅ **Approve with recommendations** / ⚠️ **Needs work** / ❌ **Block**
+
+Brief summary paragraph describing the PR's status, key accomplishments, and overall quality. Keep concise; expand when the PR is complex (a short paragraph is fine when many issues exist).
+
+**Key Strengths:**
+- Bullet 1: Major positive aspect
+- Bullet 2: Another strength
+- Bullet 3: Third strength (3–5 bullets total)
+
+**Risk Level:** Low/Medium/High/Critical (brief explanation in parentheses)
+
+**Stats:** X files changed, +Y/-Z lines, N tests passing
+
+**Baseline:** `main <hash>, target <branch|working tree>, merge base <hash>, compare <method>`
+
+---
 
 **Key Recommendations (Top Priority)**
 
 - 3–5 bullets; highest-impact items first (if none, state "None")
 
-**Findings (ordered by severity)**
+---
 
-**Finding format (post-review compatible)**
+## Detailed Findings
 
+**Finding Format Guidelines:**
+
+- **For Low Priority Findings:** Use concise format (single bullet with **Change:** and optional **Validate:**)
+- **For Medium+ Priority Findings:** Use comprehensive format with inline code examples (see format below)
 - Use exactly **one** markdown list item per finding (single bullet).
-- Keep the first line short and parseable; put details on wrapped lines within the same list item for readability.
-- Use `file:line` without backticks (parser is tolerant, but don't rely on it).
+- Use `file:line` or `file:line-range` without backticks (parser is tolerant, but don't rely on it).
 - Use an en dash `–` between `file:line` and the description (parser accepts `-` too).
-- Put actionable guidance on following wrapped lines in the same list item using `**Change:**` and optional `**Validate:**` (no multi-paragraph sub-sections in the main Findings list).
-- Example:
-  - **[Spec-1][High][Spec]** file.py:205 – Description.
-    **Change:** Fix it.
-    **Validate:** Run `pytest tests/test_x.py::test_y`.
 
-### Critical
-
-- `[ID][Severity][Tag]` file:line – Description.
-  **Change:** Recommendation.
-  **Validate:** How to test.
-
-### High
-
-- `[ID][Severity][Tag]` file:line – Description.
-  **Change:** Recommendation.
-  **Validate:** How to test.
-
-### Medium
-
+**Concise Format (Low Priority):**
 - `[ID][Severity][Tag]` file:line – Description.
   **Change:** Recommendation.
   **Validate:** How to test (optional).
 
-### Low
+**Comprehensive Format (Medium+ Priority):**
+- Use structured format with code examples:
 
-- `[ID][Severity][Tag]` file:line – Description.
+#### [Tag-N] Issue Title
+
+**Location:** `file.py:42-50`
+
+**Issue:** Detailed explanation of the problem, why it matters, and potential impact.
+
+**Example scenario:**
+```python
+# Problematic code showing the issue
+def problematic_function():
+    # Code that demonstrates the problem
+    ...
+```
+
+**Recommendation:** Suggested fix with code example.
+```python
+# Better approach
+def improved_function():
+    # Code showing the fix
+    ...
+```
+
+**Severity:** Medium/High/Critical (explanation of why this severity)
+
+**Change:** Specific actionable recommendation.
+
+**Validate:** Command(s) + pass criteria (required for Critical/High, optional for Medium).
+
+### 🔴 Critical Issues
+
+**None.** (if no findings)
+
+OR
+
+- **[Tag-N][Critical][Tag]** file:line – Brief description.
+  **Change:** Recommendation.
+  **Validate:** How to test.
+
+OR (for complex issues):
+
+#### [Tag-N] Issue Title
+
+**Location:** `file.py:42-50`
+
+**Issue:** Detailed explanation.
+
+**Example scenario:**
+```python
+# Problematic code
+```
+
+**Recommendation:**
+```python
+# Fixed code
+```
+
+**Severity:** Critical (explanation)
+
+**Change:** Specific recommendation.
+
+**Validate:** Command(s) + pass criteria.
+
+### 🟠 High Priority Issues
+
+**None.** (if no findings)
+
+OR
+
+- **[Tag-N][High][Tag]** file:line – Brief description.
+  **Change:** Recommendation.
+  **Validate:** How to test.
+
+OR (for complex issues):
+
+#### [Tag-N] Issue Title
+
+[Use comprehensive format with code examples as shown above]
+
+### 🟡 Medium Priority Issues
+
+**None.** (if no findings)
+
+OR
+
+- **[Tag-N][Medium][Tag]** file:line – Brief description.
+  **Change:** Recommendation.
+  **Validate:** How to test (optional).
+
+OR (for complex issues):
+
+#### [Tag-N] Issue Title
+
+[Use comprehensive format with code examples as shown above]
+
+### 🟢 Low Priority Issues
+
+**None.** (if no findings)
+
+OR
+
+- **[Tag-N][Low][Tag]** file:line – Description.
   **Change:** Recommendation.
 
 **Review Completion Message** (when `Total Findings | 0`)
@@ -255,22 +367,88 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 Congratulations @<author>, you are good to go!
 ```
 
+**Note on Empty Categories**: When a severity category has no findings, explicitly state "**None.**" for clarity.
+
 **Tags**: `[Spec] [Security] [Perf] [Quality] [Test] [Docs] [Env] [Arch]`
 
-**Note**: Use deterministic IDs `[Tag-N]` format (e.g., `[Spec-1]`, `[Quality-2]`). Limit to 25 findings max; aggregate remaining in summary if more issues found. For **Critical** and **High** findings, always include a `Validate:` clause with test file path, command, and pass criterion.
+**Note**: Use deterministic IDs `[Tag-N]` format with descriptive category names (e.g., `[Config-1]`, `[DB-2]`, `[Security-3]`). Limit to 25 findings max; aggregate remaining in summary if more issues found. For **Critical** and **High** findings, always include a `Validate:` clause with test file path, command, and pass criterion. For **Medium+** findings, use comprehensive format with inline code examples when the issue benefits from code demonstration.
 
-**Strengths**
+---
+
+## Strengths
 
 - 3–4 bullets max; avoid repetition; call out material wins
 
-**Tests**
+---
+
+## Testing Results
+
+```
+✅ N tests passed in X.XXs
+✅ Ruff linting passed
+✅ No critical or high-severity issues
+```
+
+Test breakdown:
+- Category tests: N (e.g., Config tests: 30+, Database tests: 15+)
+- Category tests: N
+- Category tests: N
+
+OR (if minimal testing):
 
 - One line: what was run/added; if N/A (docs-only), say so
 
-**Questions for Author**
+---
+
+## Security Considerations
+
+(Include this section only if security-related findings exist or security review is relevant)
+
+1. ✅ **SQL Injection**: Using parameterized queries
+2. ⚠️ **Path Traversal**: CLI accepts arbitrary paths (low risk for local tool)
+3. ✅ **Secret Management**: Config supports env vars (no hardcoded secrets)
+4. ✅ **Input Validation**: Proper validation on all inputs
+
+---
+
+## Performance Considerations
+
+(Include this section only if performance-related findings exist or performance review is relevant)
+
+1. ✅ **Indexed Queries**: Proper indexes on key tables
+2. ✅ **Connection Pooling**: Using async engine
+3. ⚠️ **Migration Threading**: Slight overhead from thread spawning (negligible)
+4. ✅ **Lazy Directory Creation**: Directories created only when needed
+
+---
+
+## Compatibility
+
+(Include this section only if compatibility concerns exist)
+
+- ✅ **Python**: >=3.11 (as specified in pyproject.toml)
+- ✅ **Cross-Platform**: Path expansion handles Windows/Unix
+- ⚠️ **Database**: SQLite-only (as designed, not a bug)
+
+---
+
+## Questions for Author
 
 - Add as many as needed; concise clarifications/spec asks
 - Include recommendations when appropriate (e.g., "Should auth-derived headers merge with `config["headers"]` or override them? What is the expected precedence? **Change:** Merge with auth headers taking precedence for conflicts")
+
+---
+
+## Conclusion
+
+This PR is **ready to merge** / **needs work** / **blocked**. Brief summary of why, including key tradeoffs or considerations.
+
+**Recommended Action:** ✅ **Approve and merge** / ⚠️ **Approve with recommendations** / ❌ **Request changes**
+
+The branch successfully implements all acceptance criteria from PR-XXX:
+- ✅ Criterion 1
+- ✅ Criterion 2
+- ⚠️ Criterion 3 (partial, if applicable)
 
 ## Detailed Analysis (Optional - include when comparing against baseline PR or for complex changes)
 
@@ -328,6 +506,8 @@ Use this format only in the optional appendix (not in the main "Findings" list):
 | Files Changed | N |
 | Lines Added | +N |
 | Lines Removed | -N |
+| Tests Passing | N |
+| Test Failures | N |
 | Spec Compliance Issues | N |
 
 ### Optional Appendix (use when needed)

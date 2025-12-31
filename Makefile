@@ -47,27 +47,27 @@ install-all:
 	uv pip install -e ".[all]"
 
 hooks: dev
-	pre-commit install
+	uv run pre-commit install
 
 precommit:
-	pre-commit run --all-files
+	uv run pre-commit run --all-files
 
 lint:
-	ruff check backend/
+	uv run ruff check backend/
 
 format:
-	ruff format backend/
+	uv run ruff format backend/
 
 typecheck:
-	mypy backend/
+	uv run mypy backend/
 
 test:
-	pytest
+	uv run pytest
 
 test-cov:
-	pytest --cov=backend --cov-report=term-missing
+	uv run pytest --cov=backend --cov-report=term-missing
 
 docs-check:
-	python scripts/check_docs.py
+	uv run python scripts/check_docs.py
 
 check: lint typecheck test

@@ -71,6 +71,11 @@ def test_migrations_env_file_config_none(temp_settings: None) -> None:
 
     This tests the branch where config.config_file_name is None, so fileConfig is not called.
     """
+    # Remove from cache if already imported to force reimport
+    module_name = "backend.migrations.env"
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+
     # Mock alembic.context before importing/reloading env.py
     mock_context = MagicMock()
     mock_config = MagicMock()
@@ -79,14 +84,9 @@ def test_migrations_env_file_config_none(temp_settings: None) -> None:
 
     with patch("alembic.context", mock_context):
         with patch("logging.config.fileConfig") as mock_file_config:
-            # Remove from cache if already imported to force reimport
-            module_name = "backend.migrations.env"
-            if module_name in sys.modules:
-                del sys.modules[module_name]
-
-            # Import or reload the module to trigger module-level code
-            # This will execute lines 26-27, but skip fileConfig when config_file_name is None
-            # Since we deleted it above, we need to import it fresh
+            # Import the module to trigger module-level code
+            # This will execute line 26, but skip fileConfig when config_file_name is None
+            import backend.migrations.env  # noqa: F401, PLC0415
 
             # fileConfig should NOT be called when config_file_name is None
             mock_file_config.assert_not_called()

@@ -4,6 +4,8 @@ Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, Text, func

@@ -81,7 +81,7 @@ async def run_async_migrations() -> None:
         configuration, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
 
-    async with connectable.connect() as connection:
+    async with connectable.begin() as connection:
         # Enable foreign keys for SQLite
         await connection.exec_driver_sql("PRAGMA foreign_keys=ON")
         await connection.run_sync(do_run_migrations)

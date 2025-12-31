@@ -1,8 +1,8 @@
 # Implementation Plan: Pull Requests
 
-**Status:** Spec Complete | Implementation In Progress  
-**Last Reviewed:** 2025-12-29  
-**Total PRs:** 12 (PR-001 through PR-012)
+**Status:** Spec Complete | Implementation In Progress
+**Last Reviewed:** 2025-12-31
+**Total PRs:** 17 (PR-001 through PR-012, plus breakdowns: PR-003a/b/c, PR-005a/b)
 
 ## Overview
 
@@ -30,20 +30,23 @@ This document tracks all planned Pull Requests for the TaskGenie project. The pl
 
 This sequence prioritizes **something usable early** (good UX) and then adds capabilities bit-by-bit.
 
-| Seq | PR | Title | Why now? | Depends on |
+| Seq | PR | Title | Why now? | Depends on | Skill Enrichment |
 |---:|---|---|---|---|
-| 1 | PR-001 | Database & Configuration | Foundation + migrations | - |
-| 2 | PR-002 | Task CRUD API | Core workflows + enables clients | PR-001 |
-| 3 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 |
-| 4 | PR-003 | LLM + Chat Backbone | Make chat real inside TUI | PR-001, PR-002, PR-008 |
-| 5 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows | PR-002 |
-| 6 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 |
-| 7 | PR-011 | Notifications | Early “daily value” | PR-002 |
-| 8 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 |
-| 9 | PR-006 | Gmail Integration | High-value, higher complexity | PR-004 |
-| 10 | PR-005 | RAG + Semantic Search | Better recall + better chat | PR-004, PR-003 |
-| 11 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003) |
-| 12 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 |
+| 1 | PR-001 | Database & Configuration | Foundation + migrations | - | - |
+| 2 | PR-002 | Task CRUD API | Core workflows + enables clients | PR-001 | api-testing |
+| 3 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 | tui-dev |
+| 4 | PR-003a | LLM Provider Abstraction | Provider configuration foundation | PR-001 | - |
+| 5 | PR-003b | Streaming Chat API | API surface for chat | PR-001, PR-002, PR-003a | api-testing |
+| 6 | PR-003c | TUI Chat Integration | Make chat real inside TUI | PR-002, PR-003a, PR-003b | tui-dev |
+| 7 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows | PR-002 | task-workflow |
+| 8 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 | task-workflow |
+| 9 | PR-011 | Notifications | Early "daily value" | PR-002 | task-workflow |
+| 10 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 | integration-setup |
+| 11 | PR-006 | Gmail Integration | High-value, higher complexity | PR-004 | integration-setup |
+| 12 | PR-005a | ChromaDB + Embeddings | Vector store foundation | PR-001, PR-004 | rag-testing |
+| 13 | PR-005b | Semantic Search + RAG | Better recall + better chat | PR-001, PR-003b, PR-004, PR-005a | rag-testing, context-optimization, context-compression |
+| 14 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003c) | - |
+| 15 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 | - |
 
 Notes:
 - You can swap **Seq 7–9** based on what you can test earliest (notifications vs integrations).
@@ -57,33 +60,48 @@ flowchart TD
   PR001["PR-001: Database & Config"]
   PR002["PR-002: Task CRUD API"]
   PR008["PR-008: Interactive TUI (Tasks MVP)"]
-  PR003["PR-003: LLM + Chat Backbone"]
+  PR003a["PR-003a: LLM Provider"]
+  PR003b["PR-003b: Streaming Chat API"]
+  PR003c["PR-003c: TUI Chat Integration"]
   PR009["PR-009: CLI Subcommands"]
   PR004["PR-004: Attachments + Link Detection"]
   PR011["PR-011: Notifications"]
   PR007["PR-007: GitHub Integration"]
   PR006["PR-006: Gmail Integration"]
-  PR005["PR-005: RAG (ChromaDB)"]
+  PR005a["PR-005a: ChromaDB + Embeddings"]
+  PR005b["PR-005b: Semantic Search + RAG"]
   PR010["PR-010: Web UI"]
   PR012["PR-012: Deployment + Docs"]
 
   PR001 --> PR002
   PR002 --> PR008
-  PR001 --> PR003
-  PR002 --> PR003
-  PR008 --> PR003
+  PR001 --> PR003a
+  PR002 --> PR003b
+  PR003a --> PR003b
+  PR002 --> PR003c
+  PR003a --> PR003c
+  PR003b --> PR003c
   PR002 --> PR009
   PR002 --> PR004
   PR004 --> PR007
   PR004 --> PR006
+  PR001 --> PR005a
+  PR004 --> PR005a
   PR002 --> PR011
-  PR004 --> PR005
-  PR003 --> PR005
+  PR001 --> PR005b
+  PR003b --> PR005b
+  PR004 --> PR005b
+  PR005a --> PR005b
   PR002 --> PR010
-  PR003 -. "chat UI (optional)" .-> PR010
+  PR003c -. "chat UI (optional)" .-> PR010
   PR010 --> PR012
   PR011 --> PR012
 ```
+
+Notes:
+- PR-003 has been split into PR-003a (provider), PR-003b (API), PR-003c (TUI integration).
+- PR-005 has been split into PR-005a (indexing) and PR-005b (search + RAG).
+- PR-010 can ship "tasks-only" early; chat streaming waits on PR-003c.
 
 Notes:
 - Edges reflect planned dependency relationships.
@@ -137,19 +155,52 @@ Notes:
 
 ## Phase 2: Chat + Attachments (Weeks 3-4)
 
-### PR-003: LLM Service & Chat Backbone
-**Branch:** `feature/llm-service`
+### PR-003a: LLM Provider Abstraction & Configuration
+**Branch:** `feature/llm-provider`
 **Status:** ⬜ Not Started
-**Dependency:** PR-001, PR-002, PR-008
-**Description:** Implement LLM service with OpenRouter/BYOK support and Chat API, then wire chat into the interactive TUI.
-**Spec:** `pr-specs/PR-003-llm-chat-backbone.md`
+**Dependency:** PR-001
+**Description:** Implement core LLM provider abstraction and configuration system.
+**Spec:** `pr-specs/PR-003a-llm-provider.md`
 **Files to modify:**
 - `backend/services/llm_service.py` - LLM Provider logic
-- `backend/api/chat.py` - Chat endpoint (streaming)
+- `backend/config.py` - LLM configuration
 **Acceptance Criteria:**
-- [ ] Supports OpenRouter/OpenAI API
-- [ ] Streaming response support
-- [ ] Interactive TUI chat works end-to-end
+- [ ] `LLMService` class implements stream_chat interface
+- [ ] Configuration loads from env vars and config file
+- [ ] Missing API key raises clear `ValueError`
+- [ ] OpenRouter integration works end-to-end
+
+### PR-003b: Streaming Chat API Endpoint
+**Branch:** `feature/streaming-chat-api`
+**Status:** ⬜ Not Started
+**Dependency:** PR-001, PR-002, PR-003a
+**Description:** Create FastAPI streaming chat endpoint with SSE.
+**Spec:** `pr-specs/PR-003b-streaming-chat-api.md`
+**Files to modify:**
+- `backend/api/chat.py` - Chat endpoint
+- `backend/schemas/chat.py` - Request/response schemas
+**Acceptance Criteria:**
+- [ ] `POST /api/v1/chat` endpoint exists
+- [ ] SSE format matches spec (`data:` prefix, `[DONE]` terminator)
+- [ ] Missing LLM API key returns 500 with clear error
+- [ ] OpenAPI docs include SSE protocol explanation
+
+### PR-003c: TUI Chat Integration
+**Branch:** `feature/tui-chat`
+**Status:** ⬜ Not Started
+**Dependency:** PR-002, PR-003a, PR-003b
+**Description:** Integrate chat functionality into interactive TUI from PR-008.
+**Spec:** `pr-specs/PR-003c-tui-chat-integration.md`
+**Files to modify:**
+- `backend/cli/tui/widgets/chat_panel.py` - Chat widget
+- `backend/cli/tui/screens/main.py` - Integrate chat panel
+- `backend/cli/tui/client.py` - Streaming support
+**Acceptance Criteria:**
+- [ ] Chat panel widget exists with input + message display
+- [ ] User messages appear immediately after sending
+- [ ] AI responses stream in real-time
+- [ ] Missing LLM API key shows clear error modal
+- [ ] Chat history persists for session
 
 ### PR-004: Attachment API & Link Detection
 **Branch:** `feature/attachments`
@@ -208,21 +259,42 @@ This phase is intentionally flexible: pick what’s easiest to validate early fr
 
 ---
 
-## Phase 4: Intelligence (Weeks 7-8)
+## Phase 4: Intelligence (Weeks 8-9)
 
-### PR-005: ChromaDB & RAG Integration
-**Branch:** `feature/rag-core`
+### PR-005a: ChromaDB Setup & Embeddings Pipeline
+**Branch:** `feature/chromadb-indexing`
 **Status:** ⬜ Not Started
-**Dependency:** PR-003, PR-004
-**Description:** Vector storage and semantic search over tasks and cached attachment content; integrate RAG context into chat responses.
-**Spec:** `pr-specs/PR-005-rag-semantic-search.md`
+**Dependency:** PR-001, PR-004
+**Description:** Implement ChromaDB vector store and embedding service with sentence-transformers.
+**Spec:** `pr-specs/PR-005a-chromadb-embeddings.md`
 **Files to modify:**
-- `backend/services/rag_service.py`
-- `backend/database.py` - ChromaDB setup
+- `backend/services/rag_service.py` - ChromaDB setup
+- `backend/services/embedding_service.py` - Embedding generation
+- `backend/config.py` - ChromaDB configuration
 **Acceptance Criteria:**
-- [ ] Tasks/Attachments are auto-embedded on create/update
-- [ ] Semantic search endpoint returns relevant results
-- [ ] Chat uses RAG context for answers
+- [ ] `EmbeddingService` generates 384-dimension embeddings
+- [ ] `RAGService` creates ChromaDB collection on first use
+- [ ] Task indexing works on create/update
+- [ ] Attachment content is included in parent task's document
+- [ ] Batch indexing processes multiple tasks efficiently
+
+### PR-005b: Semantic Search API & RAG Context Injection
+**Branch:** `feature/semantic-search-rag`
+**Status:** ⬜ Not Started
+**Dependency:** PR-001, PR-003b, PR-004, PR-005a
+**Description:** Implement semantic search API endpoint and RAG context injection for chat.
+**Spec:** `pr-specs/PR-005b-semantic-search-rag.md`
+**Files to modify:**
+- `backend/api/search.py` - Semantic search endpoint
+- `backend/services/rag_service.py` - Search and context building
+- `backend/api/chat.py` - RAG context integration
+**Acceptance Criteria:**
+- [ ] `GET /api/v1/search/semantic` endpoint exists
+- [ ] Search returns relevant results sorted by similarity
+- [ ] Filters (status, priority) work correctly
+- [ ] RAG context builder includes task metadata
+- [ ] Context truncation respects token budget
+- [ ] Chat endpoint injects RAG context into prompts
 
 ---
 
@@ -275,10 +347,23 @@ This phase is intentionally flexible: pick what’s easiest to validate early fr
 | Phase | Focus | Weeks | Key PRs |
 |-------|-------|--------|----------|
 | **1** | **Foundation + UX MVP** | 1-2 | PR-001 (DB), PR-002 (Task API), PR-008 (TUI Tasks) |
-| **2** | **Chat + Attachments** | 3-4 | PR-003 (LLM+Chat), PR-004 (Attachments) |
+| **2** | **Chat + Attachments** | 3-4 | PR-003a (Provider), PR-003b (API), PR-003c (TUI), PR-004 (Attachments) |
 | **3** | **Early Value Track** | 5-6 | PR-011 (Notifications) and/or PR-007 (GitHub) / PR-006 (Gmail) |
-| **4** | **Intelligence** | 7-8 | PR-005 (RAG + Semantic Search) |
-| **5** | **Secondary UIs** | 9-10 | PR-009 (CLI subcommands), PR-010 (Web UI) |
-| **6** | **Deploy + Docs** | 11-12 | PR-012 (Deployment & Docs) |
+| **4** | **Intelligence** | 8-9 | PR-005a (Indexing), PR-005b (Search+RAG) |
+| **5** | **Secondary UIs** | 10-11 | PR-009 (CLI subcommands), PR-010 (Web UI) |
+| **6** | **Deploy + Docs** | 12 | PR-012 (Deployment & Docs) |
 
-**Total Estimated Effort:** ~130 hours (~16 weeks for one developer)
+**Total Estimated Effort:** ~150 hours (~18-20 weeks for one developer)
+
+**Key Changes:**
+- **PR-003 split**: Provider (003a) → API (003b) → TUI (003c) for parallel work and focused testing
+- **PR-005 split**: Indexing (005a) + Search/RAG (005b) to separate technical concerns
+
+**Skill Integration:**
+- `api-testing`: PR-002, PR-003b
+- `rag-testing`: PR-005a, PR-005b
+- `integration-setup`: PR-006, PR-007
+- `tui-dev`: PR-008, PR-003c
+- `context-optimization`: PR-005b
+- `context-compression`: PR-005b (future chat history)
+- `task-workflow`: PR-004, PR-009, PR-011

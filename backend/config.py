@@ -4,6 +4,8 @@ Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import tomllib
@@ -103,7 +105,7 @@ class TaskGenieTomlSettingsSource(PydanticBaseSettingsSource):
 
 
 class Settings(BaseSettings):
-    """Application settings with precedence: env vars → .env → config.toml → defaults."""
+    """Application settings with precedence: init_settings → env vars → .env → config.toml → file_secrets → defaults."""
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True
@@ -158,7 +160,9 @@ class Settings(BaseSettings):
 
     # Notifications
     notifications_enabled: bool = Field(default=True, alias="NOTIFICATIONS_ENABLED")
-    notification_schedule: list[str] = Field(default=["24h", "6h"], alias="NOTIFICATION_SCHEDULE")
+    notification_schedule: list[str] = Field(
+        default_factory=lambda: ["24h", "6h"], alias="NOTIFICATION_SCHEDULE"
+    )
 
     @field_validator("app_data_dir", mode="before")
     @classmethod

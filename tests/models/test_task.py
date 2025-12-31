@@ -1,10 +1,9 @@
-"""Tests for database models.
+"""Tests for Task model.
 
 Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import alembic.command
@@ -14,8 +13,6 @@ from sqlalchemy import text
 from backend import config
 from backend.cli.db import get_alembic_cfg
 from backend.database import close_db, get_db, init_db
-from backend.models.attachment import Attachment
-from backend.models.notification import Notification
 from backend.models.task import Task
 
 
@@ -66,70 +63,11 @@ async def test_task_model(temp_settings: None) -> None:
 
 
 @pytest.mark.asyncio
-async def test_attachment_model(temp_settings: None) -> None:
-    """Test Attachment model creation."""
-    async for session in get_db():
-        # First create a task
-        task = Task(id="task-for-attachment", title="Task with Attachment", status="pending")
-        session.add(task)
-        await session.commit()
-
-        # Create attachment
-        attachment = Attachment(
-            id="attachment-1",
-            task_id="task-for-attachment",
-            type="url",
-            reference="https://example.com",
-            title="Example Link",
-            content="Some content",
-            meta_data={"source": "test"},
-        )
-        session.add(attachment)
-        await session.commit()
-
-        # Verify attachment was created
-        result = await session.execute(text("SELECT * FROM attachments WHERE id = 'attachment-1'"))
-        row = result.fetchone()
-        assert row is not None
-        assert row[2] == "url"  # type is third column
-        break
-    await close_db()
-
-
-@pytest.mark.asyncio
-async def test_notification_model(temp_settings: None) -> None:
-    """Test Notification model creation."""
-    async for session in get_db():
-        # First create a task
-        task = Task(id="task-for-notification", title="Task with Notification", status="pending")
-        session.add(task)
-        await session.commit()
-
-        # Create notification
-        notification = Notification(
-            id="notification-1",
-            task_id="task-for-notification",
-            type="reminder",
-            scheduled_at=datetime.now(),
-            status="pending",
-        )
-        session.add(notification)
-        await session.commit()
-
-        # Verify notification was created
-        result = await session.execute(
-            text("SELECT * FROM notifications WHERE id = 'notification-1'")
-        )
-        row = result.fetchone()
-        assert row is not None
-        assert row[2] == "reminder"  # type is third column
-        break
-    await close_db()
-
-
-@pytest.mark.asyncio
 async def test_task_cascade_delete(temp_settings: None) -> None:
     """Test that deleting a task cascades to attachments and notifications."""
+    from backend.models.attachment import Attachment  # noqa: PLC0415
+    from backend.models.notification import Notification  # noqa: PLC0415
+
     async for session in get_db():
         # Create task with attachment and notification
         task = Task(id="task-to-delete", title="Task to Delete", status="pending")
@@ -143,6 +81,8 @@ async def test_task_cascade_delete(temp_settings: None) -> None:
             reference="https://example.com",
         )
         session.add(attachment)
+
+        from datetime import datetime  # noqa: PLC0415
 
         notification = Notification(
             id="notification-to-delete",

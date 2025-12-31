@@ -1,73 +1,22 @@
-"""Tests for main entrypoints.
+"""Tests for FastAPI main application.
 
 Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
 import asyncio
+import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from typer.testing import CliRunner
 
-from backend.cli.main import app
 from backend.main import app as backend_app
 from backend.main import lifespan, main
-
-
-def test_cli_list_command() -> None:
-    """Test CLI list command."""
-    runner = CliRunner()
-    result = runner.invoke(app, ["list"])
-    assert result.exit_code == 0
-    assert "Not implemented" in result.stdout
-
-
-def test_cli_list_command_with_filters() -> None:
-    """Test CLI list command with filters."""
-    runner = CliRunner()
-    result = runner.invoke(app, ["list", "--status", "pending", "--priority", "high"])
-    assert result.exit_code == 0
-    assert "Not implemented" in result.stdout
-
-
-def test_cli_add_command() -> None:
-    """Test CLI add command."""
-    runner = CliRunner()
-    result = runner.invoke(app, ["add", "Test Task"])
-    assert result.exit_code == 0
-    assert "Not implemented" in result.stdout
-
-
-def test_cli_add_command_with_options() -> None:
-    """Test CLI add command with options."""
-    runner = CliRunner()
-    result = runner.invoke(
-        app,
-        [
-            "add",
-            "Test Task",
-            "--description",
-            "Test description",
-            "--eta",
-            "2025-01-15",
-            "--priority",
-            "high",
-        ],
-    )
-    assert result.exit_code == 0
-    assert "Not implemented" in result.stdout
-
-
-def test_cli_chat_command() -> None:
-    """Test CLI chat command."""
-    runner = CliRunner()
-    result = runner.invoke(app, ["chat"])
-    assert result.exit_code == 0
-    assert "Not implemented" in result.stdout
 
 
 def test_backend_main_lifespan() -> None:
@@ -106,3 +55,24 @@ def test_backend_main_function(mock_uvicorn: MagicMock) -> None:
     # Verify it was called with correct parameters
     call_args = mock_uvicorn.call_args
     assert call_args[0][0] == "backend.main:app"
+
+
+def test_backend_main_name_main() -> None:
+    """Test backend main module when run as __main__ (covers line 53)."""
+    import importlib.util
+    from unittest.mock import patch
+
+    # Load the module and execute it as __main__ to trigger line 53
+    main_path = Path("backend/main.py")
+    spec = importlib.util.spec_from_file_location("__main__", main_path)
+    assert spec is not None and spec.loader is not None
+
+    # Mock uvicorn.run before executing
+    with patch("backend.main.uvicorn.run") as mock_run:
+        module = importlib.util.module_from_spec(spec)
+        # Set __name__ to __main__ to trigger the if block
+        module.__name__ = "__main__"
+        sys.modules["__main__"] = module
+        spec.loader.exec_module(module)
+        # Verify uvicorn.run was called (indirectly through main())
+        mock_run.assert_called_once()

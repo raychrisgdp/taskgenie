@@ -4,6 +4,8 @@ Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 

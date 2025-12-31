@@ -106,32 +106,385 @@ Establish a reliable local-first foundation:
 
 ## Acceptance Criteria
 
-- [ ] Fresh install creates/runs with a clean SQLite DB (no manual steps beyond config).
-- [ ] Migrations can be created and applied via a single command.
-- [ ] Backup to `.sql` and restore from `.sql` are documented and verified.
+### AC1: Fresh Install Creates Database Automatically ✅
+
+**Success Criteria:**
+- [ ] No database file exists initially
+- [ ] Running `tgenie db upgrade head` creates database at `~/.taskgenie/data/taskgenie.db` (or configured path)
+- [ ] All required tables are created: `tasks`, `attachments`, `notifications`, `chat_history`, `config`, `alembic_version`
+- [ ] FastAPI startup automatically runs migrations if DB doesn't exist
+- [ ] `/health` endpoint returns `200 OK` after startup
+
+**How to Test:**
+
+**Automated:**
+```python
+def test_fresh_install_creates_db(tmp_path, monkeypatch):
+    """Test that fresh install creates DB and tables."""
+    db_path = tmp_path / "test.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{db_path}")
+
+    # Verify DB doesn't exist
+    assert not db_path.exists()
+
+    # Run upgrade
+    runner = CliRunner()
+    result = runner.invoke(db_app, ["upgrade", "head"])
+    assert result.exit_code == 0
+
+    # Verify DB created with all tables
+    assert db_path.exists()
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = {row[0] for row in cursor.fetchall()}
+    assert "tasks" in tables
+    assert "attachments" in tables
+    assert "notifications" in tables
+    assert "alembic_version" in tables
+    conn.close()
+```
+
+**Manual:**
+```bash
+# 1. Remove existing DB (if any)
+rm ~/.taskgenie/data/taskgenie.db
+
+# 2. Run upgrade
+uv run tgenie db upgrade head
+
+# 3. Verify DB created
+ls -la ~/.taskgenie/data/taskgenie.db
+
+# 4. Start API and verify health
+uv run python -m backend.main &
+sleep 2
+curl http://localhost:8080/health
+# Expected: {"status": "ok", "version": "0.1.0"}
+```
+
+---
+
+### AC2: Migrations Can Be Created and Applied ✅
+
+**Success Criteria:**
+- [ ] `tgenie db revision -m "..." --autogenerate` creates new migration file
+- [ ] `tgenie db upgrade head` applies all pending migrations
+- [ ] `tgenie db downgrade -1` reverts last migration (where feasible)
+- [ ] `alembic_version` table tracks current revision
+- [ ] Multiple sequential migrations apply correctly
+
+**How to Test:**
+
+**Automated:**
+```python
+def test_create_and_apply_migration(tmp_path, monkeypatch):
+    """Test creating and applying a migration."""
+    # Setup: Fresh DB at initial migration
+    runner.invoke(db_app, ["upgrade", "head"])
+
+    # Create new migration
+    result = runner.invoke(
+        db_app,
+        ["revision", "-m", "test migration", "--autogenerate"]
+    )
+    assert result.exit_code == 0
+
+    # Verify migration file created
+    versions_dir = Path("backend/migrations/versions")
+    migration_files = list(versions_dir.glob("*.py"))
+    assert len(migration_files) >= 2  # initial + new
+
+    # Apply migration
+    result = runner.invoke(db_app, ["upgrade", "head"])
+    assert result.exit_code == 0
+
+    # Verify alembic_version updated
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT version_num FROM alembic_version")
+    version = cursor.fetchone()[0]
+    assert version is not None
+    conn.close()
+```
+
+**Manual:**
+```bash
+# 1. Ensure DB is at head
+uv run tgenie db upgrade head
+
+# 2. Create a test migration (add a dummy column to tasks)
+# Edit backend/models/task.py to add a test column
+# Then generate migration:
+uv run tgenie db revision -m "add test column" --autogenerate
+
+# 3. Review generated migration file
+cat backend/migrations/versions/*_add_test_column.py
+
+# 4. Apply migration
+uv run tgenie db upgrade head
+
+# 5. Verify schema changed
+sqlite3 ~/.taskgenie/data/taskgenie.db ".schema tasks"
+
+# 6. (Optional) Test downgrade
+uv run tgenie db downgrade -1
+sqlite3 ~/.taskgenie/data/taskgenie.db ".schema tasks"  # Verify reverted
+```
+
+---
+
+### AC3: Backup and Restore Work Correctly ✅
+
+**Success Criteria:**
+- [ ] `tgenie db dump --out backup.sql` creates SQL dump file
+- [ ] Dump file contains all table schemas and data
+- [ ] `tgenie db restore --in backup.sql` restores database (with confirmation)
+- [ ] Restored database has same schema and data as original
+- [ ] Foreign key relationships preserved after restore
+- [ ] Restore prompts for confirmation before overwriting
+
+**How to Test:**
+
+**Automated:**
+```python
+async def test_backup_restore_preserves_data(tmp_path, temp_settings):
+    """Test that backup/restore preserves all data and relationships."""
+    # Create task with attachment
+    async for session in get_db():
+        task = Task(id="test-1", title="Test", status="pending", priority="medium")
+        session.add(task)
+        await session.flush()
+        attachment = Attachment(task_id=task.id, type="file", reference="/test.txt")
+        session.add(attachment)
+        await session.commit()
+
+    # Backup
+    backup_file = tmp_path / "backup.sql"
+    result = runner.invoke(db_app, ["dump", "--out", str(backup_file)])
+    assert result.exit_code == 0
+    assert backup_file.exists()
+
+    # Delete DB
+    settings.db_path.unlink()
+
+    # Restore
+    result = runner.invoke(
+        db_app, ["restore", "--in", str(backup_file)],
+        input="y\n"
+    )
+    assert result.exit_code == 0
+
+    # Verify data restored
+    async for session in get_db():
+        task = await session.get(Task, "test-1")
+        assert task is not None
+        assert len(task.attachments) == 1
+```
+
+**Manual:**
+```bash
+# 1. Create some test data (via SQLAlchemy or direct SQL)
+sqlite3 ~/.taskgenie/data/taskgenie.db <<EOF
+INSERT INTO tasks (id, title, status, priority)
+VALUES ('test-1', 'Test Task', 'pending', 'high');
+EOF
+
+# 2. Create backup
+uv run tgenie db dump --out backup.sql
+
+# 3. Verify backup file exists and contains data
+cat backup.sql | grep "INSERT INTO tasks"
+
+# 4. Delete original DB
+rm ~/.taskgenie/data/taskgenie.db
+
+# 5. Restore (will prompt for confirmation)
+uv run tgenie db restore --in backup.sql
+# Type 'y' when prompted
+
+# 6. Verify data restored
+sqlite3 ~/.taskgenie/data/taskgenie.db "SELECT * FROM tasks WHERE id='test-1'"
+# Expected: test-1 | Test Task | pending | high | ...
+```
+
+---
+
+### AC4: Configuration Precedence Works Correctly ✅
+
+**Success Criteria:**
+- [ ] Environment variables override `.env` file
+- [ ] `.env` file overrides `config.toml`
+- [ ] `config.toml` overrides built-in defaults
+- [ ] `DATABASE_URL` env var correctly sets database path
+- [ ] `TASKGENIE_CONFIG_FILE` env var overrides default config path
+- [ ] App data directories created at configured paths
+
+**How to Test:**
+
+**Automated:**
+```python
+def test_config_precedence_env_overrides_toml(tmp_path, monkeypatch):
+    """Test that env vars override config.toml."""
+    # Create config.toml with one DB path
+    config_file = tmp_path / "config.toml"
+    config_file.write_text('[app]\ndatabase_url = "sqlite+aiosqlite:///config.db"\n')
+    monkeypatch.setenv("TASKGENIE_CONFIG_FILE", str(config_file))
+
+    # Set env var to different path
+    env_db_path = tmp_path / "env.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{env_db_path}")
+
+    # Clear cache and get settings
+    config.get_settings.cache_clear()
+    settings = config.get_settings()
+
+    # Verify env var path used
+    assert str(env_db_path) in settings.database_url_resolved
+```
+
+**Manual:**
+```bash
+# 1. Create config.toml with custom DB path
+mkdir -p ~/.taskgenie
+cat > ~/.taskgenie/config.toml <<EOF
+[app]
+database_url = "sqlite+aiosqlite:///tmp/config_db.db"
+EOF
+
+# 2. Set env var to override
+export DATABASE_URL="sqlite+aiosqlite:///tmp/env_db.db"
+
+# 3. Run upgrade and verify env var path used
+uv run tgenie db upgrade head
+ls -la /tmp/env_db.db  # Should exist
+ls -la /tmp/config_db.db  # Should NOT exist
+
+# 4. Unset env var and verify config.toml used
+unset DATABASE_URL
+rm /tmp/env_db.db
+uv run tgenie db upgrade head
+ls -la /tmp/config_db.db  # Should exist
+```
+
+---
+
+### AC5: FastAPI Lifespan Integration ✅
+
+**Success Criteria:**
+- [ ] FastAPI startup automatically initializes database
+- [ ] Migrations run automatically on startup if needed
+- [ ] Database connections properly closed on shutdown
+- [ ] `/health` endpoint accessible after startup
+- [ ] No errors in logs during startup/shutdown
+
+**How to Test:**
+
+**Automated:**
+```python
+def test_fastapi_lifespan_initializes_db(tmp_path, monkeypatch):
+    """Test that FastAPI lifespan initializes DB and runs migrations."""
+    db_path = tmp_path / "test.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{db_path}")
+
+    # TestClient triggers lifespan automatically
+    client = TestClient(app)
+
+    # Verify DB created
+    assert db_path.exists()
+
+    # Verify tables exist
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = {row[0] for row in cursor.fetchall()}
+    assert "tasks" in tables
+    assert "alembic_version" in tables
+    conn.close()
+
+    # Verify health endpoint works
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "version": "0.1.0"}
+```
+
+**Manual:**
+```bash
+# 1. Remove existing DB
+rm ~/.taskgenie/data/taskgenie.db
+
+# 2. Start FastAPI (will auto-create DB and run migrations)
+uv run python -m backend.main
+
+# 3. In another terminal, verify health endpoint
+curl http://localhost:8080/health
+# Expected: {"status": "ok", "version": "0.1.0"}
+
+# 4. Verify DB was created
+ls -la ~/.taskgenie/data/taskgenie.db
+
+# 5. Check logs for any errors
+# Should see: "Database initialized" or similar
+```
+
+---
 
 ## Test Plan
 
-### Automated
+### Automated Tests
 
-- Unit: config precedence and validation.
-- Integration: DB initialization creates expected tables; migrations apply cleanly.
+**Unit Tests:**
+- ✅ Config precedence and validation (`tests/test_config.py`, `tests/test_config_extended.py`)
+- ✅ Database initialization (`tests/test_database.py`, `tests/test_database_extended.py`)
+- ✅ Model relationships (`tests/test_models.py`)
+- ✅ CLI commands (`tests/test_cli_db.py`, `tests/test_cli_db_extended.py`)
 
-### Manual
+**Integration Tests:**
+- ✅ FastAPI lifespan integration (`tests/test_main.py`)
+- ✅ End-to-end workflows (see `TEST_PLAN_POST_PR001.md`)
 
-1. **Fresh start**
-   - Delete local DB file.
-   - Run `tgenie db upgrade` (or equivalent).
-   - Start the API; hit `/health`; verify app boot completes.
-2. **Backup + restore**
-   - Create at least 1 task.
-   - Dump DB to `backup.sql`.
-   - Restore into a new DB file.
-   - Start API pointing at the restored DB and verify the task exists.
-3. **Migration forward/back**
-   - Create a migration (dummy column or table).
-   - Upgrade to head; verify schema changes.
-   - Downgrade one step; verify schema reverts (where feasible in SQLite).
+**Run all tests:**
+```bash
+make test
+# or
+pytest -v
+```
+
+### Manual Test Checklist
+
+**Before marking PR-001 complete, verify:**
+
+- [ ] **Fresh Install Test**
+  - [ ] Delete `~/.taskgenie/data/taskgenie.db`
+  - [ ] Run `uv run tgenie db upgrade head`
+  - [ ] Verify DB created with all tables
+  - [ ] Start API, verify `/health` returns 200
+
+- [ ] **Migration Test**
+  - [ ] Create a test migration: `uv run tgenie db revision -m "test" --autogenerate`
+  - [ ] Apply: `uv run tgenie db upgrade head`
+  - [ ] Verify schema changed
+  - [ ] Test downgrade: `uv run tgenie db downgrade -1`
+
+- [ ] **Backup/Restore Test**
+  - [ ] Create test data (at least 1 task)
+  - [ ] Dump: `uv run tgenie db dump --out backup.sql`
+  - [ ] Delete DB
+  - [ ] Restore: `uv run tgenie db restore --in backup.sql`
+  - [ ] Verify data restored correctly
+
+- [ ] **Configuration Test**
+  - [ ] Test env var override: `export DATABASE_URL=...`
+  - [ ] Test config.toml: Create `~/.taskgenie/config.toml`
+  - [ ] Verify precedence: env > .env > config.toml > defaults
+
+---
+
+## Related Test Documentation
+
+- **Comprehensive Test Plan:** [`TEST_PLAN_POST_PR001.md`](../TEST_PLAN_POST_PR001.md) - Full E2E test scenarios
+- **Quick Win Tests:** [`TESTING_QUICK_WINS.md`](../TESTING_QUICK_WINS.md) - High-value, low-effort tests
+- **Migrations Guide:** [`MIGRATIONS.md`](../MIGRATIONS.md) - How to create and manage migrations
 
 ## Notes / Risks / Open Questions
 

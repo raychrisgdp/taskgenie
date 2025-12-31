@@ -39,7 +39,10 @@ env/
 
 # Codex/OpenCode local artifacts
 .opencode/
-.cursor/
+# Cursor: keep repo-owned commands under `.cursor/commands/`
+.cursor/*
+!.cursor/commands/
+!.cursor/commands/**
 PR_DESCRIPTION.md
 PR_TITLE.txt
 

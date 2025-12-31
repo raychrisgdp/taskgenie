@@ -4,8 +4,15 @@ Author:
     Raymond Christopher (raymond.christopher@gdplabs.id)
 """
 
-from collections.abc import AsyncGenerator
+from __future__ import annotations
 
+import logging
+import sqlite3
+from collections.abc import AsyncGenerator
+from pathlib import Path
+
+import alembic.command
+import alembic.config
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -16,6 +23,8 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import declarative_base
 
 import backend.config
+
+logger = logging.getLogger(__name__)
 
 # SQLAlchemy declarative base for models
 Base = declarative_base()
@@ -31,6 +40,7 @@ def init_db() -> None:
     """Initialize database engine and sessionmaker.
 
     This should be called once at application startup.
+    Automatically runs migrations if database doesn't exist or alembic_version table is missing.
     """
     global engine, async_session_maker
 
@@ -46,6 +56,9 @@ def init_db() -> None:
 
     # Create sessionmaker
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    # Run migrations automatically if DB doesn't exist or alembic_version table is missing
+    _run_migrations_if_needed(settings, database_url)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -71,6 +84,77 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+def _run_migrations_if_needed(settings: backend.config.Settings, database_url: str) -> None:
+    """Run migrations if database doesn't exist or alembic_version table is missing.
+
+    Args:
+        settings: Application settings
+        database_url: Database URL string
+    """
+    # Extract database file path from URL
+    if database_url.startswith("sqlite"):
+        # Handle sqlite:///path or sqlite+aiosqlite:///path
+        db_path_str = database_url.split("///")[-1].split("?")[0]
+        if db_path_str == ":memory:":
+            # In-memory database always needs migrations
+            _run_migrations_sync(settings, database_url)
+            return
+        db_path = Path(db_path_str)
+    else:
+        # For non-SQLite databases, always run migrations
+        _run_migrations_sync(settings, database_url)
+        return
+
+    # Check if database file exists
+    if not db_path.exists():
+        _run_migrations_sync(settings, database_url)
+        return
+
+    # Check if alembic_version table exists
+    try:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'"
+        )
+        has_version_table = cursor.fetchone() is not None
+        conn.close()
+
+        if not has_version_table:
+            _run_migrations_sync(settings, database_url)
+    except Exception:
+        # If we can't check, run migrations to be safe
+        _run_migrations_sync(settings, database_url)
+
+
+def _run_migrations_sync(settings: backend.config.Settings, database_url: str) -> None:
+    """Run migrations synchronously using Alembic command interface.
+
+    Args:
+        settings: Application settings
+        database_url: Database URL string
+    """
+    backend_dir = Path(__file__).resolve().parent
+    project_root = backend_dir.parent
+    migrations_dir = backend_dir / "migrations"
+    alembic_ini = migrations_dir / "alembic.ini"
+
+    if not alembic_ini.exists():
+        # If alembic.ini doesn't exist, skip migrations
+        return
+
+    cfg = alembic.config.Config(str(alembic_ini))
+    cfg.set_main_option("prepend_sys_path", str(project_root))
+    cfg.set_main_option("script_location", str(migrations_dir))
+    cfg.set_main_option("sqlalchemy.url", database_url)
+
+    try:
+        alembic.command.upgrade(cfg, "head")
+    except Exception:
+        # Log error but don't fail startup
+        logger.warning("Failed to run automatic migrations on startup", exc_info=True)
 
 
 async def close_db() -> None:

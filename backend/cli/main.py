@@ -7,8 +7,13 @@ Author:
 import typer
 from rich.console import Console
 
+from backend.cli import db
+
 app = typer.Typer(help="TaskGenie CLI (implementation in progress)")
 console = Console()
+
+# Add db subcommand group
+app.add_typer(db.db_app, name="db")
 
 
 @app.command(name="list")

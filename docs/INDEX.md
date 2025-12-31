@@ -74,6 +74,7 @@ Implementation plans, pull request tracking, and development roadmap.
 - [Notifications](01-design/DESIGN_NOTIFICATIONS.md)
 
 ### Development
+- [Agent Guide](../AGENTS.md) - **AI agents & developers**: Code patterns, conventions, and learnings ⭐ NEW
 - [PR Plans](02-implementation/PR-PLANS.md) - Implementation roadmap
 - [Testing Guide](02-implementation/TESTING_GUIDE.md) - Testing policy and examples
 

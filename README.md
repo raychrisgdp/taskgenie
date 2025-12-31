@@ -51,7 +51,8 @@ make test
 
 ## Docs
 
-Start at `docs/INDEX.md`.
+- **For AI agents & developers**: Start with [`AGENTS.md`](AGENTS.md) - Code patterns, conventions, and learnings
+- **For project overview**: Start at [`docs/INDEX.md`](docs/INDEX.md)
 
 ## License
 

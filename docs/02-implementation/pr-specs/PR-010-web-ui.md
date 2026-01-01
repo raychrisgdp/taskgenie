@@ -1,7 +1,7 @@
 # PR-010: Web UI (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002, PR-004 (chat optional: PR-003)  
+**Depends on:** PR-002, PR-004 (attachment viewing), PR-003 (chat optional)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal

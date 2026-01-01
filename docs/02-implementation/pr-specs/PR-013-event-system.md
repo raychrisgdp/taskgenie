@@ -1,7 +1,7 @@
 # PR-013: Event System + Realtime Updates (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002, PR-004  
+**Depends on:** PR-002, PR-004 (for attachment event emission)  
 **Last Reviewed:** 2026-01-01
 
 ## Goal

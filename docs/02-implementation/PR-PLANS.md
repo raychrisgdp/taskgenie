@@ -46,7 +46,7 @@ This sequence prioritizes **something usable early** (good UX) and then adds cap
 | 5 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 | tui-dev |
 | 6 | PR-003 | LLM + Chat Backbone | Make chat real (provider + API + TUI) | PR-001, PR-002, PR-008 | api-testing, tui-dev |
 | 7 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 | task-workflow |
-| 8 | PR-013 | Event System + Realtime Updates | Enable subscriptions + hooks | PR-002 | - |
+| 8 | PR-013 | Event System + Realtime Updates | Enable subscriptions + hooks | PR-002, PR-004 | - |
 | 9 | PR-003B | Agent Tool-Calling Foundation | Safe tool execution | PR-003, PR-002, PR-004 | - |
 | 10 | PR-011 | Notifications | Early \"daily value\" | PR-002 | task-workflow |
 | 11 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 | integration-setup |
@@ -54,9 +54,9 @@ This sequence prioritizes **something usable early** (good UX) and then adds cap
 | 13 | PR-005 | RAG + Semantic Search | Better recall + better chat | PR-003, PR-004 | rag-testing, context-optimization, context-compression |
 | 14 | PR-014 | Multi-Agent Orchestration | Coordinated agent runs | PR-003B, PR-013 | - |
 | 15 | PR-015 | Agent UX Panel | Visibility + controls | PR-008, PR-003B, PR-013, PR-014 | - |
-| 16 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows + agent CLI | PR-002, PR-003B | task-workflow |
-| 17 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003) | - |
-| 18 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 | - |
+| 16 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows + agent CLI | PR-002, PR-003B, PR-014 | task-workflow |
+| 17 | PR-010 | Web UI | Secondary UX for rich preview | PR-002, PR-004 (chat optional: PR-003) | - |
+| 18 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-001, PR-017, PR-010, PR-011 | - |
 
 Notes:
 - You can swap **Seq 10–13** based on what you can test earliest (notifications vs integrations vs RAG).
@@ -96,6 +96,7 @@ flowchart TD
   PR008 --> PR003
   PR002 --> PR004
   PR002 --> PR013
+  PR004 --> PR013
   PR003 --> PR003B
   PR002 --> PR003B
   PR004 --> PR003B
@@ -110,9 +111,13 @@ flowchart TD
   PR003B --> PR015
   PR013 --> PR015
   PR014 --> PR015
+  PR014 --> PR009
   PR003B --> PR009
   PR002 --> PR010
+  PR004 --> PR010
   PR003 -. "chat UI (optional)" .-> PR010
+  PR001 --> PR012
+  PR017 --> PR012
   PR010 --> PR012
   PR011 --> PR012
 ```

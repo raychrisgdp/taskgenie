@@ -1,7 +1,7 @@
 # PR-012: Deployment + Documentation (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-010, PR-011  
+**Depends on:** PR-001 (backup/restore), PR-010, PR-011, PR-017 (backup/restore guidance)  
 **Last Reviewed:** 2025-12-29
 
 ## Goal

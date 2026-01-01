@@ -439,8 +439,7 @@ class AsyncToolExecutor:
             )
             return {
                 "status": "success",
-                "result": result,
-                "duration_ms": 0  # Example field (implementation should track actual duration)
+                "result": result
             }
 
         except asyncio.TimeoutError:

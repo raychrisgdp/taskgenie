@@ -1,7 +1,7 @@
 # PR-011: Notifications (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002, PR-003B, PR-014 (agent notifications optional)  
+**Depends on:** PR-002 (agent notifications optional: PR-003B, PR-014)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal
@@ -28,7 +28,7 @@ and in Docker.
 - Quiet hours and deduplication.
 - Persisted notification history for UI/TUI viewing.
 - Delivery channels: local desktop notifications and in-app feed for Docker.
-- Optional agent-run notifications (started/completed/failed) when agent system exists.
+- Optional agent-run notifications (started/completed/failed) when agent system exists (requires PR-003B and PR-014).
 
 ### Out
 

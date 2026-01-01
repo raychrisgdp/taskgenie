@@ -31,7 +31,12 @@ def check_relative_links(markdown_files: list[Path]) -> list[str]:
 
     for md in markdown_files:
         text = md.read_text(encoding="utf-8")
-        for raw_target in LINK_RE.findall(text):
+
+        # Remove code blocks to avoid false positives from code examples
+        code_block_pattern = re.compile(r"```[\s\S]*?```", re.MULTILINE)
+        text_without_code = code_block_pattern.sub("", text)
+
+        for raw_target in LINK_RE.findall(text_without_code):
             target = raw_target.strip()
             if not target or target.startswith("#"):
                 continue

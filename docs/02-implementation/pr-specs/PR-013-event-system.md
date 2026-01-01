@@ -1,7 +1,7 @@
 # PR-013: Event System + Realtime Updates (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002  
+**Depends on:** PR-002, PR-004  
 **Last Reviewed:** 2026-01-01
 
 ## Goal
@@ -82,48 +82,9 @@ for UI and agent hooks.
 - Failed webhook deliveries are logged and retried without blocking core flows.
 - SSE clients can reconnect with `Last-Event-ID`.
 
-## Acceptance Criteria
+### Implementation Notes
 
-### AC1: Event Emission
-
-**Success Criteria:**
-- [ ] Task create/update/delete emits the expected event types.
-- [ ] Attachment create/delete emits events when applicable.
-
-### AC2: SSE Streaming
-
-**Success Criteria:**
-- [ ] SSE endpoint streams events in order.
-- [ ] Reconnect with `Last-Event-ID` resumes without duplicates.
-
-### AC3: Webhook Delivery (Optional)
-
-**Success Criteria:**
-- [ ] Webhooks receive events when configured.
-- [ ] Delivery failures are retried and logged.
-
-## Test Plan
-
-### Automated
-
-- Unit tests for event emission and payloads.
-- Integration tests for SSE streaming and resume behavior.
-- Webhook dispatcher tests with mocked HTTP endpoints.
-
-### Manual
-
-- Create a task and observe SSE events in a terminal client.
-- Configure a webhook endpoint and verify deliveries.
-
-## Notes / Risks / Open Questions
-
-- Decide how long to retain events in the log.
-
----
-
-## Skill Enrichment: context-fundamentals
-
-### Event Batching for Efficiency
+#### Event Batching for Efficiency
 
 Aggregate high-frequency events to reduce processing overhead:
 
@@ -241,7 +202,7 @@ class EventBatcher:
         })
 ```
 
-### Event Deduplication
+#### Event Deduplication
 
 Prevent duplicate events from being emitted:
 
@@ -301,7 +262,7 @@ class EventDeduplicator:
         })
 ```
 
-### Event Filtering and Routing
+#### Event Filtering and Routing
 
 Filter events by type and content to reduce context noise:
 
@@ -364,7 +325,7 @@ AGENT_CONTEXT_FILTER = EventFilter(
 )
 ```
 
-### Event Prioritization
+#### Event Prioritization
 
 Prioritize events for context loading (most relevant first):
 
@@ -427,3 +388,40 @@ async def emit_with_priority(
 
     return event_id
 ```
+
+## Acceptance Criteria
+
+### AC1: Event Emission
+
+**Success Criteria:**
+- [ ] Task create/update/delete emits the expected event types.
+- [ ] Attachment create/delete emits events when applicable.
+
+### AC2: SSE Streaming
+
+**Success Criteria:**
+- [ ] SSE endpoint streams events in order.
+- [ ] Reconnect with `Last-Event-ID` resumes without duplicates.
+
+### AC3: Webhook Delivery (Optional)
+
+**Success Criteria:**
+- [ ] Webhooks receive events when configured.
+- [ ] Delivery failures are retried and logged.
+
+## Test Plan
+
+### Automated
+
+- Unit tests for event emission and payloads.
+- Integration tests for SSE streaming and resume behavior.
+- Webhook dispatcher tests with mocked HTTP endpoints.
+
+### Manual
+
+- Create a task and observe SSE events in a terminal client.
+- Configure a webhook endpoint and verify deliveries.
+
+## Notes / Risks / Open Questions
+
+- Decide how long to retain events in the log.

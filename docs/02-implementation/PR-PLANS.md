@@ -2,7 +2,7 @@
 
 **Status:** Spec Complete | Implementation In Progress
 **Last Reviewed:** 2025-12-31
-**Total PRs:** 17 (PR-001 through PR-012, plus PR-003B and PR-013 through PR-016)
+**Total PRs:** 18 (PR-001 through PR-012, plus PR-003B and PR-013 through PR-017)
 
 ## Overview
 
@@ -40,25 +40,26 @@ This sequence prioritizes **something usable early** (good UX) and then adds cap
 | Seq | PR | Title | Why now? | Depends on | Skill Enrichment |
 |---:|---|---|---|---|---|
 | 1 | PR-001 | Database & Configuration | Foundation + migrations | - | - |
-| 2 | PR-016 | Observability Baseline | De-risk debugging early | PR-001 | - |
-| 3 | PR-002 | Task CRUD API | Core workflows + enables clients | PR-001 | api-testing |
-| 4 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 | tui-dev |
-| 5 | PR-003 | LLM + Chat Backbone | Make chat real (provider + API + TUI) | PR-001, PR-002, PR-008 | api-testing, tui-dev |
-| 6 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 | task-workflow |
-| 7 | PR-013 | Event System + Realtime Updates | Enable subscriptions + hooks | PR-002 | - |
-| 8 | PR-003B | Agent Tool-Calling Foundation | Safe tool execution | PR-003, PR-002, PR-004 | - |
-| 9 | PR-011 | Notifications | Early \"daily value\" | PR-002 | task-workflow |
-| 10 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 | integration-setup |
-| 11 | PR-006 | Gmail Integration | High-value, higher complexity | PR-004 | integration-setup |
-| 12 | PR-005 | RAG + Semantic Search | Better recall + better chat | PR-003, PR-004 | rag-testing, context-optimization, context-compression |
-| 13 | PR-014 | Multi-Agent Orchestration | Coordinated agent runs | PR-003B, PR-013 | - |
-| 14 | PR-015 | Agent UX Panel | Visibility + controls | PR-008, PR-003B, PR-013, PR-014 | - |
-| 15 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows + agent CLI | PR-002, PR-003B | task-workflow |
-| 16 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003) | - |
-| 17 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 | - |
+| 2 | PR-017 | DB Config Follow-ups | Close PR-001 gaps | PR-001 | - |
+| 3 | PR-016 | Observability Baseline | De-risk debugging early | PR-001 | - |
+| 4 | PR-002 | Task CRUD API | Core workflows + enables clients | PR-001 | api-testing |
+| 5 | PR-008 | Interactive TUI (Tasks MVP) | Validate UX early | PR-002 | tui-dev |
+| 6 | PR-003 | LLM + Chat Backbone | Make chat real (provider + API + TUI) | PR-001, PR-002, PR-008 | api-testing, tui-dev |
+| 7 | PR-004 | Attachments + Link Detection | Context capture for real work | PR-002 | task-workflow |
+| 8 | PR-013 | Event System + Realtime Updates | Enable subscriptions + hooks | PR-002 | - |
+| 9 | PR-003B | Agent Tool-Calling Foundation | Safe tool execution | PR-003, PR-002, PR-004 | - |
+| 10 | PR-011 | Notifications | Early \"daily value\" | PR-002 | task-workflow |
+| 11 | PR-007 | GitHub Integration | High-value for dev tasks | PR-004 | integration-setup |
+| 12 | PR-006 | Gmail Integration | High-value, higher complexity | PR-004 | integration-setup |
+| 13 | PR-005 | RAG + Semantic Search | Better recall + better chat | PR-003, PR-004 | rag-testing, context-optimization, context-compression |
+| 14 | PR-014 | Multi-Agent Orchestration | Coordinated agent runs | PR-003B, PR-013 | - |
+| 15 | PR-015 | Agent UX Panel | Visibility + controls | PR-008, PR-003B, PR-013, PR-014 | - |
+| 16 | PR-009 | CLI Subcommands (Secondary) | Scriptable workflows + agent CLI | PR-002, PR-003B | task-workflow |
+| 17 | PR-010 | Web UI | Secondary UX for rich preview | PR-002 (chat optional: PR-003) | - |
+| 18 | PR-012 | Deployment + Docs | Make it easy to run/share | PR-010, PR-011 | - |
 
 Notes:
-- You can swap **Seq 9–12** based on what you can test earliest (notifications vs integrations vs RAG).
+- You can swap **Seq 10–13** based on what you can test earliest (notifications vs integrations vs RAG).
 - PR-010 can be started earlier for task pages, but chat streaming needs PR-003.
 - PR-015 depends on PR-014 for agent run endpoints.
 - Specs (with test scenarios): `pr-specs/INDEX.md`
@@ -68,6 +69,7 @@ Notes:
 ```mermaid
 flowchart TD
   PR001["PR-001: Database & Config"]
+  PR017["PR-017: DB Config Follow-ups"]
   PR016["PR-016: Observability Baseline"]
   PR002["PR-002: Task CRUD API"]
   PR008["PR-008: Interactive TUI (Tasks MVP)"]
@@ -85,6 +87,7 @@ flowchart TD
   PR010["PR-010: Web UI"]
   PR012["PR-012: Deployment + Docs"]
 
+  PR001 --> PR017
   PR001 --> PR016
   PR001 --> PR002
   PR002 --> PR008
@@ -127,6 +130,7 @@ These diagrams break the full dependency graph into smaller, phase-focused views
 ```mermaid
 flowchart TD
   PR001["PR-001: Database & Config"]
+  PR017["PR-017: DB Config Follow-ups"]
   PR016["PR-016: Observability Baseline"]
   PR002["PR-002: Task CRUD API"]
   PR008["PR-008: Interactive TUI"]
@@ -135,6 +139,7 @@ flowchart TD
   PR013["PR-013: Event System"]
   PR003B["PR-003B: Agent Tool-Calling"]
 
+  PR001 --> PR017
   PR001 --> PR016
   PR001 --> PR002
   PR002 --> PR008
@@ -213,6 +218,17 @@ flowchart TD
 - [ ] Database creates tables on startup
 - [ ] Environment variables load correctly
 - [ ] Tests pass for database operations
+
+### PR-017: DB Config Follow-ups
+**Branch:** `feature/db-config-followups`
+**Status:** ⬜ Not Started
+**Dependency:** PR-001
+**Description:** Close gaps after PR-001 (dir creation, restore safety, FK enforcement, docs alignment).
+**Spec:** `pr-specs/PR-017-db-config-followups.md`
+**Acceptance Criteria:**
+- [ ] `data/chroma` directory is created in app data dir
+- [ ] `tgenie db restore` prompts unless `--yes` is provided
+- [ ] SQLite foreign keys are enforced on every connection
 
 ### PR-016: Observability Baseline
 **Branch:** `feature/observability-baseline`
@@ -438,7 +454,7 @@ This phase is intentionally flexible: pick what’s easiest to validate early fr
 
 | Phase | Focus | Weeks | Key PRs |
 |-------|-------|--------|----------|
-| **1** | **Foundation + Observability + UX MVP** | 1-2 | PR-001 (DB), PR-016 (Observability), PR-002 (Task API), PR-008 (TUI Tasks) |
+| **1** | **Foundation + Observability + UX MVP** | 1-2 | PR-001 (DB), PR-017 (DB follow-ups), PR-016 (Observability), PR-002 (Task API), PR-008 (TUI Tasks) |
 | **2** | **Chat + Attachments** | 3-4 | PR-003 (Chat backbone), PR-004 (Attachments) |
 | **3** | **Agent Foundations + Events** | 5-6 | PR-013 (Events), PR-003B (Tool-calling) |
 | **4** | **Early Value Track** | 7-8 | PR-011 (Notifications) and/or PR-007 (GitHub) / PR-006 (Gmail) |

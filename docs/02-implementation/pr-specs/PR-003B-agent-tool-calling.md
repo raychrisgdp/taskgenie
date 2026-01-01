@@ -89,48 +89,9 @@ behalf of the user.
 - Invalid tool args return a tool error message back to the model.
 - Tool timeouts return a clear failure response without crashing chat.
 
-## Acceptance Criteria
+### Implementation Notes
 
-### AC1: Tool Schema and Registry
-
-**Success Criteria:**
-- [ ] Tools are defined with JSON Schema parameters.
-- [ ] Tool registry exposes the schema list to the chat pipeline.
-
-### AC2: Tool Execution Flow
-
-**Success Criteria:**
-- [ ] Tool calls are validated and executed with timeout handling.
-- [ ] Tool results are included in the chat response flow.
-
-### AC3: Safety and Confirmation
-
-**Success Criteria:**
-- [ ] Destructive tools require confirmation or are blocked by default.
-- [ ] Tool errors are surfaced as readable assistant responses.
-
-## Test Plan
-
-### Automated
-
-- Unit tests for tool schema validation and registry behavior.
-- Integration tests for tool call -> execution -> response flow with mocked LLM.
-- Safety tests for destructive tool confirmation gating.
-
-### Manual
-
-- Run chat and ask the assistant to create/update/complete a task.
-- Attempt a destructive action and verify confirmation is required.
-
-## Notes / Risks / Open Questions
-
-- Decide whether tool execution logs should be persisted for audit (future).
-
----
-
-## Skill Enrichment: tool-design
-
-### Consolidation Principle
+#### Consolidation Principle
 
 Prefer single comprehensive tools over multiple narrow tools:
 
@@ -175,7 +136,7 @@ def query_tasks(
     pass
 ```
 
-### Tool Description Engineering
+#### Tool Description Engineering
 
 Write descriptions that answer what, when, and what returns:
 
@@ -218,6 +179,43 @@ async def create_task(
     """Create a new task."""
     # Implementation...
 ```
+
+## Acceptance Criteria
+
+### AC1: Tool Schema and Registry
+
+**Success Criteria:**
+- [ ] Tools are defined with JSON Schema parameters.
+- [ ] Tool registry exposes the schema list to the chat pipeline.
+
+### AC2: Tool Execution Flow
+
+**Success Criteria:**
+- [ ] Tool calls are validated and executed with timeout handling.
+- [ ] Tool results are included in the chat response flow.
+
+### AC3: Safety and Confirmation
+
+**Success Criteria:**
+- [ ] Destructive tools require confirmation or are blocked by default.
+- [ ] Tool errors are surfaced as readable assistant responses.
+
+## Test Plan
+
+### Automated
+
+- Unit tests for tool schema validation and registry behavior.
+- Integration tests for tool call -> execution -> response flow with mocked LLM.
+- Safety tests for destructive tool confirmation gating.
+
+### Manual
+
+- Run chat and ask the assistant to create/update/complete a task.
+- Attempt a destructive action and verify confirmation is required.
+
+## Notes / Risks / Open Questions
+
+- Decide whether tool execution logs should be persisted for audit (future).
 
 ### Response Format Optimization
 
@@ -442,7 +440,7 @@ class AsyncToolExecutor:
             return {
                 "status": "success",
                 "result": result,
-                "duration_ms": 0  # TODO: track duration
+                "duration_ms": 0  # Example field (implementation should track actual duration)
             }
 
         except asyncio.TimeoutError:

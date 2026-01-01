@@ -1,7 +1,7 @@
 # PR-010: Web UI (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002 (chat optional: PR-003)  
+**Depends on:** PR-002, PR-004 (chat optional: PR-003)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal
@@ -25,6 +25,7 @@ optional chat streaming.
 ### In
 
 - Task list, detail, create, and edit pages (HTMX forms).
+- Attachment viewing pages for reading attachment content.
 - Basic responsive layout.
 - Optional chat page if PR-003 is implemented.
 
@@ -36,6 +37,7 @@ optional chat streaming.
 ## Mini-Specs
 
 - FastAPI template routes for tasks list/detail and edit/create.
+- Attachment viewing pages for displaying attachment content.
 - HTMX interactions for inline updates and form submissions.
 - Optional chat page using SSE via EventSource.
 
@@ -84,12 +86,17 @@ optional chat streaming.
 **Success Criteria:**
 - [ ] List/detail/create/edit flows work against the API.
 
-### AC2: Responsive Layout
+### AC2: Attachment Viewing
+
+**Success Criteria:**
+- [ ] Attachment viewing pages display attachment content correctly.
+
+### AC3: Responsive Layout
 
 **Success Criteria:**
 - [ ] Pages remain usable on narrow viewports.
 
-### AC3: Optional Chat UI
+### AC4: Optional Chat UI
 
 **Success Criteria:**
 - [ ] If PR-003 is present, chat page streams responses and handles disconnects.

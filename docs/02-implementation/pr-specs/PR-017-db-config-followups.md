@@ -51,7 +51,7 @@ SQLite FK enforcement, and docs alignment.
 - As a user, I must explicitly confirm a restore before it overwrites data.
 - As a developer, I can rely on SQLite foreign keys for any connection.
 
-## UX Notes
+## UX Notes (if applicable)
 
 - Restore prompts should be explicit about the target DB path.
 - The `--yes` flag should be consistent with `db reset`.
@@ -126,3 +126,5 @@ SQLite FK enforcement, and docs alignment.
 - Start the API and confirm `~/.taskgenie/data/chroma` is created.
 
 ## Notes / Risks / Open Questions
+
+- N/A.

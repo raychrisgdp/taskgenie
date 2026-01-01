@@ -26,4 +26,4 @@ Design deep-dives live in `docs/01-design/` (notably `DESIGN_TUI.md`, `DESIGN_CH
 - [PR-014-multi-agent-orchestration.md](PR-014-multi-agent-orchestration.md) - Multi-agent orchestration
 - [PR-015-agent-ux-panel.md](PR-015-agent-ux-panel.md) - TUI agent panel + controls
 - [PR-016-observability-baseline.md](PR-016-observability-baseline.md) - Structured logging + telemetry
-- [PR-017-db-config-followups.md](PR-017-db-config-followups.md) - DB config follow-up fixes
+- [PR-017-db-config-followups.md](PR-017-db-config-followups.md) - DB config follow-ups

@@ -1,7 +1,7 @@
 # PR-009: CLI Subcommands (Secondary) (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002, PR-003B  
+**Depends on:** PR-002, PR-003B, PR-014  
 **Last Reviewed:** 2025-12-29
 
 ## Goal
@@ -121,4 +121,4 @@ Provide non-interactive commands for scripting while the TUI remains primary.
 ## Notes / Risks / Open Questions
 
 - Ensure CLI flags align with TUI field names and API enums.
-- Agent commands depend on PR-003B and any agent run API contract.
+- Agent commands depend on PR-003B and PR-014 (agent run API contract).

@@ -80,46 +80,9 @@ execution.
 
 - Failed runs are marked with error status and short reason.
 
-## Acceptance Criteria
+### Implementation Notes
 
-### AC1: Run Lifecycle
-
-**Success Criteria:**
-- [ ] Agent runs can be started, paused, resumed, and canceled.
-- [ ] Run status is persisted and queryable.
-
-### AC2: Concurrency Control
-
-**Success Criteria:**
-- [ ] Concurrency limits prevent excessive parallel runs.
-- [ ] Runs back off or queue when limits are reached.
-
-### AC3: Event Integration
-
-**Success Criteria:**
-- [ ] Run status updates emit events for UI consumption.
-
-## Test Plan
-
-### Automated
-
-- Unit tests for run state transitions.
-- Integration tests for API start/cancel/status.
-- Concurrency tests for max-parallel settings.
-
-### Manual
-
-- Start a run, observe status updates, then cancel it.
-
-## Notes / Risks / Open Questions
-
-- Decide how much agent context to persist vs summarize.
-
----
-
-## Skill Enrichment: multi-agent-patterns
-
-### Architectural Pattern Selection
+#### Architectural Pattern Selection
 
 Implement **Swarm/Peer-to-Peer** pattern (not Supervisor) to avoid telephone game:
 
@@ -221,7 +184,7 @@ orchestrator.register_agent(PLANNER)
 orchestrator.register_agent(EXECUTOR)
 ```
 
-### Handoff Protocol
+#### Handoff Protocol
 
 Implement explicit handoff mechanism with `forward_message` tool:
 
@@ -290,7 +253,7 @@ async def researcher_agent(goal: str, context: dict) -> dict:
     return {"type": "final", "result": findings}
 ```
 
-### Convergence and Consensus
+#### Convergence and Consensus
 
 Implement debate protocol for complex decisions:
 
@@ -367,7 +330,7 @@ class DebateCoordinator:
         }
 ```
 
-### Failure Mode Mitigations
+#### Failure Mode Mitigations
 
 **Supervisor Bottleneck:** Implement output schema constraints
 
@@ -428,9 +391,9 @@ def enforce_objectives(agent_run: AgentRun, objective: AgentObjective):
 
 ---
 
-## Skill Enrichment: memory-systems
+### Memory Implementation Notes
 
-### Shared Memory Architecture
+#### Shared Memory Architecture
 
 Implement hierarchical memory with temporal validity for multi-agent coordination:
 
@@ -603,7 +566,7 @@ async def executor_agent(goal: str, context: dict) -> dict:
     return {"type": "final", "result": f"Executing task with: {task_facts}"}
 ```
 
-### Entity Consistency Tracking
+#### Entity Consistency Tracking
 
 Track entity identity across sessions and agents:
 
@@ -704,7 +667,7 @@ class EntityRegistry:
         return best_match
 ```
 
-### Memory Consolidation
+#### Memory Consolidation
 
 Implement periodic consolidation to prevent unbounded growth:
 
@@ -836,7 +799,7 @@ class MemoryConsolidator:
         return len(fact_ids_to_remove)
 ```
 
-### Integration with Context Loading
+#### Integration with Context Loading
 
 Load relevant memories into agent context:
 
@@ -891,7 +854,7 @@ def estimate_tokens(text: str) -> int:
     return len(text.split()) * 1.3
 ```
 
-### Agent Task Summarization
+#### Agent Task Summarization
 
 Store agent summaries in memory for future retrieval:
 
@@ -967,4 +930,38 @@ async def store_agent_summary(
         "outcomes": len(outcomes)
     })
 ```
-```
+
+## Acceptance Criteria
+
+### AC1: Run Lifecycle
+
+**Success Criteria:**
+- [ ] Agent runs can be started, paused, resumed, and canceled.
+- [ ] Run status is persisted and queryable.
+
+### AC2: Concurrency Control
+
+**Success Criteria:**
+- [ ] Concurrency limits prevent excessive parallel runs.
+- [ ] Runs back off or queue when limits are reached.
+
+### AC3: Event Integration
+
+**Success Criteria:**
+- [ ] Run status updates emit events for UI consumption.
+
+## Test Plan
+
+### Automated
+
+- Unit tests for run state transitions.
+- Integration tests for API start/cancel/status.
+- Concurrency tests for max-parallel settings.
+
+### Manual
+
+- Start a run, observe status updates, then cancel it.
+
+## Notes / Risks / Open Questions
+
+- Decide how much agent context to persist vs summarize.

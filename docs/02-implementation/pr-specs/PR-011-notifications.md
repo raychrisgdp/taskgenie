@@ -1,7 +1,7 @@
 # PR-011: Notifications (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002  
+**Depends on:** PR-002, PR-003B, PR-014 (agent notifications optional)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal

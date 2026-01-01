@@ -6,108 +6,114 @@
 
 ## Goal
 
-Add semantic recall across tasks and cached attachment content, and improve chat answers by injecting the most relevant context.
+Add semantic search across tasks and cached attachment content, and use retrieved
+context to improve chat responses.
 
 ## User Value
 
-- “Where did I put that?” becomes fast: semantic search finds tasks/attachments by meaning.
-- Chat becomes more accurate because it can ground responses in local data.
+- Users can find tasks by meaning, not just keywords.
+- Chat responses can reference local context.
+
+## References
+
+- `docs/01-design/DESIGN_CHAT.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/01-design/API_REFERENCE.md`
 
 ## Scope
 
 ### In
 
-- Local vector store (ChromaDB).
-- Embedding pipeline for:
-  - tasks
-  - attachments (cached content)
-- Semantic search endpoint (query → top-k results with scores).
-- Chat integration:
-  - retrieve top context snippets
-  - inject into prompt (bounded by token limits)
+- Local vector store (ChromaDB) and embeddings pipeline.
+- Indexing for tasks and cached attachment content.
+- Semantic search endpoint returning ranked results.
+- Chat context injection with strict token limits.
 
 ### Out
 
-- Cross-user/multi-tenant search.
-- Remote vector DB.
+- Multi-tenant or remote vector databases.
+- Hybrid keyword search, re-ranking, and query expansion (future).
 
 ## Mini-Specs
 
-- Embeddings:
-  - choose default embedding model/provider (configurable).
-- Indexing:
-  - tasks + cached attachments are embedded and stored in ChromaDB.
-  - re-index on create/update and after attachment fetch.
-- Query:
-  - semantic search API (`GET /api/v1/search/semantic`) returns ranked results.
-- Chat augmentation:
-  - retrieve top snippets and inject into chat prompt (bounded by token limits).
-- Tests:
-  - small fixture corpus; validate top-k results for representative queries.
-
-## References
-
-- `docs/01-design/DESIGN_CHAT.md` (RAG strategy + prompt assembly)
-- `docs/01-design/DESIGN_DATA.md` (RAG document structure)
-- `docs/01-design/API_REFERENCE.md` (semantic search endpoint examples)
+- Configurable embedding model and vector store location.
+- Indexing triggers on task create/update and attachment content updates.
+- `/api/v1/search/semantic` endpoint returning top-k results with scores.
+- Prompt assembly that injects retrieved context within a token budget.
 
 ## User Stories
 
-- As a user, I can search by meaning (“login issues”) and find the right task.
-- As a user, chat answers can reference the correct task/attachment context.
+- As a user, I can search by meaning and find relevant tasks.
+- As a user, chat answers reference the right tasks or attachments.
+
+## UX Notes (if applicable)
+
+- N/A.
 
 ## Technical Design
 
-### Indexing triggers
+### Architecture
 
-- Index tasks:
-  - on task create/update
-- Index attachments:
-  - when attachment content is fetched/updated (PR-006/PR-007)
+- Embedding service creates chunks and writes to ChromaDB.
+- Retrieval service returns top-k snippets with scores and metadata.
+- Chat pipeline requests top snippets and injects them into the prompt.
 
-### Embeddings
+### Data Model / Migrations
 
-- **Model:** `sentence-transformers/all-MiniLM-L6-v2` (via `sentence-transformers`; make configurable later)
-- **Vector Store:** ChromaDB (running in-process)
-- **Collection Naming:** `taskgenie_items`
-- **Document Metadata:**
-  - `id`: task or attachment ID
-  - `source_type`: `task | attachment`
-  - `parent_task_id`: ID of the task
-  - `text`: the chunked content
+- Vector store collection `taskgenie_items` with metadata:
+  id, source_type (task|attachment), parent_task_id, text, embedding_version.
 
-### Retrieval + response format
+### API Contract
 
-- Semantic search endpoint returns:
-  - top-k results with scores
-  - short excerpts for display
-- Chat integration:
-  - retrieve top snippets
-  - inject into prompt within a strict token budget
-  - (optional) include “sources” in response for traceability
+- `GET /api/v1/search/semantic?query=...&limit=...` returns results with id, type,
+  score, snippet, and task linkage.
+
+### Background Jobs
+
+- Optional background indexing for large attachment content to avoid blocking
+  requests.
+
+### Security / Privacy
+
+- Do not log raw content or prompts by default.
+- Embeddings are stored locally in the app data directory.
+
+### Error Handling
+
+- Empty index returns empty results (200 OK).
+- Embedding failures return actionable errors and do not crash chat.
 
 ## Acceptance Criteria
 
+### AC1: Indexing Pipeline
+
+**Success Criteria:**
 - [ ] Tasks and cached attachments are embedded and indexed automatically.
-- [ ] Semantic search returns relevant results for representative queries.
-- [ ] Chat responses cite retrieved task/attachment context where applicable.
+
+### AC2: Semantic Search API
+
+**Success Criteria:**
+- [ ] Search returns relevant results for representative queries.
+
+### AC3: Chat Context Injection
+
+**Success Criteria:**
+- [ ] Chat responses include retrieved context when available and respect token
+  limits.
 
 ## Test Plan
 
 ### Automated
 
-- Unit: chunking logic, prompt assembly, context truncation.
-- Integration:
-  1. Create two tasks with different topics; query semantic search; verify ranking.
-  2. Add attachment content; query that content; verify attachment appears in results.
-  3. Chat query uses retrieved context (verify via stubbed “context used” markers).
+- Unit tests for chunking, prompt assembly, token budgeting.
+- Integration tests for search ranking with a small fixture corpus.
 
 ### Manual
 
-1. Create tasks “Fix auth bug” and “Plan vacation”.
-2. Search “login issues” → should surface the auth task.
-3. Ask chat “What’s the status of the login work?” → response should reference the correct task.
+- Create tasks and attachments and query semantic search.
+- Ask chat a question that should be grounded in a task.
 
 ## Notes / Risks / Open Questions
 
-- Decide whether to store embeddings for task description only vs (title + description).
+- Decide whether embeddings include title only or title + description.
+- Consider hybrid search and re-ranking in a follow-on PR for higher precision.

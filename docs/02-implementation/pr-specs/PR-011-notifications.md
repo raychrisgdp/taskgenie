@@ -1,110 +1,127 @@
 # PR-011: Notifications (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002  
+**Depends on:** PR-002 (agent notifications optional: PR-003B, PR-014)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal
 
-Deliver early "daily value" by reminding user about tasks with ETAs (24h/6h/overdue), with a path that works both locally and in Docker.
+Deliver reminders for tasks with ETAs (24h/6h/overdue) with a path that works locally
+and in Docker.
 
 ## User Value
 
-- Users feel app helping them without needing integrations or RAG.
-- Encourages regular usage (reminders + quick completion loop).
-
-## Scope
-
-### In
-
-- Scheduling logic:
-  - reminders at configured offsets (default 24h + 6h)
-  - overdue alerts
-  - quiet hours
-  - dedup (don't spam same notification)
-- Notification history persisted (so UI can show "what was sent").
-- Delivery mechanism (pragmatic):
-  - **Local run:** desktop notifications (e.g., `plyer`)
-  - **Docker run:** provide an in-app notification channel (Web UI / API), with desktop as optional later
-- Scheduler runs every 1-5 minutes (configurable).
-
-### Out
-
-- Mobile notifications (future).
-- Multi-device sync (future).
-
-## Mini-Specs
-
-- Data model:
-  - `notifications` table to persist delivery history (type, task_id, sent_at, channel, status, error).
-- Scheduler:
-  - in-process tick loop (APScheduler or background task), configurable interval (default 60s).
-  - computes due reminders (24h/6h/overdue) for non-completed tasks with `eta`.
-  - deduplication via persisted history (no repeated sends for same task/type).
-- Delivery channels:
-  - local dev: desktop notifications (e.g., `plyer`)
-  - Docker: in-app notification feed (API-backed) as the reliable baseline
-- UX:
-  - quiet hours support (defer or suppress)
-  - clear “why did I get this?” content (task title + due time + shortcut to open task)
-- Tests:
-  - time-based computations, deduplication, quiet hours, and Docker/local channel selection.
+- Users get timely reminders without external integrations.
+- Encourages regular task completion.
 
 ## References
 
 - `docs/01-design/DESIGN_NOTIFICATIONS.md`
 - `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
-- `docs/01-design/REQUIREMENTS_AUDIT.md` (Docker notification constraints)
+- `docs/01-design/REQUIREMENTS_AUDIT.md`
+
+## Scope
+
+### In
+
+- Scheduler logic for reminders and overdue alerts.
+- Quiet hours and deduplication.
+- Persisted notification history for UI/TUI viewing.
+- Delivery channels: local desktop notifications and in-app feed for Docker.
+- Optional agent-run notifications (started/completed/failed) when agent system exists (requires PR-003B and PR-014).
+
+### Out
+
+- Mobile notifications.
+- Multi-device sync.
+
+## Mini-Specs
+
+- `notifications` table to store delivery history and status.
+- In-process scheduler tick (default 60s) to compute due reminders.
+- Channel adapters for desktop (local) and in-app notifications.
+- In-app API to list notifications for UI/TUI.
+- Notification types for agent runs and tool failures (depends on PR-003B/PR-014).
+
+## User Stories
+
+- As a user, I get reminders before tasks are due and when they are overdue.
+- As a user, I can see a history of notifications in the app.
+- As a user, notifications respect quiet hours.
+- As a user, I can see when an agent run completes or fails.
+
+## UX Notes (if applicable)
+
+- Notifications should explain why they fired (task title + due time).
 
 ## Technical Design
 
-### Scheduler Implementation
+### Architecture
 
-- **Background Worker:** Use `asyncio.create_task` or a separate process started on app startup.
-- **Precision:** Run every 60 seconds.
-- **Logic:**
-  1. Query `tasks` where `status != 'completed'` and `eta` is not null.
-  2. For each task, check if a notification of type (24h, 6h, overdue) has already been sent (check `notifications` table).
-  3. If not sent and `now() >= eta - offset`, trigger delivery.
-- **Delivery:**
-  - `DesktopNotifier`: wrapper around `plyer` for local notifications.
-  - `InAppNotifier`: inserts into `notifications` table with `status='unread'`.
+- Background task or scheduler runs on app startup and calls a `NotificationService`.
+- `NotificationService` computes due reminders, persists history, and dispatches
+  through configured channels.
 
-### Notification Delivery Channels
+### Data Model / Migrations
 
-- Implement a `NotificationService` that exposes a single “tick” operation:
-  - query due tasks
-  - compute which reminder types should fire
-  - write delivery history (dedup)
-  - dispatch via the configured channel(s)
-- Implement channel adapters:
-  - `DesktopNotifier` (local) wraps `plyer`
-  - `InAppNotifier` persists a notification record for UI/TUI to display
+- `notifications` table: id, task_id, type, channel, status, error, sent_at,
+  created_at.
+
+### API Contract
+
+- `GET /api/v1/notifications` returns recent notifications for UI/TUI.
+- `PATCH /api/v1/notifications/{id}` marks as read (optional).
+
+### Background Jobs
+
+- In-process scheduler runs every 60s (configurable).
+
+### Security / Privacy
+
+- Do not log notification content beyond metadata.
+
+### Error Handling
+
+- Delivery failures are stored with error reason and do not stop the scheduler.
 
 ## Acceptance Criteria
 
-- [ ] Reminders fire at default offsets (24h/6h) and for overdue tasks.
-- [ ] No duplicate notifications for the same task/type (dedup persisted).
-- [ ] Quiet hours are respected (defer or suppress, per config).
+### AC1: Scheduling and Overdue
+
+**Success Criteria:**
+- [ ] Reminders fire at configured offsets and for overdue tasks.
+
+### AC2: Deduplication and History
+
+**Success Criteria:**
+- [ ] No duplicate notifications for the same task/type.
+- [ ] Notification history is persisted and queryable.
+
+### AC3: Delivery Channels
+
+**Success Criteria:**
 - [ ] Docker mode uses in-app notifications as the baseline channel.
-- [ ] Notification history is persisted and queryable (for UI/TUI listing).
+- [ ] Local mode can use desktop notifications.
+
+### AC4: Quiet Hours
+
+**Success Criteria:**
+- [ ] Quiet hours suppress or defer notifications per config.
 
 ## Test Plan
 
 ### Automated
 
-- Unit (pure logic): given `(now, eta, offsets, history)` compute which notifications should fire.
-- Integration (DB): history persistence prevents duplicates across ticks/restarts.
-- Channel selection: local run uses desktop channel; Docker run uses in-app channel.
-- Quiet hours: notifications are suppressed/deferred during quiet window.
+- Unit tests for schedule computation and quiet hours.
+- Integration tests for history persistence and dedup across restarts.
+- Channel selection tests for local vs Docker mode.
 
 ### Manual
 
-1. Create a task due in ~10 minutes; temporarily set schedule to `["10m"]` for testing.
-2. Run scheduler job (or wait for interval).
-3. Verify a notification appears and is recorded in history.
-4. Mark task complete; ensure no further reminders fire.
+- Configure a short offset and verify reminders fire.
+- Run in Docker and confirm in-app notifications appear.
 
 ## Notes / Risks / Open Questions
 
-- Desktop notifications from Docker are non-trivial; plan for an "in-app notifications" channel as a reliable baseline.
+- Desktop notifications from Docker are unreliable; in-app feed is the baseline.
+- Agent notifications depend on agent run APIs and may be staged after PR-003B.

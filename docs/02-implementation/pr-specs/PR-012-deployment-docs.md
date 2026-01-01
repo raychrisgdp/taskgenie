@@ -1,94 +1,108 @@
 # PR-012: Deployment + Documentation (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-010, PR-011  
+**Depends on:** PR-001 (backup/restore), PR-010, PR-011, PR-017 (backup/restore guidance)  
 **Last Reviewed:** 2025-12-29
 
 ## Goal
 
-Make the system easy to run, upgrade, and back up:
-- Docker Compose “just works”
-- docs match reality
-- data persistence is safe
+Make the system easy to run, upgrade, and back up with reliable Docker and accurate
+docs.
 
 ## User Value
 
-- Faster setup for new machines.
-- Lower risk of data loss (clear volumes + backup instructions).
+- Faster setup on new machines.
+- Lower risk of data loss via clear persistence and backup guidance.
+
+## References
+
+- `docs/SETUP.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/02-implementation/PR-PLANS.md`
 
 ## Scope
 
 ### In
 
-- Docker Compose configuration:
-  - API service
-  - persistent volume for SQLite DB and vector store
-  - env var configuration
-  - health checks
-- Documentation updates:
-  - setup instructions
-  - backup/restore
-  - “what works today” vs planned
+- Docker Compose configuration with persistent volumes and health checks.
+- Environment variable documentation and `.env.example` alignment.
+- Backup/restore and upgrade instructions.
 
 ### Out
 
-- Cloud deployment (Kubernetes, etc.).
-- Multi-user auth/HTTPS termination (future).
+- Kubernetes or cloud deployment.
+- Multi-user auth and HTTPS termination.
 
 ## Mini-Specs
 
-- Docker Compose:
-  - one-command local run with persisted data volumes.
-- Environment docs:
-  - `.env.example` and `docs/SETUP.md` aligned with the actual config keys.
-- Developer ergonomics:
-  - smoke checks (`/health`, basic task CRUD) documented.
-- Docs hygiene:
-  - docs link/name checks in CI (no `todo` command examples; consistent `tgenie` usage; no broken relative links).
-- Release:
-  - minimal “how to run” instructions and expected ports/paths.
+- Compose file for API service with volume mounts for DB and vector store.
+- Health check on `/health` and clear port mappings.
+- Docs updates for setup, backups, and upgrade path.
 
-## References
+## User Stories
 
-- `docs/SETUP.md`
-- `docs/01-design/DESIGN_DATA.md` (data locations + backup)
-- `docs/02-implementation/PR-PLANS.md` (current roadmap)
+- As a user, I can start the app with `docker compose up` and keep my data.
+- As a user, I can follow docs and get a working setup on a new machine.
+
+## UX Notes (if applicable)
+
+- N/A.
 
 ## Technical Design
 
-### Docker Compose
+### Architecture
 
-- Define volumes for:
-  - SQLite DB
-  - vector store
-  - attachment cache (if needed)
-- Add health checks and clear env var configuration.
+- Docker Compose with a single API service and named volumes for data.
+- Document environment variables and default ports.
 
-### Upgrade path
+### Data Model / Migrations
 
-- When migrations exist:
-  - document `tgenie db upgrade` for upgrades
-  - document backup/restore workflows (SQL dump + restore)
+- N/A.
+
+### API Contract
+
+- N/A.
+
+### Background Jobs
+
+- N/A.
+
+### Security / Privacy
+
+- Document data locations and backup guidance to avoid accidental loss.
+
+### Error Handling
+
+- Health checks surface startup failures in Docker.
 
 ## Acceptance Criteria
 
-- [ ] `docker compose up` starts successfully and `/health` returns ok.
+### AC1: Docker Compose Boots Cleanly
+
+**Success Criteria:**
+- [ ] `docker compose up` starts successfully and `/health` returns OK.
+
+### AC2: Data Persistence
+
+**Success Criteria:**
 - [ ] Data persists across container restarts.
-- [ ] Docs are accurate and consistent with the chosen CLI name and UX.
+
+### AC3: Docs Match Reality
+
+**Success Criteria:**
+- [ ] Setup and backup docs match actual commands, ports, and paths.
 
 ## Test Plan
 
 ### Automated
 
-- Optional: CI smoke test that builds images and runs health check (if CI exists).
+- Optional CI smoke test to build images and hit `/health`.
 
 ### Manual
 
-1. `docker compose up -d`
-2. Create a task (via TUI or API).
-3. Restart containers; verify task persists.
-4. Run `tgenie db upgrade` inside container context and verify no errors.
+- Run compose, create a task, restart, and verify data persists.
+- Follow `docs/SETUP.md` and validate commands.
 
 ## Notes / Risks / Open Questions
 
-- Keep local dev (no docker) and docker paths aligned to avoid “works on my machine” data-loss issues.
+- Keep docker and local paths aligned to avoid data-loss confusion.

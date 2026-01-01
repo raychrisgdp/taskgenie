@@ -1,93 +1,118 @@
 # PR-010: Web UI (Spec)
 
 **Status:** Spec Only  
-**Depends on:** PR-002 (chat optional: PR-003)  
+**Depends on:** PR-002, PR-004 (attachment viewing), PR-003 (chat optional)  
 **Last Reviewed:** 2025-12-30
 
 ## Goal
 
-Provide a secondary web interface for:
-- managing tasks
-- richer viewing of attachments (longer text, links)
-- optional chat streaming in the browser (once chat exists)
+Provide a secondary web interface for managing tasks and viewing attachments, with
+optional chat streaming.
 
 ## User Value
 
-- Easy browsing and reading for long attachments.
-- A fallback UX when terminal UI isn’t ideal.
+- Easier reading of longer task descriptions and attachments.
+- A fallback UX when terminal UI is not ideal.
+
+## References
+
+- `docs/01-design/DESIGN_WEB.md`
+- `docs/01-design/DESIGN_CHAT.md`
+- `docs/01-design/API_REFERENCE.md`
 
 ## Scope
 
 ### In
 
-- Tasks pages:
-  - list + filters
-  - detail view
-  - create/edit (HTMX forms)
-- Optional (if PR-003 exists):
-  - chat page with streaming responses
+- Task list, detail, create, and edit pages (HTMX forms).
+- Attachment viewing pages for reading attachment content.
+- Basic responsive layout.
+- Optional chat page if PR-003 is implemented.
 
 ### Out
 
-- Authentication/multi-user (future).
-- Mobile-first polish beyond basic responsiveness (future iteration).
+- Authentication/multi-user.
+- Advanced mobile-first polish.
 
 ## Mini-Specs
 
-- Pages:
-  - tasks list + task detail; create/edit flows (HTMX forms).
-- Chat (optional):
-  - if PR-003 is present, chat page streams responses and handles reconnects.
-- Notifications (optional):
-  - in-app notification feed view (if PR-011 exists).
-- Design:
-  - responsive layout; minimal JS (HTMX + Tailwind or equivalent).
-- Tests:
-  - basic route rendering + API integration smoke tests.
+- FastAPI template routes for tasks list/detail and edit/create.
+- Attachment viewing pages for displaying attachment content.
+- HTMX interactions for inline updates and form submissions.
+- Optional chat page using SSE via EventSource.
 
-## References
+## User Stories
 
-- `docs/01-design/DESIGN_WEB.md` (page layouts + HTMX interactions)
-- `docs/01-design/DESIGN_CHAT.md` (streaming/SSE handling)
-- `docs/01-design/API_REFERENCE.md` (API endpoints consumed)
+- As a user, I can view and edit tasks in a browser.
+- As a user, I can read long attachment content comfortably.
+- As a user, I can use chat in the browser when available.
+
+## UX Notes (if applicable)
+
+- Keep JS minimal and favor HTMX for interactions.
 
 ## Technical Design
 
-- **Backend:** FastAPI with Jinja2Templates
-- **Frontend:**
-  - **CSS:** Tailwind CSS (via CDN or standalone CLI)
-  - **JS:** HTMX for SPA-like feel without a full framework
-- **Patterns:**
-  - `GET /tasks` → returns full page
-  - `POST /tasks` → returns HTMX fragment (single task row) to be prepended to the list
-  - `GET /tasks/{id}/edit` → returns HTMX fragment (form) to swap into the row/modal
-- **Chat (optional):**
-  - Start with plain SSE via `EventSource` for streaming chat output.
-  - If we want tighter HTMX integration later, consider the `htmx-sse` extension.
-- **Thin Client:**
-  - call the same backend services as the API (no duplicated business logic)
-  - rely on the Task API for CRUD
+### Architecture
+
+- FastAPI + Jinja2 templates for server-rendered pages.
+- HTMX for partial updates; Tailwind (or equivalent) for styling.
+
+### Data Model / Migrations
+
+- N/A.
+
+### API Contract
+
+- Uses existing task API for CRUD operations.
+- Optional chat page uses `/api/v1/chat` SSE.
+
+### Background Jobs
+
+- N/A.
+
+### Security / Privacy
+
+- N/A (no auth in MVP).
+
+### Error Handling
+
+- Render friendly error states when API calls fail.
 
 ## Acceptance Criteria
 
-- [ ] Task pages work end-to-end against the API.
-- [ ] Basic responsive layout (desktop + narrow viewport).
-- [ ] If PR-003 is present: chat page streams responses correctly and handles disconnects gracefully.
+### AC1: Task Pages
+
+**Success Criteria:**
+- [ ] List/detail/create/edit flows work against the API.
+
+### AC2: Attachment Viewing
+
+**Success Criteria:**
+- [ ] Attachment viewing pages display attachment content correctly.
+
+### AC3: Responsive Layout
+
+**Success Criteria:**
+- [ ] Pages remain usable on narrow viewports.
+
+### AC4: Optional Chat UI
+
+**Success Criteria:**
+- [ ] If PR-003 is present, chat page streams responses and handles disconnects.
 
 ## Test Plan
 
 ### Automated
 
-- Integration: fetch pages and verify key elements render.
-- E2E (optional): Playwright smoke test for task list → create → detail.
+- Integration tests for page rendering and basic actions.
+- Optional Playwright smoke test for task flow.
 
 ### Manual
 
-1. Start API.
-2. Open tasks page; verify list renders.
-3. Create a task; verify it appears and detail page loads.
-4. If chat is enabled, open chat page and send a message; verify streaming.
+- Verify task CRUD in the browser and resize for responsiveness.
+- If chat enabled, verify streaming behavior.
 
 ## Notes / Risks / Open Questions
 
-- Keep web UI optional/secondary; avoid blocking core UX iteration in the TUI.
+- Keep the web UI optional so it does not block core TUI iteration.

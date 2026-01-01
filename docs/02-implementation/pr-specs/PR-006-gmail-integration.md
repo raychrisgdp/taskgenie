@@ -6,306 +6,112 @@
 
 ## Goal
 
-Given a Gmail URL attached to a task, authenticate via OAuth and fetch the email content, then cache it locally as attachment content.
+Given a Gmail URL attachment, authenticate via OAuth, fetch email content, and cache
+it locally on the attachment.
 
 ## User Value
 
-- Email-linked tasks keep the important context without re-opening Gmail.
-- Cached email content can later be searched via RAG (PR-005).
+- Email-linked tasks keep essential context without reopening Gmail.
+- Cached email content can later be searched via RAG.
+
+## References
+
+- `docs/01-design/INTEGRATION_GUIDE.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
 
 ## Scope
 
 ### In
 
-- Parse Gmail URLs to a stable reference (message id / thread id as appropriate).
-- OAuth flow (local machine):
-  - open browser for consent
-  - store credentials securely on disk
-- Fetch:
-  - subject
-  - from/to
-  - date
-  - body (plain text preferred; HTML optional)
-- Cache fetched content into the attachment record.
+- Gmail URL normalization to a stable reference.
+- OAuth flow for local machines and secure credential storage.
+- Fetch subject/from/to/date/body and store in `attachment.content`.
+- Explicit refresh action and/or background fetch for pending attachments.
 
 ### Out
 
-- Two-way sync (labeling, replying, etc.).
-- Bulk email ingestion.
+- Two-way sync or bulk ingestion.
 
 ## Mini-Specs
 
-- URL recognition + normalization:
-  - detect Gmail message URLs and normalize to a stable reference key.
-- OAuth + credential storage:
-  - `tgenie config --gmail-auth` (or equivalent) to set up tokens.
-  - store secrets under `~/.taskgenie/credentials/` with `0600` permissions.
-- Fetch + cache:
-  - fetch subject/from/date/body and store into `attachment.content`.
-- Background fetch:
-  - allow explicit refresh and/or background “pending fetch” processing.
-- Tests:
-  - URL parsing, auth error mapping, and fetch-to-cache pipeline (mocked HTTP).
-
-## References
-
-- `docs/01-design/INTEGRATION_GUIDE.md` (provider pattern + security)
-- `docs/01-design/DESIGN_DATA.md` (attachment cache fields)
-- `docs/01-design/DESIGN_BACKGROUND_JOBS.md` (fetch jobs without a queue)
+- Provider that parses Gmail URLs and normalizes to `gmail:<id>`.
+- OAuth setup command and token storage under `~/.taskgenie/credentials/` with 0600.
+- Fetch pipeline to populate attachment title/content and metadata.
+- Optional background job to refresh pending attachments.
+- Expose a tool wrapper for attachment refresh (registered in PR-003B).
 
 ## User Stories
 
-- As a user, I can paste a Gmail URL into a task and see key email context in the attachment.
-- As a user, the system handles OAuth securely and doesn’t leak email content into logs.
+- As a user, I can paste a Gmail URL and see email context on the task.
+- As a user, my OAuth tokens are stored securely and not logged.
+
+## UX Notes (if applicable)
+
+- Provide clear setup instructions when Gmail auth is missing.
 
 ## Technical Design
 
-### URL-first normalization
+### Architecture
 
-- Accept Gmail URLs as the primary input.
-- Normalize to a stable identifier (message id and/or thread id) stored in `attachment.reference`.
+- Gmail provider service with methods: `normalize_url`, `fetch_message`,
+  `cache_content`.
+- Auth uses Google OAuth InstalledAppFlow with local browser callback.
+- A refresh entrypoint (CLI or background job) triggers fetch per attachment.
+- Tool wrapper integration is defined in PR-003B and calls the refresh entrypoint.
 
-### OAuth + credential storage
+### Data Model / Migrations
 
-- OAuth flow opens the browser and stores credentials on disk with strict permissions.
-- Do not store OAuth secrets inside the main SQLite DB.
+- Store Gmail message metadata in `attachment.metadata` and content in
+  `attachment.content`.
 
-### Fetch + cache
+### API Contract
 
-- Fetch minimal useful fields (subject, from/to, date, text body).
-- Store formatted content into `attachment.content` for later viewing/searching.
+- No new public API required beyond attachment refresh endpoint/command.
+- If adding API: `POST /api/v1/attachments/{id}/refresh` returns updated attachment.
 
-### Background fetch
+### Background Jobs
 
-- Fetch can be initiated:
-  - explicitly (e.g., “refresh attachment” action), and/or
-  - as a background job that processes “pending fetch” attachments.
+- Optional background loop to process attachments with missing content.
+
+### Security / Privacy
+
+- Store OAuth credentials on disk with 0600 permissions.
+- Do not log email bodies or tokens.
+
+### Error Handling
+
+- Map Gmail API errors (401/403/404/429) to user-facing messages.
+- Fail fetch gracefully without deleting the attachment.
 
 ## Acceptance Criteria
 
-- [ ] OAuth flow works and credentials persist.
-- [ ] Gmail URL is normalized and fetch succeeds.
-- [ ] Email content is cached and viewable from task attachment.
-- [ ] Credentials stored securely with file permissions (0600).
+### AC1: OAuth and Credential Persistence
 
-## Technical Design
+**Success Criteria:**
+- [ ] OAuth flow completes and tokens persist with secure permissions.
 
-### OAuth Flow Implementation
+### AC2: URL Normalization and Fetch
 
-```python
-# backend/services/gmail_service.py
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2.credentials import Credentials
-from pathlib import Path
-import json
+**Success Criteria:**
+- [ ] Gmail URLs normalize to stable references and fetch succeeds.
 
-class GmailService:
-    def __init__(self):
-        self.credentials: Credentials | None = None
-        self.SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-        self.CREDENTIALS_DIR = Path.home() / ".taskgenie" / "credentials"
-        self.CLIENT_SECRET_PATH = self.CREDENTIALS_DIR / "gmail_client_secret.json"
-        self.TOKEN_PATH = self.CREDENTIALS_DIR / "gmail_token.json"
+### AC3: Cache Attachment Content
 
-    async def authenticate(self) -> bool:
-        """Run OAuth flow for Gmail."""
-        # Check for existing token
-        if self.TOKEN_PATH.exists():
-            self.credentials = Credentials.from_authorized_user_file(
-                str(self.TOKEN_PATH), self.SCOPES
-            )
-
-            # Refresh if expired
-            if self.credentials.expired and self.credentials.refresh_token:
-                self.credentials.refresh(Request())
-                self._save_token()
-                return True
-
-        # Run OAuth flow
-        if not self.CLIENT_SECRET_PATH.exists():
-            raise FileNotFoundError(
-                f"Gmail client secret not found at {self.CLIENT_SECRET_PATH}. "
-                "Download from Google Cloud Console."
-            )
-
-        flow = InstalledAppFlow.from_client_secrets_file(
-            str(self.CLIENT_SECRET_PATH), self.SCOPES
-        )
-
-        self.credentials = flow.run_local_server(
-            port=0,
-            prompt="consent",
-            success_message="Authentication successful! You can close this tab."
-        )
-
-        self._save_token()
-        return True
-
-    def _save_token(self):
-        """Save token to file with secure permissions."""
-        self.TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-        # Save token
-        with open(self.TOKEN_PATH, "w") as f:
-            f.write(self.credentials.to_json())
-
-        # Set secure file permissions (owner read/write only)
-        self.TOKEN_PATH.chmod(0o600)
-
-    async def get_message(self, message_id: str) -> dict:
-        """Fetch Gmail message by ID."""
-        if not self.credentials or not self.credentials.valid:
-            await self.authenticate()
-
-        service = build("gmail", "v1", credentials=self.credentials)
-        message = service.users().messages().get(
-            userId="me",
-            id=message_id,
-            format="full"
-        ).execute()
-
-        return self._parse_message(message)
-
-    def _parse_message(self, raw_message: dict) -> dict:
-        """Parse Gmail message to structured data."""
-        headers = {
-            h["name"].lower(): h["value"]
-            for h in raw_message.get("payload", {}).get("headers", [])
-        }
-
-        # Extract body
-        payload = raw_message.get("payload", {})
-        body = self._extract_body(payload)
-
-        return {
-            "id": raw_message["id"],
-            "thread_id": raw_message["threadId"],
-            "subject": headers.get("subject", ""),
-            "from": headers.get("from", ""),
-            "to": headers.get("to", ""),
-            "date": headers.get("date", ""),
-            "body": body,
-            "snippet": raw_message.get("snippet", ""),
-        }
-
-    def _extract_body(self, payload: dict) -> str:
-        """Extract body from message payload."""
-        import base64
-
-        # Try direct body first
-        if "body" in payload and payload["body"].get("data"):
-            return base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8")
-
-        # Try multipart
-        if "parts" in payload:
-            for part in payload["parts"]:
-                if part.get("mimeType") == "text/plain" and part.get("body", {}).get("data"):
-                    return base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8")
-
-        return ""
-```
+**Success Criteria:**
+- [ ] Attachment content includes subject/from/to/date/body excerpt.
 
 ## Test Plan
 
 ### Automated
 
-```python
-# tests/test_services/test_gmail_service.py
-import pytest
-from unittest.mock import MagicMock, patch
-from backend.services.gmail_service import GmailService
-
-class TestGmailOAuth:
-    """Tests for Gmail OAuth flow"""
-
-    @pytest.mark.asyncio
-    async def test_authenticate_creates_token(self, tmp_path):
-        """OAuth flow creates token file."""
-        gmail = GmailService()
-
-        # Mock OAuth flow
-        mock_flow = MagicMock()
-        mock_flow.run_local_server.return_value = MagicMock(
-            to_json=lambda: '{"refresh_token": "test-refresh", "token": "test-token"}'
-        )
-
-        with patch("backend.services.gmail_service.InstalledAppFlow", return_value=mock_flow):
-            await gmail.authenticate()
-
-            # Verify token was saved
-            assert gmail.TOKEN_PATH.exists()
-
-            # Check file permissions
-            import os
-            assert os.stat(gmail.TOKEN_PATH).st_mode == 0o600
-
-    @pytest.mark.asyncio
-    async def test_authenticate_loads_existing_token(self, tmp_path):
-        """Existing token is loaded and refreshed if needed."""
-        gmail = GmailService()
-
-        # Create valid token file
-        gmail.TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(gmail.TOKEN_PATH, "w") as f:
-            f.write('{"refresh_token": "valid", "token": "valid"}')
-
-        # Load (should not run OAuth flow)
-        mock_flow = MagicMock()
-        with patch("backend.services.gmail_service.InstalledAppFlow", return_value=mock_flow):
-            await gmail.authenticate()
-
-            # Verify existing token was used
-            mock_flow.run_local_server.assert_not_called()
-
-
-class TestGmailMessageParsing:
-    """Tests for Gmail message parsing"""
-
-    def test_parse_simple_message(self):
-        """Parse simple text message."""
-        gmail = GmailService()
-        raw = {
-            "id": "msg-123",
-            "threadId": "thread-456",
-            "snippet": "Test message",
-            "payload": {
-                "headers": [
-                    {"name": "Subject", "value": "Test Subject"},
-                    {"name": "From", "value": "sender@example.com"}
-                ],
-                "body": {"data": "SGVsbG8gV29ybGQ="}  # "Hello World"
-            }
-        }
-
-        result = gmail._parse_message(raw)
-        assert result["subject"] == "Test Subject"
-        assert result["body"] == "Hello World"
-
-    def test_parse_multipart_message(self):
-        """Parse multipart message."""
-        gmail = GmailService()
-        raw = {
-            "id": "msg-123",
-            "payload": {
-                "parts": [
-                    {
-                        "mimeType": "text/plain",
-                        "body": {"data": "TWVsbG8gV29ybGQ="}
-                    }
-                ]
-            }
-        }
-
-        result = gmail._parse_message(raw)
-        assert result["body"] == "Hello World"
-```
+- Unit tests for URL normalization and message parsing.
+- Integration tests for token storage and refresh behavior (mocked HTTP).
 
 ### Manual
 
-1. Run `tgenie config --gmail-auth` (or equivalent) and complete OAuth in browser.
-2. Create task containing a Gmail URL.
-3. Trigger fetch and verify attachment shows subject/from/date/body excerpt.
+- Run OAuth setup, attach a Gmail URL, refresh, and verify cached content.
 
 ## Notes / Risks / Open Questions
 
-- Gmail URL formats vary; normalization rules should be tested against real examples.
+- Gmail URL formats vary; expand normalization fixtures with real samples.

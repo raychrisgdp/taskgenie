@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-XXX  
-**Last Reviewed:** 2025-12-29
+**Last Reviewed:** YYYY-MM-DD
 
 ## Goal
 
@@ -20,13 +20,15 @@
 
 ## Mini-Specs
 
-- Bullet list of concrete deliverables (sub-features) to ship in this PR.
+- Concrete deliverables for this PR.
 
 ## User Stories
 
-- As a user, I can …
+- As a user, I can ...
 
 ## UX Notes (if applicable)
+
+- N/A.
 
 ## Technical Design
 
@@ -36,13 +38,25 @@
 
 ### API Contract
 
-### Background Jobs (if applicable)
+### Background Jobs
+
+- N/A.
 
 ### Security / Privacy
 
 ### Error Handling
 
 ## Acceptance Criteria
+
+### AC1: <Short Title>
+
+**Success Criteria:**
+- [ ] ...
+
+### AC2: <Short Title>
+
+**Success Criteria:**
+- [ ] ...
 
 ## Test Plan
 

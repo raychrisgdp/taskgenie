@@ -203,7 +203,7 @@ schedule = ["24h", "6h"]
 @property
 def database_path(self) -> Path:
     """Get canonical database file path.
-    
+
     Automatically strips query parameters (e.g., ?mode=ro) from SQLite URLs
     before extracting the file path. This prevents invalid file paths when
     URLs include query parameters.
@@ -277,7 +277,7 @@ def init_db() -> None:
 
 async def init_db_async() -> None:
     """Initialize database asynchronously (for FastAPI lifespan).
-    
+
     Runs migrations in a threadpool using asyncio.to_thread() to avoid
     blocking the event loop.
     """

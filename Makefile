@@ -7,7 +7,7 @@ help:
 	@echo "  make dev        Install dev dependencies (includes API for tests)"
 	@echo "  make install-all Install all optional dependencies"
 	@echo "  make hooks      Install pre-commit git hooks"
-	@echo "  make precommit  Run pre-commit on all files"
+	@echo "  make precommit  Run docs check + pre-commit on all files"
 	@echo "  make lint       Run ruff lint"
 	@echo "  make format     Run ruff formatter"
 	@echo "  make typecheck  Run mypy"
@@ -25,7 +25,7 @@ install-all:
 hooks: dev
 	uv run pre-commit install
 
-precommit:
+precommit: docs-check
 	uv run pre-commit run --all-files
 
 lint:

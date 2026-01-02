@@ -601,6 +601,7 @@ The `make precommit` command runs all code quality checks:
 - Linting (ruff check)
 - Type checking (mypy)
 - Test syntax validation
+- Docs validation (scripts/check_docs.py)
 
 **Workflow:**
 ```bash

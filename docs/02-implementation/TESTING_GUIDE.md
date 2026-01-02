@@ -661,7 +661,7 @@ Before submitting a PR, verify:
 - [ ] Manual testing completed (if applicable)
 - [ ] Test coverage >80%
 - [ ] No tests skipped without comment
-- [ ] **Precommit passes**: `make precommit` (checks formatting, linting, type checking)
+- [ ] **Precommit passes**: `make precommit` (checks formatting, linting, type checking, docs validation)
 - [ ] No duplicate test functions
 - [ ] All test functions are complete (no broken definitions)
 - [ ] Unused variables prefixed with `_` or removed

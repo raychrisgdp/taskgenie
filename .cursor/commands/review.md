@@ -103,15 +103,14 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 
 6. **Language-Specific Reviews**:
 
-   **Python** (for glaip-sdk):
-   - Type hints usage (Python 3.8+)
-   - PEP 8 compliance (or project-specific style guide)
-   - Absolute imports preferred over relative
-   - Exception handling patterns
-   - SDK API design consistency
-   - CLI command structure
-   - Example script validation
-   - Async/await patterns where applicable
+    **Python** (for personal-todo):
+    - Type hints usage (Python 3.11+)
+    - PEP 8 compliance (via ruff, 120-char line limit)
+    - Absolute imports preferred over relative
+    - Exception handling patterns
+    - CLI command structure (Typer)
+    - Example script validation
+    - Async/await patterns (SQLAlchemy/FastAPI)
 
    **JavaScript/TypeScript**:
    - ESLint compliance
@@ -125,11 +124,11 @@ Provide clear, high-impact review findings that keep the implementation simple, 
    - Build configuration validation
 
 7. **Spec Compliance Review** (CRITICAL FOCUS):
-   - **Identify relevant spec files**:
-     - Look for `.md` files in `docs/specs/` that relate to the changes
-     - Check if spec files are in the diff (`git diff main --name-only | grep -E 'specs/.*\.md'`)
-     - **If no spec found in diff or codebase**: Ask the user to provide the spec document or clarify the requirements before proceeding with review
-     - Search for spec references in code comments or commit messages
+    - **Identify relevant spec files**:
+      - Look for `.md` files in `docs/02-implementation/pr-specs/` that relate to the changes
+      - Check if spec files are in the diff (`git diff main --name-only | grep -E 'docs/02-implementation/pr-specs/.*\.md'`)
+      - **If no spec found in diff or codebase**: Ask the user to provide the spec document or clarify the requirements before proceeding with review
+      - Search for spec references in code comments or commit messages
    - **Read the spec**: Understand what was required vs what was implemented
    - **Prune scope**: When spec deprecates architecture/components, flag code tied to removed architecture as out-of-scope rather than requesting changes
    - **Check for spec compliance gaps**: Identify features mentioned in spec but not implemented
@@ -569,9 +568,9 @@ Use this format only in the optional appendix (not in the main "Findings" list):
 
 ## Context-Aware Review
 
-- Use $ARGUMENTS for focus cues; consider project purpose (Python SDK) and conventions.
-- Apply domain knowledge (AI/ML SDK patterns) and match existing codebase style.
-- Locate and read the relevant spec first; if missing, ask for it before deep review; check template compliance only when specs change.
+- Use $ARGUMENTS for focus cues; consider project purpose (Personal Todo Manager) and conventions.
+- Apply domain knowledge (Python/FastAPI/SQLAlchemy patterns) and match existing codebase style.
+- Locate and read the relevant spec first (in `docs/02-implementation/pr-specs/`); if missing, ask for it before deep review; check template compliance only when specs change.
 - Continuously ask: "Can this be simpler?" and "Does this satisfy the spec with minimum code?"
 
 ## Automated Checks (run when available)

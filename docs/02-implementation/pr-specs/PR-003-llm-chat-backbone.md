@@ -20,6 +20,14 @@ Implement provider-agnostic LLM chat with streaming responses and wire it into t
 - `docs/01-design/DESIGN_TUI.md`
 - `docs/01-design/DECISIONS.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/DESIGN_CLI.md`
+- `docs/01-design/API_REFERENCE.md`
+
 ## Scope
 
 ### In

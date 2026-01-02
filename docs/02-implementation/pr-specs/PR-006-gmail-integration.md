@@ -20,6 +20,14 @@ it locally on the attachment.
 - `docs/01-design/DESIGN_DATA.md`
 - `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/DESIGN_CLI.md`
+- `docs/01-design/API_REFERENCE.md`
+
 ## Scope
 
 ### In

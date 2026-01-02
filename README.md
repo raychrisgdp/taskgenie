@@ -1,6 +1,7 @@
 # TaskGenie (personal-todo)
 
-CLI-first, AI-native personal task manager. This repo is **implementation in progress**; the `docs/` folder contains the full design + PR plan.
+CLI-first, AI-native personal task manager. This repo is **implementation in progress**; the
+`docs/` folder contains the full design + PR plan.
 
 ## Naming
 
@@ -27,11 +28,20 @@ uv run python -m backend.main
 uv run tgenie --help
 ```
 
-## What’s Implemented Today
+## What You Can Do Right Now
 
-- FastAPI app with `GET /health`
-- Settings via `.env` (`backend/config.py`)
-- CLI entrypoint (`tgenie`) with placeholder commands (no real functionality yet)
+- Start the FastAPI app and call `GET /health`.
+- Configure settings via `.env` (`backend/config.py`).
+- Use the CLI entrypoint (`tgenie --help`) to view placeholder commands.
+
+## Try It Now
+
+```bash
+uv run python -m backend.main
+curl http://127.0.0.1:8000/health
+
+uv run tgenie --help
+```
 
 ## What’s Planned (See `docs/`)
 
@@ -49,10 +59,13 @@ make typecheck
 make test
 ```
 
-## Docs
+## Docs Map
 
-- **For AI agents & developers**: Start with [`AGENTS.md`](AGENTS.md) - Code patterns, conventions, and learnings
-- **For project overview**: Start at [`docs/INDEX.md`](docs/INDEX.md)
+- **Overview and hub:** [`docs/INDEX.md`](docs/INDEX.md)
+- **Install and setup:** [`docs/SETUP.md`](docs/SETUP.md)
+- **Developer quickstart:** [`docs/DEVELOPER_QUICKSTART.md`](docs/DEVELOPER_QUICKSTART.md)
+- **User guide (spec):** [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
+- **AI agents and dev conventions:** [`AGENTS.md`](AGENTS.md)
 
 ## License
 

@@ -23,6 +23,8 @@ repos:
         exclude: ^uv\.lock$
       - id: check-merge-conflict
       - id: check-case-conflict
+      - id: no-commit-to-branch
+        args: [--branch, main]
       - id: check-ast
         types_or: [python]
       - id: check-yaml

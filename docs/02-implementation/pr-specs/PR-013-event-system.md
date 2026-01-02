@@ -19,6 +19,14 @@ for UI and agent hooks.
 - `docs/01-design/DESIGN_ARCHITECTURE.md`
 - `docs/01-design/DESIGN_DATA.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/DESIGN_CLI.md`
+- `docs/01-design/API_REFERENCE.md`
+
 ## Scope
 
 ### In

@@ -20,6 +20,14 @@ context to improve chat responses.
 - `docs/01-design/DESIGN_DATA.md`
 - `docs/01-design/API_REFERENCE.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/DESIGN_CLI.md`
+- `docs/01-design/API_REFERENCE.md`
+
 ## Scope
 
 ### In

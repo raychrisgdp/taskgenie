@@ -48,6 +48,7 @@ Implementation plans, pull request tracking, and development roadmap.
 
 - [PR-PLANS.md](02-implementation/PR-PLANS.md) - **START HERE** - Detailed PR plan with roadmap
 - [pr-specs/INDEX.md](02-implementation/pr-specs/INDEX.md) - Specs + test scenarios for each PR
+- PR specs include a "Docs Links" section pointing to the living docs (README + core guides)
 - [PLAN.md](02-implementation/PLAN.md) - Original project plan (condensed; Q&A archived)
 - [PLAN_ARCHIVE.md](02-implementation/PLAN_ARCHIVE.md) - Archived planning Q&A / early questions
 - [TESTING_GUIDE.md](02-implementation/TESTING_GUIDE.md) - Testing policy and examples

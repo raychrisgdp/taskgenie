@@ -29,6 +29,7 @@ After a review report exists in `reviews/`, re-check the current state, validate
    - Compare the current repo state to the review file contents.
    - Remove or downgrade findings that no longer apply.
    - Add new findings based on the current diff/state, using deterministic IDs that continue existing sequences.
+   - **Ignore `PR_DESCRIPTION.md`**: Do not flag issues in `PR_DESCRIPTION.md`; it is for PR authoring purposes only.
 5. **Update Review Report**
    - Keep the same template and formatting as `.cursor/commands/review.md`.
    - Update **Executive Summary**, **Findings**, **Strengths**, **Testing Results**, and **Metrics Summary**.

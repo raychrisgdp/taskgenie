@@ -26,6 +26,7 @@ After a review has been validated via `/review-validate`, implement the remainin
    - Read the review file and extract: Review Summary, Metrics, and Findings grouped by severity.
    - **Include**: Critical and High severity findings with `file:line` references and explicit "Change:" recommendations.
    - **Exclude**: Findings marked as "Out of scope", "Deferred", or requiring external clarification ("NEEDS CLARIFICATION").
+   - **Exclude**: Findings related to `PR_DESCRIPTION.md` (this file is for PR authoring and should not be modified).
    - **User Override**: If `$ARGUMENTS` contains specific finding IDs (e.g., `--findings Spec-1`), implement only those.
 
 3. **Prioritize & Implement**

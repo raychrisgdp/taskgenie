@@ -40,6 +40,7 @@ Provide clear, high-impact review findings that keep the implementation simple, 
 
 4. **File Analysis**
    - List changed non-test files; note responsibility and trim opportunities.
+   - **Ignore `PR_DESCRIPTION.md`**: This file is for PR authoring and should not be reviewed. Do not flag issues in this file.
    - Apply language-specific review rules (Python 3.11+, FastAPI).
 
 ## Analysis Directives (CRITICAL FOCUS)
@@ -226,5 +227,6 @@ Use this format only in the optional appendix if needed for large change sets.
 - **Use Evidence**: Base findings on actual code analysis.
 - **Avoid Nitpicking**: Focus on substantive issues.
 - **Prefer minimal deltas**: Smallest viable change relative to main.
+- **Ignore PR_DESCRIPTION.md**: Do not review or flag issues in `PR_DESCRIPTION.md`; it is for PR authoring purposes only.
 
 Context: $ARGUMENTS

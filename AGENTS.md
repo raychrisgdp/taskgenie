@@ -33,7 +33,7 @@ Prefer `uv run ...` when invoking project tooling directly (e.g., `uv run pytest
 
 - Type hints required for all functions (mypy strict-ish; see `[tool.mypy]`)
 - Docstrings: Google style (ruff pydocstyle)
-- Line length: 100 (ruff)
+- Line length: 120 (ruff)
 - Quotes: double quotes (ruff formatter)
 - Imports: standard → third-party → local; use `from __future__ import annotations`
 - **Mutable defaults**: Use `default_factory` for lists/dicts (e.g., `Field(default_factory=lambda: [])`)

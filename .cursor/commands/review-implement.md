@@ -58,6 +58,29 @@ After a review has been validated via `/review-validate`, implement the remainin
 - **Verification**: Run all validation commands mentioned in the finding's "Validate:" clause.
 - **Documentation**: Update docstrings/comments if the change affects public APIs.
 
+## Finding Format Parsing
+
+Parse findings using the same format as `/review`:
+
+```
+[ID][Severity][Tag] file:line – description
+
+**Current Implementation:** (code snippet)
+
+**Problem:** explanation
+
+**Change:** recommendation with code example
+
+**Validate:** test file or command
+```
+
+Extract:
+- Finding ID (e.g., `Spec-1`, `Quality-2`)
+- Severity (Critical, High, Medium, Low)
+- File path and line number
+- Change recommendation (code example or clear steps)
+- Validation command (if provided)
+
 ## Output Format
 
 After implementation, display:

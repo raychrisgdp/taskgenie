@@ -6,10 +6,10 @@ Generate or update `PR_DESCRIPTION.md` so it reflects the current diff against t
 
 For combined work across the backend API, CLI, and data models—call out each surface area's feature set, integration touchpoints, and manual verification steps independently so reviewers understand the scope split.
 
-**IMPORTANT - Title vs Description Separation**:
-- The PR **title** is stored separately and used for the GitHub PR `title` field (Conventional Commit format: `type(scope): description`)
-- The PR **description** body starts with `## Summary` (NOT `# Title`) and is used for the GitHub PR `body` field
-- When updating GitHub PRs, ensure the title does NOT appear as a markdown heading in the description body to avoid duplication
+**IMPORTANT - Title Format**:
+- The PR **title** is included as a `# Title` heading at the top of `PR_DESCRIPTION.md` (Conventional Commit format: `type(scope): description`)
+- The PR **description** body starts with `## Summary` after the title heading
+- When updating GitHub PRs, extract the title from the first line (`# Title`) and use it for the PR `title` field, and use the rest of the content (starting from `## Summary`) for the PR `body` field
 
 **GitHub PR Sync**:
 - After generating/updating `PR_DESCRIPTION.md` locally, the command will detect if there's an open PR for the current branch
@@ -184,18 +184,18 @@ Based on the file analysis from Step 2, automatically determine which testing ap
    - Custom notes under **Additional Notes** are preserved unless clearly obsolete.
    - Previous manual edits provided via $ARGUMENTS are respected.
 3. Overwrite (or create) `PR_DESCRIPTION.md` with the following sections, in template order, incorporating any human-provided clarification answers into the relevant sections and removing resolved `Clarification Needed` items.
-   - **CRITICAL**: The file should start with `## Summary` (not `# Title`). The title is stored separately and should NOT appear as a markdown heading in the description body.
-   - When updating GitHub PRs, use the title for the PR `title` field and the description content (starting from `## Summary`) for the PR `body` field.
+   - **CRITICAL**: The file should start with `# Title` as a markdown heading, followed by `## Summary`. The title is included as the first line of the file.
+   - When updating GitHub PRs, extract the title from the first line (`# Title`) and use it for the PR `title` field, and use the rest of the content (starting from `## Summary`) for the PR `body` field.
 
 ### Title
 
-- **IMPORTANT**: The title is separate from the description body. Generate ONLY the title text (no markdown heading, no `#` prefix).
+- **IMPORTANT**: The title is included as a `# Title` markdown heading at the top of `PR_DESCRIPTION.md`.
 - Provide a Conventional Commit-style title (`type(scope): description`) following the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification. Derive the subject from the current diff and `.github/pull_request_template.md`, not from any previously generated `PR_DESCRIPTION.md`.
 - **Analyze the diff to determine the primary change type**: Use the file changes and modifications to identify if this is a `feat`, `fix`, `refactor`, `test`, `docs`, etc.
 - **Scope identification**: Look at which components were most heavily modified to determine the scope (e.g., `api`, `cli`, `models`, `services`, `docs`).
 - **Description synthesis**: Based on the actual changes observed in the diff, create a concise description that captures the essence of what was modified.
 - **User clarification**: If the primary purpose isn't clear from the diff analysis, ask the user to clarify the main objective of these changes.
-- **Store separately**: Save the title as a separate variable/field. When updating GitHub PRs, use the title for the `title` parameter and the description body (without title heading) for the `body` parameter.
+- **Format**: Write the title as `# type(scope): description` at the very beginning of `PR_DESCRIPTION.md`, followed by a blank line, then `## Summary`.
 
 ### Summary
 
@@ -298,10 +298,10 @@ Based on the file analysis from Step 2, automatically determine which testing ap
    - Merge new review areas/testing steps with existing ones, de-duplicating while keeping stable ordering (stable = by file path).
    - Retain any user-edited checklist states unless contradicted by automated checks.
 3. Save the file at the repository root: `$REPO_ROOT/PR_DESCRIPTION.md`.
-   - **File format**: The file should start directly with `## Summary` (no title heading). Store the title separately.
+   - **File format**: The file should start with `# Title` as a markdown heading, followed by a blank line, then `## Summary`.
    - **GitHub PR updates**: When updating GitHub PRs via API, use:
-     - `title`: The Conventional Commit-style title (e.g., `docs: restructure documentation and improve code quality`)
-     - `body`: The full content from `PR_DESCRIPTION.md` starting from `## Summary` (do NOT include the title as a heading)
+     - `title`: Extract the title from the first line of `PR_DESCRIPTION.md` by removing the `# ` prefix (e.g., if file starts with `# docs: restructure documentation`, use `docs: restructure documentation`)
+     - `body`: The full content from `PR_DESCRIPTION.md` starting from `## Summary` (do NOT include the title heading)
 4. Print (or log) a short status summary for the user including: title string, number of files changed, and whether the checklist sync item is checked.
 
 5. **GitHub PR Sync (Optional)**:
@@ -312,16 +312,14 @@ Based on the file analysis from Step 2, automatically determine which testing ap
      - Find a PR where the head branch matches the current branch (check `head.ref` field)
    - **Prompt user**: If an open PR is found, ask the user: "Found open PR #X for branch 'Y'. Would you like to update the PR title and description on GitHub with the generated content? (yes/no)"
    - **Update PR if confirmed**: If the user confirms "yes" (or if `$ARGUMENTS` contains `--sync` or `--update-pr`):
-     - **Extract title**:
-       - First, check if `PR_TITLE.txt` exists and read from it
-       - If not, generate the title using the same logic from step 3 (Conventional Commit format based on diff analysis)
-     - **Extract description**: Read the full content from `PR_DESCRIPTION.md` (it should start with `## Summary`, not `# Title`)
+     - **Extract title**: Read the first line of `PR_DESCRIPTION.md` (should be `# type(scope): description`) and remove the `# ` prefix to get the title
+     - **Extract description**: Read the full content from `PR_DESCRIPTION.md` starting from `## Summary` (skip the title heading and blank line)
      - **Update PR**: Use GitHub MCP `update_pull_request` tool with:
        - `owner`: Repository owner
        - `repo`: Repository name  
        - `pullNumber`: The PR number found
-       - `title`: The Conventional Commit-style title (without markdown formatting)
-       - `body`: The full content from `PR_DESCRIPTION.md` (starting from `## Summary`, ensuring no title heading is included)
+       - `title`: The Conventional Commit-style title extracted from the first line (without the `# ` markdown heading prefix)
+       - `body`: The full content from `PR_DESCRIPTION.md` starting from `## Summary` (do NOT include the title heading)
      - **Print confirmation**: "✓ Updated PR #X on GitHub: title and description synced"
    - **Skip if no PR found**: If no open PR is found, print: "No open PR found for current branch. PR description saved locally in `PR_DESCRIPTION.md`. You can create a PR or update manually later."
    - **Skip if user declines**: If user declines or answers "no", print: "PR description saved locally in `PR_DESCRIPTION.md`. You can update the PR manually when ready."

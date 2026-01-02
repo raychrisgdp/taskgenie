@@ -1,4 +1,4 @@
-# Review Validate Command
+# Review Validate Command (personal-todo)
 
 Validate current specs after a review and refresh the existing review report to match the current state.
 
@@ -20,10 +20,10 @@ After a review report exists in `reviews/`, re-check the current state, validate
    - If the user supplies a path, use it.
    - Otherwise, pick the most recent `reviews/REVIEW_*.md`.
 2. **Capture Baseline**
+   - **Ensure `main` is up-to-date**: `git fetch origin main:main` (if exists) or `git fetch origin main`.
    - Record `git branch --show-current`, `git rev-parse main`, `git merge-base main HEAD`, and `git diff --stat main...HEAD`.
-   - If `main` might be stale due to network restrictions, note that in the Review Summary.
-3. **Validate Spec Structure**
-   - Run `uv run python scripts/check_docs.py`.
+3. **Validate State**
+   - Run `uv run python scripts/check_docs.py` for spec integrity.
    - If validation fails, capture errors as new findings.
 4. **Re-evaluate Findings**
    - Compare the current repo state to the review file contents.
@@ -31,28 +31,22 @@ After a review report exists in `reviews/`, re-check the current state, validate
    - Add new findings based on the current diff/state, using deterministic IDs that continue existing sequences.
 5. **Update Review Report**
    - Keep the same template and formatting as `.cursor/commands/review.md`.
-   - Update **Review Summary**, **Decision**, **Key Recommendations**, **Findings**, **Tests**, and **Metrics Summary**.
+   - Update **Executive Summary**, **Findings**, **Strengths**, **Testing Results**, and **Metrics Summary**.
    - If no findings remain, set Decision to approve and Key Recommendations to “None”.
    - Keep deterministic IDs (`[Spec-1]`, `[Quality-2]`, etc.).
 6. **Write Changes In-Place**
    - Update the existing `reviews/REVIEW_*.md` file only; do not create a new review report.
 
-## Output Template
+## Output Directives (CRITICAL)
 
-Use the same section order and formatting defined in `.cursor/commands/review.md`:
+**Directive I: Report Integrity**
+- **Clean Output**: Never include "[N tools called]" lines or internal implementation details.
+- **Actual Commands**: The Testing Results section must show the actual commands run (e.g., `uv run ruff check .`) and their output.
+- **Explicit Skips**: List any skipped validations with reasons (e.g., "⏭️ Skipped: [command] - Reason: [reason]").
 
-- **Review Summary** (Decision/Risk/Baseline)
-- **Key Recommendations (Top Priority)**
-- **Findings (ordered by severity)**
-- **Strengths**
-- **Tests**
-- **Questions for Author**
-- **Metrics Summary**
-
-## Notes
-
-- Do not reference any tool names in the report; keep the output consistent with existing review files in `reviews/`.
-- Do not add extra sections beyond the review template; keep the report layout stable.
+**Directive II: Structural Stability**
+- **Template Compliance**: Do not add extra sections beyond the review template; keep the report layout stable.
+- **No Tool Names**: Do not reference any tool names in the report; keep the output consistent with existing review files.
 
 ## Integration with Review Workflow
 

@@ -24,15 +24,11 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    task_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
-    )
+    task_id: Mapped[str] = mapped_column(String(36), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     type: Mapped[str] = mapped_column(String(20), nullable=False)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending", server_default="pending"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", server_default="pending")
 
     # Relationships
     task: Mapped[Task] = relationship("Task", back_populates="notifications")

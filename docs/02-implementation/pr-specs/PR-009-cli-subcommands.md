@@ -27,6 +27,7 @@ Provide non-interactive commands for scripting while the TUI remains primary.
 - `docs/USER_GUIDE.md`
 - `docs/01-design/DESIGN_CLI.md`
 - `docs/01-design/API_REFERENCE.md`
+- `docs/01-design/DESIGN_TUI.md`
 
 ## Scope
 

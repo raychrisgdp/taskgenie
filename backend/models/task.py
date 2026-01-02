@@ -27,21 +27,12 @@ class Task(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending", server_default="pending"
-    )
-    priority: Mapped[str] = mapped_column(
-        String(20), nullable=True, default="medium", server_default="medium"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", server_default="pending")
+    priority: Mapped[str] = mapped_column(String(20), nullable=True, default="medium", server_default="medium")
     eta: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp(),
+        DateTime, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
     tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     meta_data: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)

@@ -177,17 +177,13 @@ def test_migrations_env_run_sync_migrations_non_sqlite(temp_settings: None) -> N
             mock_engine.begin.return_value.__enter__.return_value = mock_connection
             mock_engine.begin.return_value.__exit__.return_value = None
 
-            with patch(
-                "backend.migrations.env.create_engine", return_value=mock_engine
-            ) as mock_create:
+            with patch("backend.migrations.env.create_engine", return_value=mock_engine) as mock_create:
                 with patch("backend.migrations.env.do_run_migrations") as mock_do_run:
                     # Call run_sync_migrations with non-SQLite URL
                     env_module.run_sync_migrations()
 
                     # Verify engine was created with correct URL
-                    mock_create.assert_called_once_with(
-                        "postgresql://user:pass@localhost/db", poolclass=pool.NullPool
-                    )
+                    mock_create.assert_called_once_with("postgresql://user:pass@localhost/db", poolclass=pool.NullPool)
 
                     # Verify connection.begin() was called
                     mock_engine.begin.assert_called_once()
@@ -240,10 +236,7 @@ def test_migrations_env_run_async_migrations(temp_db_path: Path, temp_settings: 
                     return mock_connection
 
                 async def __aexit__(
-                    self,
-                    exc_type: type[BaseException] | None,
-                    exc_val: BaseException | None,
-                    exc_tb: object | None,
+                    self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object | None
                 ) -> None:
                     return None
 
@@ -266,9 +259,7 @@ def test_migrations_env_run_async_migrations(temp_db_path: Path, temp_settings: 
                     mock_engine.begin.assert_called_once()
 
                     # Verify PRAGMA foreign_keys was executed
-                    mock_connection.exec_driver_sql.assert_called_once_with(
-                        "PRAGMA foreign_keys=ON"
-                    )
+                    mock_connection.exec_driver_sql.assert_called_once_with("PRAGMA foreign_keys=ON")
 
                     # Verify do_run_migrations was called via run_sync
                     mock_connection.run_sync.assert_called_once()
@@ -278,9 +269,7 @@ def test_migrations_env_run_async_migrations(temp_db_path: Path, temp_settings: 
                     mock_engine.dispose.assert_called_once()
 
 
-def test_migrations_env_run_migrations_online_async_path(
-    temp_db_path: Path, temp_settings: None
-) -> None:
+def test_migrations_env_run_migrations_online_async_path(temp_db_path: Path, temp_settings: None) -> None:
     """Test run_migrations_online() async path (covers line 140).
 
     This test verifies that when an async URL is provided, asyncio.run() is called.

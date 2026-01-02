@@ -58,7 +58,7 @@ packages = ["backend"]
 
 [tool.ruff]
 target-version = "py311"
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint]
 # Rule selection: all rules are explicitly listed in select.

@@ -24,6 +24,7 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: no-commit-to-branch
+        # Note: Assumes default branch is named 'main'. Update this if the default branch is renamed.
         args: [--branch, main]
       - id: check-ast
         types_or: [python]

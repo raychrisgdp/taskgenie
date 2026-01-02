@@ -23,8 +23,8 @@ Add a TUI panel for agent runs, tool execution status, and controls.
 - `README.md`
 - `docs/INDEX.md`
 - `docs/USER_GUIDE.md`
-- `docs/01-design/DESIGN_CLI.md`
-- `docs/01-design/API_REFERENCE.md`
+- `docs/01-design/DESIGN_TUI.md`
+- `docs/01-design/DESIGN_CHAT.md`
 
 ## Scope
 

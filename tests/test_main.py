@@ -47,9 +47,7 @@ def test_backend_main_health_check(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert "version" in data
 
 
-def test_backend_main_startup_runs_migrations_fresh_db(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_backend_main_startup_runs_migrations_fresh_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that FastAPI startup automatically runs migrations on fresh DB.
 
     This explicitly verifies AC1: migrations run automatically when DB doesn't exist.

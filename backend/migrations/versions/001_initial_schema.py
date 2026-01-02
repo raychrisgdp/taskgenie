@@ -28,12 +28,8 @@ def upgrade() -> None:
         sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
         sa.Column("priority", sa.String(20), nullable=True, server_default="medium"),
         sa.Column("eta", sa.DateTime(), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
-        ),
-        sa.Column(
-            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
-        ),
+        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.Column("tags", sa.JSON(), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
     )
@@ -48,9 +44,7 @@ def upgrade() -> None:
         sa.Column("title", sa.String(255), nullable=True),
         sa.Column("content", sa.Text(), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
-        ),
+        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.ForeignKeyConstraint(["task_id"], ["tasks.id"], ondelete="CASCADE"),
     )
 
@@ -73,9 +67,7 @@ def upgrade() -> None:
         sa.Column("session_id", sa.String(36), nullable=False),
         sa.Column("role", sa.String(10), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column(
-            "timestamp", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
-        ),
+        sa.Column("timestamp", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
     )
 
     # Create config table
@@ -83,9 +75,7 @@ def upgrade() -> None:
         "config",
         sa.Column("key", sa.String(100), primary_key=True),
         sa.Column("value", sa.Text(), nullable=False),
-        sa.Column(
-            "updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
-        ),
+        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
     )
 
     # Create indexes for tasks

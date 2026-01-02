@@ -26,8 +26,10 @@ migrations, and backup/restore workflows.
 - `README.md`
 - `docs/INDEX.md`
 - `docs/USER_GUIDE.md`
-- `docs/01-design/DESIGN_CLI.md`
-- `docs/01-design/API_REFERENCE.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
+- `docs/01-design/DECISIONS.md`
+- `docs/02-implementation/MIGRATIONS.md`
 
 ## Scope
 

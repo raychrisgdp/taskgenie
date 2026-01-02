@@ -12,6 +12,13 @@
 
 - `docs/01-design/...`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/...` (add design docs referenced above)
+
 ## Scope
 
 ### In

@@ -67,9 +67,7 @@ def test_db_dump(temp_settings: None, temp_db_path: Path, tmp_path: Path) -> Non
     assert "CREATE TABLE test" in content or "test" in content.lower()
 
 
-def test_db_restore(
-    temp_settings: None, temp_db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_db_restore(temp_settings: None, temp_db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test database restore command."""
     # Create a backup first
     backup_file = tmp_path / "backup.sql"
@@ -108,9 +106,7 @@ def test_db_reset_requires_confirmation(
     assert temp_db_path.exists()  # Database should still exist
 
 
-def test_db_reset_with_yes_flag(
-    temp_settings: None, temp_db_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_db_reset_with_yes_flag(temp_settings: None, temp_db_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that db reset works with --yes flag."""
     runner = CliRunner()
     result = runner.invoke(db_app, ["reset", "--yes"])
@@ -128,9 +124,7 @@ def test_db_upgrade(temp_settings_with_db: None) -> None:
     assert "upgraded" in result.stdout.lower() or "✓" in result.stdout
 
 
-def test_db_upgrade_completes_promptly_and_creates_alembic_version(
-    temp_db_path: Path, temp_settings: None
-) -> None:
+def test_db_upgrade_completes_promptly_and_creates_alembic_version(temp_db_path: Path, temp_settings: None) -> None:
     """Regression test for DB-1: ensures CLI upgrade completes promptly and creates alembic_version.
 
     This test explicitly validates that:
@@ -218,9 +212,7 @@ def test_db_downgrade(temp_settings_with_db: None) -> None:
         )
 
 
-def test_db_revision(
-    temp_settings_with_db: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_db_revision(temp_settings_with_db: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test database revision creation."""
 
     def fake_revision(*_args: object, **kwargs: object) -> None:
@@ -238,9 +230,7 @@ def test_db_revision(
     assert "test_migration" in result.stdout.lower() or "✓" in result.stdout
 
 
-def test_db_revision_autogenerate(
-    temp_settings_with_db: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_db_revision_autogenerate(temp_settings_with_db: None, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test database revision with autogenerate."""
 
     def fake_revision(*_args: object, **kwargs: object) -> None:

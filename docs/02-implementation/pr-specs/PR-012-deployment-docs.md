@@ -20,6 +20,15 @@ docs.
 - `docs/01-design/DESIGN_DATA.md`
 - `docs/02-implementation/PR-PLANS.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/SETUP.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/02-implementation/PR-PLANS.md`
+
 ## Scope
 
 ### In

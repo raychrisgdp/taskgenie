@@ -78,7 +78,7 @@ personal-todo/
 
 ### Python Style
 
-- **Line length**: 100 characters (configured in `ruff`)
+- **Line length**: 120 characters (configured in `ruff`)
 - **Type hints**: Required for all functions (mypy strict mode)
 - **Docstrings**: Google style (configured in `ruff`)
 - **Imports**: Use `from __future__ import annotations` for forward references
@@ -601,6 +601,7 @@ The `make precommit` command runs all code quality checks:
 - Linting (ruff check)
 - Type checking (mypy)
 - Test syntax validation
+- Docs validation (scripts/check_docs.py)
 
 **Workflow:**
 ```bash

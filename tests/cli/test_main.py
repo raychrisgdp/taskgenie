@@ -22,9 +22,7 @@ def test_cli_main_help() -> None:
 def test_cli_main_name_main() -> None:
     """Test CLI main module when run as __main__."""
     # Run the module as __main__ to trigger line 54
-    result = subprocess.run(
-        [sys.executable, "-m", "backend.cli.main", "--help"], capture_output=True, text=True
-    )
+    result = subprocess.run([sys.executable, "-m", "backend.cli.main", "--help"], capture_output=True, text=True)
     assert result.returncode == 0
 
 

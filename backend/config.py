@@ -66,9 +66,7 @@ def _flatten_toml_data(data: dict[str, Any]) -> dict[str, Any]:
     # This is intentional and documented. If more nested keys are needed,
     # add them here rather than relying on automatic underscore flattening.
     # Example: {"notifications": {"schedule": [...]}} → {"notification_schedule": [...]}
-    field_name_mapping: dict[str, dict[str, str]] = {
-        "notifications": {"schedule": "notification_schedule"}
-    }
+    field_name_mapping: dict[str, dict[str, str]] = {"notifications": {"schedule": "notification_schedule"}}
 
     flattened: dict[str, Any] = {}
     for key, value in data.items():
@@ -126,9 +124,7 @@ class Settings(BaseSettings):
     file_secret_settings → defaults.
     """
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True)
 
     @classmethod
     def settings_customise_sources(
@@ -154,9 +150,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
 
     # App data directory (canonical location)
-    app_data_dir: Path = Field(
-        default_factory=lambda: Path.home() / ".taskgenie", alias="TASKGENIE_DATA_DIR"
-    )
+    app_data_dir: Path = Field(default_factory=lambda: Path.home() / ".taskgenie", alias="TASKGENIE_DATA_DIR")
 
     # Database
     database_url: str | None = Field(default=None, alias="DATABASE_URL")
@@ -179,9 +173,7 @@ class Settings(BaseSettings):
 
     # Notifications
     notifications_enabled: bool = Field(default=True, alias="NOTIFICATIONS_ENABLED")
-    notification_schedule: list[str] = Field(
-        default_factory=lambda: ["24h", "6h"], alias="NOTIFICATION_SCHEDULE"
-    )
+    notification_schedule: list[str] = Field(default_factory=lambda: ["24h", "6h"], alias="NOTIFICATION_SCHEDULE")
 
     @field_validator("app_data_dir", mode="before")
     @classmethod

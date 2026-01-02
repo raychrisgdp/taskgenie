@@ -15,12 +15,7 @@ from pathlib import Path
 import alembic.command
 import alembic.config
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 import backend.config
@@ -148,9 +143,7 @@ def _run_migrations_if_needed(settings: backend.config.Settings, database_url: s
     try:
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'"
-        )
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'")
         has_version_table = cursor.fetchone() is not None
         conn.close()
 

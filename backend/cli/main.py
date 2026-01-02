@@ -33,9 +33,7 @@ def list_tasks(
 def add_task(
     title: str = typer.Argument(..., help="Task title"),
     description: str = typer.Option(None, "--description", "-d", help="Task description"),
-    eta: str = typer.Option(
-        None, "--eta", "-e", help="Due date/time (e.g., '2025-01-15' or 'tomorrow')"
-    ),
+    eta: str = typer.Option(None, "--eta", "-e", help="Due date/time (e.g., '2025-01-15' or 'tomorrow')"),
     priority: str = typer.Option("medium", "--priority", "-p", help="Priority level"),
 ) -> None:
     """

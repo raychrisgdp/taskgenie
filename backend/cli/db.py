@@ -52,9 +52,7 @@ def get_alembic_cfg() -> alembic.config.Config:
 
 
 @db_app.command(name="upgrade")
-def upgrade(
-    revision: str = typer.Option("head", "--rev", help="Revision to upgrade to (default: head)"),
-) -> None:
+def upgrade(revision: str = typer.Option("head", "--rev", help="Revision to upgrade to (default: head)")) -> None:
     """Upgrade database to a specific revision (default: head)."""
     try:
         backend.config.get_settings().ensure_app_dirs()
@@ -68,9 +66,7 @@ def upgrade(
 
 @db_app.command(name="downgrade")
 def downgrade(
-    revision: str = typer.Option(
-        "-1", "--rev", help="Revision to downgrade to (default: -1 for one step back)"
-    ),
+    revision: str = typer.Option("-1", "--rev", help="Revision to downgrade to (default: -1 for one step back)"),
 ) -> None:
     """Downgrade database by one revision or to a specific revision."""
     try:
@@ -86,9 +82,7 @@ def downgrade(
 @db_app.command(name="revision")
 def revision(
     message: str = typer.Option(..., "-m", "--message", help="Migration message"),
-    autogenerate: bool = typer.Option(
-        False, "--autogenerate", "-a", help="Auto-generate migration from models"
-    ),
+    autogenerate: bool = typer.Option(False, "--autogenerate", "-a", help="Auto-generate migration from models"),
 ) -> None:
     """Create a new migration revision."""
     try:

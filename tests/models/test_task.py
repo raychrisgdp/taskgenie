@@ -75,20 +75,14 @@ async def test_task_cascade_delete(temp_settings: None) -> None:
         await session.commit()
 
         attachment = Attachment(
-            id="attachment-to-delete",
-            task_id="task-to-delete",
-            type="url",
-            reference="https://example.com",
+            id="attachment-to-delete", task_id="task-to-delete", type="url", reference="https://example.com"
         )
         session.add(attachment)
 
         from datetime import datetime  # noqa: PLC0415
 
         notification = Notification(
-            id="notification-to-delete",
-            task_id="task-to-delete",
-            type="reminder",
-            scheduled_at=datetime.now(),
+            id="notification-to-delete", task_id="task-to-delete", type="reminder", scheduled_at=datetime.now()
         )
         session.add(notification)
         await session.commit()
@@ -98,15 +92,11 @@ async def test_task_cascade_delete(temp_settings: None) -> None:
         await session.commit()
 
         # Verify cascade delete
-        result = await session.execute(
-            text("SELECT COUNT(*) FROM attachments WHERE task_id = 'task-to-delete'")
-        )
+        result = await session.execute(text("SELECT COUNT(*) FROM attachments WHERE task_id = 'task-to-delete'"))
         attachment_count = result.scalar()
         assert attachment_count == 0
 
-        result = await session.execute(
-            text("SELECT COUNT(*) FROM notifications WHERE task_id = 'task-to-delete'")
-        )
+        result = await session.execute(text("SELECT COUNT(*) FROM notifications WHERE task_id = 'task-to-delete'"))
         notification_count = result.scalar()
         assert notification_count == 0
         break

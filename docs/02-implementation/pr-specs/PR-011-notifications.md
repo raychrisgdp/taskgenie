@@ -20,6 +20,15 @@ and in Docker.
 - `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
 - `docs/01-design/REQUIREMENTS_AUDIT.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/01-design/DESIGN_NOTIFICATIONS.md`
+- `docs/01-design/DESIGN_BACKGROUND_JOBS.md`
+- `docs/01-design/REQUIREMENTS_AUDIT.md`
+
 ## Scope
 
 ### In

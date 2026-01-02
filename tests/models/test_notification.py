@@ -60,9 +60,7 @@ async def test_notification_model(temp_settings: None) -> None:
         await session.commit()
 
         # Verify notification was created
-        result = await session.execute(
-            text("SELECT * FROM notifications WHERE id = 'notification-1'")
-        )
+        result = await session.execute(text("SELECT * FROM notifications WHERE id = 'notification-1'"))
         row = result.fetchone()
         assert row is not None
         assert row[2] == "reminder"  # type is third column

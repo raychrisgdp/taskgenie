@@ -22,6 +22,15 @@ SQLite FK enforcement, and docs alignment.
 - `docs/01-design/DESIGN_DATA.md`
 - `docs/02-implementation/MIGRATIONS.md`
 
+## Docs Links
+
+- `README.md`
+- `docs/INDEX.md`
+- `docs/USER_GUIDE.md`
+- `docs/02-implementation/pr-specs/PR-001-db-config.md`
+- `docs/01-design/DESIGN_DATA.md`
+- `docs/02-implementation/MIGRATIONS.md`
+
 ## Scope
 
 ### In

@@ -16,14 +16,7 @@ import pytest
 from sqlalchemy import text
 
 from backend import config, database
-from backend.database import (
-    _run_migrations_if_needed,
-    _run_migrations_sync,
-    close_db,
-    get_db,
-    init_db,
-    init_db_async,
-)
+from backend.database import _run_migrations_if_needed, _run_migrations_sync, close_db, get_db, init_db, init_db_async
 
 
 @pytest.fixture
@@ -54,9 +47,7 @@ _INIT_DB_TIMEOUT_SECONDS = 5.0
 
 
 @pytest.mark.asyncio
-async def test_init_db_runs_migrations_and_completes_promptly(
-    temp_db_path: Path, temp_settings: None
-) -> None:
+async def test_init_db_runs_migrations_and_completes_promptly(temp_db_path: Path, temp_settings: None) -> None:
     """Test that init_db_async() completes promptly and leaves migrated schema.
 
     Regression test for DB-1: ensures migrations don't hang and alembic_version table exists.
@@ -232,9 +223,7 @@ def test_run_migrations_if_needed_non_sqlite(monkeypatch: pytest.MonkeyPatch) ->
         mock_run.assert_called_once()
 
 
-def test_run_migrations_if_needed_no_version_table(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_if_needed_no_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_if_needed when alembic_version table doesn't exist (covers lines 122-126)."""
     db_path = tmp_path / "test.db"
     db_url = f"sqlite+aiosqlite:///{db_path}"
@@ -256,9 +245,7 @@ def test_run_migrations_if_needed_no_version_table(
         mock_run.assert_called_once()
 
 
-def test_run_migrations_if_needed_version_table_exists(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_if_needed_version_table_exists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_if_needed when alembic_version table exists (covers branch 125->exit)."""
     db_path = tmp_path / "test.db"
     db_url = f"sqlite+aiosqlite:///{db_path}"
@@ -281,9 +268,7 @@ def test_run_migrations_if_needed_version_table_exists(
         mock_run.assert_not_called()
 
 
-def test_run_migrations_if_needed_exception_checking_version(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_if_needed_exception_checking_version(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_if_needed when exception occurs checking alembic_version (covers lines 127-129)."""
     db_path = tmp_path / "test.db"
     db_url = f"sqlite+aiosqlite:///{db_path}"
@@ -314,9 +299,7 @@ def test_run_migrations_if_needed_exception_checking_version(
             mock_cursor.execute.assert_called_once()
 
 
-def test_run_migrations_sync_no_alembic_ini(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_sync_no_alembic_ini(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_sync when alembic.ini doesn't exist (covers line 146)."""
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
     monkeypatch.setenv("DATABASE_URL", db_url)
@@ -340,9 +323,7 @@ def test_run_migrations_sync_no_alembic_ini(
             shutil.move(str(backup_path), str(alembic_ini_path))
 
 
-def test_run_migrations_sync_upgrade_exception_debug_mode(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_sync_upgrade_exception_debug_mode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_sync when alembic.command.upgrade raises exception in debug mode.
 
     In debug mode, should warn and continue (not fail-fast).
@@ -354,9 +335,7 @@ def test_run_migrations_sync_upgrade_exception_debug_mode(
     settings = config.get_settings()
 
     # Mock alembic.command.upgrade to raise an exception
-    with patch(
-        "backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")
-    ):
+    with patch("backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")):
         with patch("backend.database.logger") as mock_logger:
             # Should not raise, but should log warning (debug mode)
             _run_migrations_sync(settings, db_url)
@@ -367,9 +346,7 @@ def test_run_migrations_sync_upgrade_exception_debug_mode(
             assert call_args[1]["exc_info"] is True
 
 
-def test_run_migrations_sync_upgrade_exception_production_mode(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_migrations_sync_upgrade_exception_production_mode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_sync when alembic.command.upgrade raises exception in production mode.
 
     In production mode (debug=False), should fail-fast.
@@ -381,9 +358,7 @@ def test_run_migrations_sync_upgrade_exception_production_mode(
     settings = config.get_settings()
 
     # Mock alembic.command.upgrade to raise an exception
-    with patch(
-        "backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")
-    ):
+    with patch("backend.database.alembic.command.upgrade", side_effect=Exception("Migration failed")):
         with patch("backend.database.logger") as mock_logger:
             # Should raise RuntimeError (fail-fast in production)
             with pytest.raises(RuntimeError, match="Database migration failed"):

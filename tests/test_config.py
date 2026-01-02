@@ -20,9 +20,7 @@ def test_config_precedence_env_var_overrides_default(monkeypatch: pytest.MonkeyP
     assert settings.app_name == "TestApp"
 
 
-def test_config_precedence_toml_overrides_default(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_config_precedence_toml_overrides_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that TOML config file overrides defaults."""
     config_file = tmp_path / "config.toml"
     config_file.write_text('app_name = "TOMLApp"\n')
@@ -32,9 +30,7 @@ def test_config_precedence_toml_overrides_default(
     assert settings.app_name == "TOMLApp"
 
 
-def test_config_precedence_env_overrides_toml(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_config_precedence_env_overrides_toml(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that environment variables override TOML config."""
     config_file = tmp_path / "config.toml"
     config_file.write_text('app_name = "TOMLApp"\n')
@@ -45,9 +41,7 @@ def test_config_precedence_env_overrides_toml(
     assert settings.app_name == "EnvApp"
 
 
-def test_config_precedence_env_overrides_env_file_and_toml(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_config_precedence_env_overrides_env_file_and_toml(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test full precedence chain: env vars → .env → config.toml → defaults.
 
     This verifies AC4: Configuration precedence works correctly.
@@ -143,9 +137,7 @@ def test_get_config_file_path_nonexistent_env(monkeypatch: pytest.MonkeyPatch) -
     assert path is None
 
 
-def test_get_config_file_path_default_exists(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_get_config_file_path_default_exists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test getting default config file path when it exists."""
     default_path = tmp_path / ".taskgenie" / "config.toml"
     default_path.parent.mkdir(parents=True)

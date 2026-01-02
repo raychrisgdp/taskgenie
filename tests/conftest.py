@@ -14,9 +14,7 @@ from backend import config, database
 
 
 @pytest.fixture(autouse=True)
-def isolate_settings_files(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Generator[None, None, None]:
+def isolate_settings_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     """Isolate tests from developer machine config (.env and ~/.taskgenie/config.toml)."""
 
     # Disable implicit config file lookup.

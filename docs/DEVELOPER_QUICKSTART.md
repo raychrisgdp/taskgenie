@@ -10,24 +10,31 @@ Get a local dev environment running quickly. For full details, see `docs/SETUP.m
 ## Install
 
 ```bash
-uv pip install -e .
+# Install dev dependencies (includes FastAPI, uvicorn, and test tools)
+make dev
+
+# Or manually:
+# uv pip install -e ".[dev]"
+
+# Copy environment file template
 cp .env.example .env
+# Edit .env with your configuration (optional for basic usage)
 ```
 
 ## Run (backend + CLI)
 
 ```bash
 # Terminal 1: start API server (reads .env)
-uv run python -m backend.main
+python -m backend.main
 
 # Terminal 2: CLI (scaffolded; backend integration in progress)
 uv run tgenie --help
 
-# Health check
+# Health check (in another terminal)
 curl http://127.0.0.1:8080/health
 
 # OpenAPI (FastAPI Swagger UI)
-open http://127.0.0.1:8080/docs  # macOS (use xdg-open on Linux)
+xdg-open http://127.0.0.1:8080/docs  # Linux (use 'open' on macOS)
 ```
 
 ## Common dev commands

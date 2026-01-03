@@ -103,6 +103,16 @@ Common migration commands:
 - Type errors → Add `# type: ignore[error-code]` with specific code
 - Import warnings → Add `# noqa: PLC0415` for intentional imports inside functions
 
+## Implementation Patterns (Critical)
+
+**Exception Handling & Variable Scoping:**
+
+- **Variables assigned in `try` blocks**: If you use a variable after `except`/`finally`, ensure it's initialized before the `try` or guard its usage. Common bug: `UnboundLocalError` when exceptions occur before assignment.
+- **Code after exception handlers**: Don't access variables that may not exist if an exception occurred. Move variable-dependent operations into the `try` block (after successful assignment) or guard with existence checks.
+- **Cleanup in `finally` blocks**: Only access variables guaranteed to exist regardless of exception path.
+
+**Environment variables**: When adding new env vars, update `.env.example` if it exists (`test -f .env.example`).
+
 ## Where To Read More
 
 **Essential References:**

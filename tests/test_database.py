@@ -207,9 +207,9 @@ async def test_engine_level_foreign_keys_enabled(temp_settings: None) -> None:
     await init_db_async()
     assert database.engine is not None
 
-    # Open a raw connection via sync_engine (bypassing get_db() session)
-    with database.engine.sync_engine.connect() as conn:
-        result = conn.execute(text("PRAGMA foreign_keys"))
+    # Open a raw connection via engine.connect() (async)
+    async with database.engine.connect() as conn:
+        result = await conn.execute(text("PRAGMA foreign_keys"))
         enabled = result.scalar()
         assert enabled == 1, "Foreign keys should be enabled at engine connection level"
 

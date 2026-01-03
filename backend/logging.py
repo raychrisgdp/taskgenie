@@ -21,16 +21,7 @@ from backend.config import Settings, get_settings
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 # Sensitive keys to redact (case-insensitive)
-SENSITIVE_KEYS = {
-    "authorization",
-    "token",
-    "api_key",
-    "password",
-    "secret",
-    "cookie",
-    "set-cookie",
-    "email",
-}
+SENSITIVE_KEYS = {"authorization", "token", "api_key", "password", "secret", "cookie", "set-cookie", "email"}
 
 # Email regex pattern
 EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
@@ -81,7 +72,29 @@ class JSONFormatter(logging.Formatter):
         # Add extra fields (excluding already processed ones)
         excluded_keys = {"event", "method", "path", "status", "duration_ms"}
         for key, value in record.__dict__.items():
-            if key not in excluded_keys and key not in {"name", "msg", "args", "created", "filename", "funcName", "levelname", "levelno", "lineno", "module", "msecs", "message", "pathname", "process", "processName", "relativeCreated", "thread", "threadName", "exc_info", "exc_text", "stack_info"}:
+            if key not in excluded_keys and key not in {
+                "name",
+                "msg",
+                "args",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "message",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+            }:
                 log_data[key] = value
 
         return json.dumps(log_data, default=str)

@@ -29,6 +29,7 @@ _middleware_logger.propagate = True
 _root_logger = logging.getLogger()
 _root_logger.setLevel(logging.DEBUG)
 
+
 def test_is_safe_request_id_valid() -> None:
     """Test _is_safe_request_id accepts valid request IDs."""
     assert _is_safe_request_id("abc123") is True

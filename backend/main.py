@@ -14,8 +14,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from backend.api.v1 import tasks as tasks_router
+from backend.api.v1 import telemetry
 from backend.config import get_settings
 from backend.database import close_db, init_db_async
+from backend.logging import setup_logging
+from backend.middleware import RequestLoggingMiddleware
 from backend.schemas.task import ErrorResponse
 from backend.services.task_service import TaskNotFoundError
 
@@ -24,7 +27,9 @@ from backend.services.task_service import TaskNotFoundError
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application lifespan events."""
     # Startup
-    get_settings().ensure_app_dirs()
+    settings = get_settings()
+    settings.ensure_app_dirs()
+    setup_logging(settings)  # Setup structured logging
     await init_db_async()  # Use async version to avoid blocking event loop
     yield
     # Shutdown
@@ -34,8 +39,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 settings = get_settings()
 app = FastAPI(title=settings.app_name, version=settings.app_version, lifespan=lifespan)
 
+# Add request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
+
 # Register API routers
 app.include_router(tasks_router.router, prefix="/api/v1")
+
+# Only register telemetry router if enabled
+if settings.telemetry_enabled:
+    app.include_router(telemetry.router, prefix="/api/v1", tags=["telemetry"])
 
 
 @app.exception_handler(TaskNotFoundError)
@@ -62,13 +74,8 @@ async def health_check() -> dict[str, str]:
 def main() -> None:
     """Main entry point for the backend server."""
     settings = get_settings()
-    uvicorn.run(
-        "backend.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
-        log_level="info" if not settings.debug else "debug",
-    )
+    # Logging is now configured via setup_logging() in lifespan
+    uvicorn.run("backend.main:app", host=settings.host, port=settings.port, reload=settings.debug)
 
 
 if __name__ == "__main__":

@@ -18,10 +18,17 @@ pip install uv
 
 # Install dependencies (PR-001: Database & Configuration)
 # This installs all development dependencies including FastAPI (needed for backend and tests)
+# Uses 'uv sync' if uv.lock exists, otherwise 'uv pip install'
 make dev
 
-# Or manually install with extras:
-# uv pip install -e ".[dev]"
+# Or manually (if uv.lock exists):
+# uv sync --extra dev
+
+# Or manually (if no uv.lock):
+# uv venv && uv pip install --python .venv/bin/python -e ".[dev]"
+
+# Note: After modifying pyproject.toml dependencies, update the lock file:
+# uv lock
 
 # To install all available optional dependencies:
 # make install-all

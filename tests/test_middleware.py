@@ -68,31 +68,41 @@ class LogCaptureHandler(logging.Handler):
 
 @pytest.fixture
 def log_handler() -> Generator[LogCaptureHandler, None, None]:
-    """Fixture to provide a custom log handler for tests."""
+    """Fixture to provide a custom log handler for tests.
+
+    This handler is attached directly to the middleware logger to avoid
+    interference from setup_logging() which clears root logger handlers.
+    """
     handler = LogCaptureHandler()
     handler.setLevel(logging.DEBUG)
 
     middleware_logger = logging.getLogger("backend.middleware")
+    # Attach handler directly to middleware logger (not root)
+    # This ensures it persists even if setup_logging() clears root handlers
     middleware_logger.addHandler(handler)
     middleware_logger.setLevel(logging.DEBUG)
-    middleware_logger.propagate = True
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    # Set propagate to False so logs don't go to root logger
+    # This prevents setup_logging() from interfering
+    middleware_logger.propagate = False
 
     yield handler
 
     # Cleanup
     middleware_logger.removeHandler(handler)
+    middleware_logger.propagate = True  # Restore default
 
 
 @pytest.fixture
-def test_app() -> FastAPI:
+def test_app(log_handler: LogCaptureHandler) -> FastAPI:
     """Create test FastAPI app with middleware."""
     # Ensure middleware logger is configured before middleware runs
     middleware_logger = logging.getLogger("backend.middleware")
+    # Ensure handler is attached before middleware is added
+    if log_handler not in middleware_logger.handlers:
+        middleware_logger.addHandler(log_handler)
     middleware_logger.setLevel(logging.DEBUG)  # Set to DEBUG to ensure all logs are captured
-    middleware_logger.propagate = True
+    # Set propagate to False to avoid interference from setup_logging()
+    middleware_logger.propagate = False
 
     app = FastAPI()
 
@@ -147,15 +157,28 @@ def test_middleware_rejects_unsafe_request_id(test_app: FastAPI) -> None:
 
 def test_middleware_logs_request(test_app: FastAPI, log_handler: LogCaptureHandler) -> None:
     """Test middleware logs http_request event with correct fields."""
-    # Clear handler records and ensure handler is attached right before request
+    # Clear handler records before request
     log_handler.clear()
-    middleware_logger = logging.getLogger("backend.middleware")
-    if log_handler not in middleware_logger.handlers:
-        middleware_logger.addHandler(log_handler)
-    middleware_logger.setLevel(logging.DEBUG)
-    middleware_logger.propagate = True
 
-    # Make request - logger should be configured now
+    # CRITICAL: Configure logger RIGHT BEFORE request to ensure it's not reset
+    # This must happen after any other test setup that might call setup_logging()
+    middleware_logger = logging.getLogger("backend.middleware")
+    # Remove all existing handlers and add ours to ensure clean state
+    for h in list(middleware_logger.handlers):
+        middleware_logger.removeHandler(h)
+    middleware_logger.addHandler(log_handler)
+    middleware_logger.setLevel(logging.DEBUG)
+    middleware_logger.propagate = False  # Don't propagate to avoid setup_logging() interference
+    middleware_logger.disabled = False  # Ensure logger is not disabled
+
+    # Verify handler is attached and logger is configured
+    assert log_handler in middleware_logger.handlers
+    assert middleware_logger.level == logging.DEBUG
+    assert middleware_logger.propagate is False
+    assert middleware_logger.disabled is False
+    assert middleware_logger.isEnabledFor(logging.DEBUG)
+
+    # Make request immediately after configuring logger
     client = TestClient(test_app)
     response = client.get("/test")
 
@@ -163,6 +186,10 @@ def test_middleware_logs_request(test_app: FastAPI, log_handler: LogCaptureHandl
 
     # Find the http_request log
     request_logs = [r for r in log_handler.records if hasattr(r, "event") and r.event == "http_request"]
+    # If no logs captured, check all records for debugging
+    if len(request_logs) == 0:
+        all_records = [r.getMessage() for r in log_handler.records]
+        assert False, f"No http_request logs found. Handler has {len(log_handler.records)} records: {all_records}"
     assert len(request_logs) == 1
 
     log = request_logs[0]
@@ -176,15 +203,28 @@ def test_middleware_logs_request(test_app: FastAPI, log_handler: LogCaptureHandl
 
 def test_middleware_logs_error(test_app: FastAPI, log_handler: LogCaptureHandler) -> None:
     """Test middleware logs http_error event for unhandled exceptions."""
-    # Clear handler records and ensure handler is attached right before request
+    # Clear handler records before request
     log_handler.clear()
-    middleware_logger = logging.getLogger("backend.middleware")
-    if log_handler not in middleware_logger.handlers:
-        middleware_logger.addHandler(log_handler)
-    middleware_logger.setLevel(logging.DEBUG)
-    middleware_logger.propagate = True
 
-    # Make request - logger should be configured now
+    # CRITICAL: Configure logger RIGHT BEFORE request to ensure it's not reset
+    # This must happen after any other test setup that might call setup_logging()
+    middleware_logger = logging.getLogger("backend.middleware")
+    # Remove all existing handlers and add ours to ensure clean state
+    for h in list(middleware_logger.handlers):
+        middleware_logger.removeHandler(h)
+    middleware_logger.addHandler(log_handler)
+    middleware_logger.setLevel(logging.DEBUG)
+    middleware_logger.propagate = False  # Don't propagate to avoid setup_logging() interference
+    middleware_logger.disabled = False  # Ensure logger is not disabled
+
+    # Verify handler is attached and logger is configured
+    assert log_handler in middleware_logger.handlers
+    assert middleware_logger.level == logging.DEBUG
+    assert middleware_logger.propagate is False
+    assert middleware_logger.disabled is False
+    assert middleware_logger.isEnabledFor(logging.DEBUG)
+
+    # Make request immediately after configuring logger
     client = TestClient(test_app)
     try:
         client.get("/error")
@@ -193,6 +233,10 @@ def test_middleware_logs_error(test_app: FastAPI, log_handler: LogCaptureHandler
 
     # Find the http_error log
     error_logs = [r for r in log_handler.records if hasattr(r, "event") and r.event == "http_error"]
+    # If no logs captured, check all records for debugging
+    if len(error_logs) == 0:
+        all_records = [r.getMessage() for r in log_handler.records]
+        assert False, f"No http_error logs found. Handler has {len(log_handler.records)} records: {all_records}"
     assert len(error_logs) >= 1
 
     log = error_logs[0]

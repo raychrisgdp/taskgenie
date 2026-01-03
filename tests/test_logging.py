@@ -25,13 +25,7 @@ def test_json_formatter_basic_fields() -> None:
     """Test JSONFormatter includes all required basic fields."""
     formatter = JSONFormatter()
     record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=1,
-        msg="Test message",
-        args=(),
-        exc_info=None,
+        name="test.logger", level=logging.INFO, pathname="test.py", lineno=1, msg="Test message", args=(), exc_info=None
     )
     record.created = 1609459200.0  # 2021-01-01 00:00:00 UTC
 
@@ -49,13 +43,7 @@ def test_json_formatter_with_request_id() -> None:
     """Test JSONFormatter includes request_id when set in context."""
     formatter = JSONFormatter()
     record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=1,
-        msg="Test message",
-        args=(),
-        exc_info=None,
+        name="test.logger", level=logging.INFO, pathname="test.py", lineno=1, msg="Test message", args=(), exc_info=None
     )
     record.created = 1609459200.0
 
@@ -73,13 +61,7 @@ def test_json_formatter_with_event() -> None:
     """Test JSONFormatter includes event field when present."""
     formatter = JSONFormatter()
     record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=1,
-        msg="HTTP request",
-        args=(),
-        exc_info=None,
+        name="test.logger", level=logging.INFO, pathname="test.py", lineno=1, msg="HTTP request", args=(), exc_info=None
     )
     record.created = 1609459200.0
     record.event = "http_request"  # type: ignore[attr-defined]
@@ -102,13 +84,7 @@ def test_redaction_filter_sensitive_keys() -> None:
     """Test RedactionFilter redacts sensitive keys."""
     filter_obj = RedactionFilter()
     record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=1,
-        msg="Test message",
-        args=(),
-        exc_info=None,
+        name="test.logger", level=logging.INFO, pathname="test.py", lineno=1, msg="Test message", args=(), exc_info=None
     )
     record.authorization = "Bearer secret-token"  # type: ignore[attr-defined]
     record.password = "mypassword123"  # type: ignore[attr-defined]
@@ -144,13 +120,7 @@ def test_redaction_filter_nested_dict() -> None:
     """Test RedactionFilter handles nested dictionaries."""
     filter_obj = RedactionFilter()
     record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname="test.py",
-        lineno=1,
-        msg="Test message",
-        args=(),
-        exc_info=None,
+        name="test.logger", level=logging.INFO, pathname="test.py", lineno=1, msg="Test message", args=(), exc_info=None
     )
     record.data = {"user": {"email": "user@example.com", "token": "secret123"}}  # type: ignore[attr-defined]
 

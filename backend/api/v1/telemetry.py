@@ -59,9 +59,7 @@ async def check_db_health(db: AsyncSession) -> tuple[bool, str | None]:
 
 
 @router.get("/telemetry")
-async def get_telemetry(
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
+async def get_telemetry(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     """Get system telemetry and health metrics.
 
     Returns:
@@ -87,10 +85,7 @@ async def get_telemetry(
         "status": status,
         "version": settings.app_version,
         "uptime_s": uptime_s,
-        "db": {
-            "connected": db_connected,
-            "migration_version": migration_version,
-        },
+        "db": {"connected": db_connected, "migration_version": migration_version},
         "optional": {
             "event_queue_size": None,  # PR-013 not implemented
             "agent_runs_active": None,  # PR-014 not implemented

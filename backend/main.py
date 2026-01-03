@@ -54,12 +54,7 @@ def main() -> None:
     """Main entry point for the backend server."""
     settings = get_settings()
     # Logging is now configured via setup_logging() in lifespan
-    uvicorn.run(
-        "backend.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
-    )
+    uvicorn.run("backend.main:app", host=settings.host, port=settings.port, reload=settings.debug)
 
 
 if __name__ == "__main__":

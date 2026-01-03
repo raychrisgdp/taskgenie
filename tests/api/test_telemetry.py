@@ -41,9 +41,7 @@ async def test_telemetry_endpoint_returns_200(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_includes_required_fields(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_includes_required_fields(client: TestClient) -> None:
     """Test telemetry endpoint includes all required fields."""
     await database.init_db_async()
     try:
@@ -67,9 +65,7 @@ async def test_telemetry_endpoint_includes_required_fields(
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_db_health_connected(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_db_health_connected(client: TestClient) -> None:
     """Test telemetry endpoint reports DB as connected when available."""
     await database.init_db_async()
     try:
@@ -84,9 +80,7 @@ async def test_telemetry_endpoint_db_health_connected(
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_migration_version(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_migration_version(client: TestClient) -> None:
     """Test telemetry endpoint includes migration version."""
     await database.init_db_async()
     try:
@@ -107,9 +101,7 @@ async def test_telemetry_endpoint_migration_version(
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_optional_metrics_null(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_optional_metrics_null(client: TestClient) -> None:
     """Test telemetry endpoint returns null for optional metrics."""
     await database.init_db_async()
     try:
@@ -124,9 +116,7 @@ async def test_telemetry_endpoint_optional_metrics_null(
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_uptime_increases(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_uptime_increases(client: TestClient) -> None:
     """Test telemetry endpoint uptime increases over time."""
     await database.init_db_async()
     try:
@@ -146,10 +136,9 @@ async def test_telemetry_endpoint_uptime_increases(
 
 
 @pytest.mark.asyncio
-async def test_telemetry_endpoint_degraded_status_on_db_error(
-    client: TestClient,
-) -> None:
+async def test_telemetry_endpoint_degraded_status_on_db_error(client: TestClient) -> None:
     """Test telemetry endpoint returns degraded status when DB check fails."""
+
     # Mock get_db to return a session that raises on execute
     async def mock_get_db() -> AsyncGenerator[AsyncMock, None]:
         mock_session = AsyncMock()

@@ -13,7 +13,8 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from backend.api.v1 import tasks as tasks_router, telemetry
+from backend.api.v1 import tasks as tasks_router
+from backend.api.v1 import telemetry
 from backend.config import get_settings
 from backend.database import close_db, init_db_async
 from backend.logging import setup_logging

@@ -95,7 +95,11 @@ def test_middleware_rejects_unsafe_request_id(test_app: FastAPI) -> None:
 
 def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
     """Test middleware logs http_request event with correct fields."""
-    with caplog.at_level(logging.INFO):
+    # Ensure the middleware logger level is set to INFO
+    middleware_logger = logging.getLogger("backend.middleware")
+    middleware_logger.setLevel(logging.INFO)
+
+    with caplog.at_level(logging.INFO, logger="backend.middleware"):
         client = TestClient(test_app)
         response = client.get("/test")
 
@@ -116,7 +120,11 @@ def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: Fas
 
 def test_middleware_logs_error(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
     """Test middleware logs http_error event for unhandled exceptions."""
-    with caplog.at_level(logging.ERROR):
+    # Ensure the middleware logger level is set to ERROR
+    middleware_logger = logging.getLogger("backend.middleware")
+    middleware_logger.setLevel(logging.ERROR)
+
+    with caplog.at_level(logging.ERROR, logger="backend.middleware"):
         client = TestClient(test_app)
         try:
             client.get("/error")

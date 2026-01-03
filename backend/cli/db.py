@@ -119,7 +119,10 @@ def dump(out: Path = typer.Option(..., "--out", help="Output SQL file path")) ->
 
 
 @db_app.command(name="restore")
-def restore(input_file: Path = typer.Option(..., "--in", help="Input SQL file path")) -> None:
+def restore(
+    input_file: Path = typer.Option(..., "--in", help="Input SQL file path"),
+    yes: bool = typer.Option(False, "--yes", help="Skip confirmation"),
+) -> None:
     """Restore database from SQL file (WARNING: overwrites existing database)."""
     if not input_file.exists():
         console.print(f"[red]✗[/red] Input file not found: {input_file}")
@@ -128,8 +131,8 @@ def restore(input_file: Path = typer.Option(..., "--in", help="Input SQL file pa
     settings = backend.config.get_settings()
     db_path = settings.database_path
 
-    # Confirm overwrite
-    if db_path.exists():
+    # Confirm overwrite only if DB exists and --yes not provided
+    if not yes and db_path.exists():
         console.print(f"[yellow]⚠[/yellow]  This will overwrite the existing database at {db_path}")
         if not Confirm.ask("Continue?", default=False):
             console.print("[yellow]Restore cancelled[/yellow]")

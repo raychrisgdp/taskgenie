@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-001  
-**Last Reviewed:** 2025-12-30
+**Last Reviewed:** 2026-01-03
 
 ## Goal
 
@@ -35,12 +35,13 @@ SQLite FK enforcement, and docs alignment.
 
 ### In
 
-- Ensure `ensure_app_dirs()` creates the vector store directory (`data/chroma`).
-- Keep confirmation when `tgenie db restore` would overwrite an existing DB,
-  and add a `--yes` flag to skip the prompt for automation.
-- Enforce SQLite foreign keys on every SQLAlchemy connection (not just sessions).
+- Ensure `ensure_app_dirs()` creates the vector store directory (`data/chroma`) via
+  the canonical settings path helper.
+- Keep confirmation when `tgenie db restore` would overwrite an existing DB, and add
+  a `--yes` flag to skip the prompt for automation (consistent with `db reset`).
+- Enforce SQLite foreign keys on every SQLAlchemy engine connection (not just sessions).
 - Update `docs/TROUBLESHOOTING.md` to remove PR-001 "planned" wording and align
-  default DB path guidance with current settings.
+  default DB path guidance with current settings and environment overrides.
 
 ### Out
 
@@ -49,10 +50,10 @@ SQLite FK enforcement, and docs alignment.
 
 ## Mini-Specs
 
-- Add vector store directory creation to settings dir bootstrap.
-- Add a restore confirmation bypass flag for overwrite prompts.
-- Add engine-level SQLite FK enforcement hook.
-- Align troubleshooting docs with actual DB/config behavior.
+- Add vector store directory creation to settings dir bootstrap using `vector_store_path`.
+- Add a restore confirmation bypass flag (`--yes`) for overwrite prompts.
+- Add engine-level SQLite FK enforcement hook on each new DBAPI connection.
+- Align troubleshooting docs with actual DB/config behavior and default paths.
 
 ## User Stories
 
@@ -69,11 +70,17 @@ SQLite FK enforcement, and docs alignment.
 
 ### Architecture
 
-- In `Settings.ensure_app_dirs()`, create `data/chroma` using the same root as
-  `database_path`.
+- In `Settings.ensure_app_dirs()`, create `data/chroma` using
+  `Settings.vector_store_path` (same root as `database_path`).
+- Add `--yes` to `tgenie db restore` (in `backend/cli/db.py`) and gate the
+  confirmation prompt on `not yes` and `db_path.exists()`.
 - For SQLite, attach a SQLAlchemy engine `connect` event that runs
-  `PRAGMA foreign_keys=ON` on every new DBAPI connection (sync + async engines).
+  `PRAGMA foreign_keys=ON` on every new DBAPI connection (use
+  `event.listens_for(engine.sync_engine, "connect")` for async engines).
 - Keep `get_db()` PRAGMA as a secondary guard.
+- In `docs/TROUBLESHOOTING.md`, update the DB section to reflect the default
+  path `~/.taskgenie/data/taskgenie.db` and mention `TASKGENIE_DATA_DIR` or
+  `DATABASE_URL` overrides (no cwd-relative defaults).
 
 ### Data Model / Migrations
 
@@ -101,7 +108,7 @@ SQLite FK enforcement, and docs alignment.
 ### AC1: App Dir Completeness
 
 **Success Criteria:**
-- [ ] `ensure_app_dirs()` creates `data/chroma` under the resolved app data dir.
+- [ ] `ensure_app_dirs()` creates `data/chroma` using `Settings.vector_store_path`.
 - [ ] No directories are created at import time.
 
 ### AC2: Restore Confirmation
@@ -118,15 +125,17 @@ SQLite FK enforcement, and docs alignment.
 ### AC4: Docs Alignment
 
 **Success Criteria:**
-- [ ] `docs/TROUBLESHOOTING.md` reflects current DB wiring and default paths.
+- [ ] `docs/TROUBLESHOOTING.md` reflects current DB wiring, default paths, and
+  `TASKGENIE_DATA_DIR`/`DATABASE_URL` override behavior.
 
 ## Test Plan
 
 ### Automated
 
-- Unit: `ensure_app_dirs()` creates `data/chroma`.
+- Unit: `ensure_app_dirs()` creates `data/chroma` via `vector_store_path`.
 - CLI: `tgenie db restore` prompts only when the DB exists; `--yes` skips.
-- Integration: engine-level FK PRAGMA is applied for a fresh connection.
+- Integration: engine-level FK PRAGMA is applied for a fresh connection
+  (verify `PRAGMA foreign_keys` returns `1` on a new connection).
 
 ### Manual
 

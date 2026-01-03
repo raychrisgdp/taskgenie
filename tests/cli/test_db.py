@@ -420,6 +420,27 @@ def test_db_restore_confirmation_accepted(tmp_path: Path, monkeypatch: pytest.Mo
     assert db_path.exists()
 
 
+def test_db_restore_with_yes_flag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that db restore works with --yes flag."""
+    db_path = tmp_path / "test.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{db_path}")
+    config.get_settings.cache_clear()
+
+    # Create DB file and backup file
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_path.write_text("old data")
+    backup_file = tmp_path / "backup.sql"
+    backup_file.write_text("CREATE TABLE test (id INTEGER);")
+
+    runner = CliRunner()
+    # Use --yes flag, no input needed
+    result = runner.invoke(db_app, ["restore", "--in", str(backup_file), "--yes"])
+    assert result.exit_code == 0
+    assert "restored" in result.stdout.lower() or "✓" in result.stdout
+    # Verify old DB was deleted and new one created
+    assert db_path.exists()
+
+
 def test_db_restore_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test restore command error handling."""
     db_path = tmp_path / "test.db"

@@ -11,10 +11,11 @@ import logging
 import sqlite3
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from typing import Any
 
 import alembic.command
 import alembic.config
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
@@ -30,6 +31,22 @@ Base = declarative_base()
 # For multi-instance scenarios, consider using dependency injection.
 engine: AsyncEngine | None = None
 async_session_maker: async_sessionmaker[AsyncSession] | None = None
+
+
+def _enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
+    """Enable SQLite foreign keys for all connections via engine event.
+
+    This ensures foreign keys are enforced at the connection level,
+    not just at the session level.
+    """
+    if engine.url.get_backend_name() == "sqlite":
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def set_sqlite_pragma(dbapi_conn: sqlite3.Connection, _connection_record: Any) -> None:
+            """Set PRAGMA foreign_keys=ON for SQLite connections."""
+            cursor = dbapi_conn.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
 
 
 def init_db() -> None:
@@ -52,6 +69,9 @@ def init_db() -> None:
 
     # Create async engine
     engine = create_async_engine(database_url, echo=settings.debug)
+
+    # Enable SQLite foreign keys at engine level
+    _enable_sqlite_foreign_keys(engine)
 
     # Create sessionmaker
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -80,6 +100,9 @@ async def init_db_async() -> None:
 
     # Create async engine
     engine = create_async_engine(database_url, echo=settings.debug)
+
+    # Enable SQLite foreign keys at engine level
+    _enable_sqlite_foreign_keys(engine)
 
     # Create sessionmaker
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

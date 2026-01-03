@@ -95,6 +95,7 @@ def test_app_data_dir_creation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     assert (settings.app_data_dir / "data").exists()
     assert (settings.app_data_dir / "logs").exists()
     assert (settings.app_data_dir / "cache" / "attachments").exists()
+    assert settings.vector_store_path.exists()
 
 
 def test_database_url_resolved_default() -> None:

@@ -201,6 +201,21 @@ async def test_get_db_foreign_keys_enabled(temp_settings: None) -> None:
     await close_db()
 
 
+@pytest.mark.asyncio
+async def test_engine_level_foreign_keys_enabled(temp_settings: None) -> None:
+    """Test that foreign keys are enabled at engine connection level (not just session level)."""
+    await init_db_async()
+    assert database.engine is not None
+
+    # Open a raw connection via sync_engine (bypassing get_db() session)
+    with database.engine.sync_engine.connect() as conn:
+        result = conn.execute(text("PRAGMA foreign_keys"))
+        enabled = result.scalar()
+        assert enabled == 1, "Foreign keys should be enabled at engine connection level"
+
+    await close_db()
+
+
 def test_run_migrations_if_needed_memory_db(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test _run_migrations_if_needed with :memory: database (covers lines 102-103)."""
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")

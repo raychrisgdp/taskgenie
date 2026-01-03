@@ -203,6 +203,7 @@ class Settings(BaseSettings):
         (self.app_data_dir / "logs").mkdir(parents=True, exist_ok=True)
         (self.app_data_dir / "cache").mkdir(parents=True, exist_ok=True)
         (self.app_data_dir / "cache" / "attachments").mkdir(parents=True, exist_ok=True)
+        self.vector_store_path.mkdir(parents=True, exist_ok=True)
 
         database_path = self.database_path
         if str(database_path) != ":memory:":

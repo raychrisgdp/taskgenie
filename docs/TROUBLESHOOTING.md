@@ -24,12 +24,12 @@
 
 ## Database file/path issues
 
-Database wiring (migrations, tables, dump/restore) is planned in PR-001. Today, `DATABASE_URL` is reserved for that work.
+The default database path is `~/.taskgenie/data/taskgenie.db` (derived from `TASKGENIE_DATA_DIR`).
 
-The default is `DATABASE_URL=sqlite+aiosqlite:///./data/taskgenie.db`, which is relative to your current working directory.
-
-- Run from repo root, or change `DATABASE_URL` to an absolute path.
-- Ensure the `data/` directory exists and is writable.
+- Override the data directory: set `TASKGENIE_DATA_DIR`
+- Override the database URL: set `DATABASE_URL` (e.g., `sqlite+aiosqlite:///path/to/db`)
+- Ensure the data directory exists and is writable
+- Run migrations: `tgenie db upgrade`
 
 ## `NOTIFICATION_SCHEDULE` parsing errors
 

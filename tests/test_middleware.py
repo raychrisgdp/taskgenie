@@ -7,6 +7,7 @@ Author:
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator
 
 import pytest
 from fastapi import FastAPI, status
@@ -46,6 +47,43 @@ def test_is_safe_request_id_non_ascii() -> None:
     """Test _is_safe_request_id rejects non-ASCII request IDs."""
     assert _is_safe_request_id("café") is False
     assert _is_safe_request_id("测试") is False
+
+
+class LogCaptureHandler(logging.Handler):
+    """Custom handler to capture logs for testing."""
+
+    def __init__(self) -> None:
+        """Initialize handler."""
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Capture log record."""
+        self.records.append(record)
+
+    def clear(self) -> None:
+        """Clear captured records."""
+        self.records.clear()
+
+
+@pytest.fixture
+def log_handler() -> Generator[LogCaptureHandler, None, None]:
+    """Fixture to provide a custom log handler for tests."""
+    handler = LogCaptureHandler()
+    handler.setLevel(logging.DEBUG)
+
+    middleware_logger = logging.getLogger("backend.middleware")
+    middleware_logger.addHandler(handler)
+    middleware_logger.setLevel(logging.DEBUG)
+    middleware_logger.propagate = True
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    yield handler
+
+    # Cleanup
+    middleware_logger.removeHandler(handler)
 
 
 @pytest.fixture
@@ -107,58 +145,60 @@ def test_middleware_rejects_unsafe_request_id(test_app: FastAPI) -> None:
     # This is already covered by test_is_safe_request_id_non_ascii
 
 
-def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
+def test_middleware_logs_request(test_app: FastAPI, log_handler: LogCaptureHandler) -> None:
     """Test middleware logs http_request event with correct fields."""
-    # Ensure logger levels are set to DEBUG to capture all logs
-    # This ensures logs are captured even if other tests reset logging
+    # Clear handler records and ensure handler is attached right before request
+    log_handler.clear()
     middleware_logger = logging.getLogger("backend.middleware")
+    if log_handler not in middleware_logger.handlers:
+        middleware_logger.addHandler(log_handler)
     middleware_logger.setLevel(logging.DEBUG)
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    middleware_logger.propagate = True
 
-    with caplog.at_level(logging.DEBUG):
-        client = TestClient(test_app)
-        response = client.get("/test")
+    # Make request - logger should be configured now
+    client = TestClient(test_app)
+    response = client.get("/test")
 
     assert response.status_code == HTTP_OK
 
     # Find the http_request log
-    request_logs = [r for r in caplog.records if hasattr(r, "event") and r.event == "http_request"]
+    request_logs = [r for r in log_handler.records if hasattr(r, "event") and r.event == "http_request"]
     assert len(request_logs) == 1
 
     log = request_logs[0]
-    assert log.event == "http_request"
-    assert log.method == "GET"
-    assert log.path == "/test"
-    assert log.status == HTTP_OK
+    assert log.event == "http_request"  # type: ignore[attr-defined]
+    assert log.method == "GET"  # type: ignore[attr-defined]
+    assert log.path == "/test"  # type: ignore[attr-defined]
+    assert log.status == HTTP_OK  # type: ignore[attr-defined]
     assert hasattr(log, "duration_ms")
-    assert isinstance(log.duration_ms, (int, float))
+    assert isinstance(log.duration_ms, (int, float))  # type: ignore[arg-type]
 
 
-def test_middleware_logs_error(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
+def test_middleware_logs_error(test_app: FastAPI, log_handler: LogCaptureHandler) -> None:
     """Test middleware logs http_error event for unhandled exceptions."""
-    # Ensure logger levels are set to DEBUG to capture all logs
-    # This ensures logs are captured even if other tests reset logging
+    # Clear handler records and ensure handler is attached right before request
+    log_handler.clear()
     middleware_logger = logging.getLogger("backend.middleware")
+    if log_handler not in middleware_logger.handlers:
+        middleware_logger.addHandler(log_handler)
     middleware_logger.setLevel(logging.DEBUG)
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    middleware_logger.propagate = True
 
-    with caplog.at_level(logging.DEBUG):
-        client = TestClient(test_app)
-        try:
-            client.get("/error")
-        except Exception:
-            pass  # Expected to raise
+    # Make request - logger should be configured now
+    client = TestClient(test_app)
+    try:
+        client.get("/error")
+    except Exception:
+        pass  # Expected to raise
 
     # Find the http_error log
-    error_logs = [r for r in caplog.records if hasattr(r, "event") and r.event == "http_error"]
+    error_logs = [r for r in log_handler.records if hasattr(r, "event") and r.event == "http_error"]
     assert len(error_logs) >= 1
 
     log = error_logs[0]
-    assert log.event == "http_error"
-    assert log.method == "GET"
-    assert log.path == "/error"
+    assert log.event == "http_error"  # type: ignore[attr-defined]
+    assert log.method == "GET"  # type: ignore[attr-defined]
+    assert log.path == "/error"  # type: ignore[attr-defined]
 
 
 def test_middleware_sets_request_id_in_context(test_app: FastAPI) -> None:

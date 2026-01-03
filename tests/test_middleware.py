@@ -6,17 +6,19 @@ Author:
 
 from __future__ import annotations
 
-import json
 import logging
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.logging import request_id_var
 from backend.middleware import RequestLoggingMiddleware, _is_safe_request_id
+
+# UUID v4 format constants
+UUID_LENGTH = 36  # UUID4 format: 8-4-4-4-12 hex digits = 36 chars total
+UUID_DASH_COUNT = 4  # UUID4 has 4 dashes
+HTTP_OK = status.HTTP_200_OK
 
 
 def test_is_safe_request_id_valid() -> None:
@@ -59,12 +61,12 @@ def test_middleware_generates_request_id(test_app: FastAPI) -> None:
     client = TestClient(test_app)
     response = client.get("/test")
 
-    assert response.status_code == 200
+    assert response.status_code == HTTP_OK
     assert "X-Request-Id" in response.headers
     # UUID4 format: 8-4-4-4-12 hex digits
     request_id = response.headers["X-Request-Id"]
-    assert len(request_id) == 36
-    assert request_id.count("-") == 4
+    assert len(request_id) == UUID_LENGTH
+    assert request_id.count("-") == UUID_DASH_COUNT
 
 
 def test_middleware_reuses_safe_request_id(test_app: FastAPI) -> None:
@@ -72,7 +74,7 @@ def test_middleware_reuses_safe_request_id(test_app: FastAPI) -> None:
     client = TestClient(test_app)
     response = client.get("/test", headers={"X-Request-Id": "test-id-123"})
 
-    assert response.status_code == 200
+    assert response.status_code == HTTP_OK
     assert response.headers["X-Request-Id"] == "test-id-123"
 
 
@@ -82,10 +84,10 @@ def test_middleware_rejects_unsafe_request_id(test_app: FastAPI) -> None:
     # Too long - TestClient allows this
     response1 = client.get("/test", headers={"X-Request-Id": "a" * 129})
 
-    assert response1.status_code == 200
+    assert response1.status_code == HTTP_OK
     # Should generate new UUID, not reuse unsafe one
     assert response1.headers["X-Request-Id"] != "a" * 129
-    assert len(response1.headers["X-Request-Id"]) == 36
+    assert len(response1.headers["X-Request-Id"]) == UUID_LENGTH
 
     # Non-ASCII - TestClient rejects this before middleware, so test the function directly
     # This is already covered by test_is_safe_request_id_non_ascii
@@ -97,7 +99,7 @@ def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: Fas
         client = TestClient(test_app)
         response = client.get("/test")
 
-    assert response.status_code == 200
+    assert response.status_code == HTTP_OK
 
     # Find the http_request log
     request_logs = [r for r in caplog.records if hasattr(r, "event") and r.event == "http_request"]
@@ -107,7 +109,7 @@ def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: Fas
     assert log.event == "http_request"
     assert log.method == "GET"
     assert log.path == "/test"
-    assert log.status == 200
+    assert log.status == HTTP_OK
     assert hasattr(log, "duration_ms")
     assert isinstance(log.duration_ms, (int, float))
 
@@ -144,5 +146,5 @@ def test_middleware_sets_request_id_in_context(test_app: FastAPI) -> None:
     client = TestClient(app)
 
     response = client.get("/test-context", headers={"X-Request-Id": "test-context-id"})
-    assert response.status_code == 200
+    assert response.status_code == HTTP_OK
     assert response.json()["request_id"] == "test-context-id"

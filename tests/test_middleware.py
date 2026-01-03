@@ -20,6 +20,15 @@ UUID_LENGTH = 36  # UUID4 format: 8-4-4-4-12 hex digits = 36 chars total
 UUID_DASH_COUNT = 4  # UUID4 has 4 dashes
 HTTP_OK = status.HTTP_200_OK
 
+# Configure middleware logger at module level to ensure it's set before tests run
+# This ensures logs are captured even when running with coverage in parallel
+_middleware_logger = logging.getLogger("backend.middleware")
+_middleware_logger.setLevel(logging.DEBUG)
+_middleware_logger.propagate = True
+# Also ensure root logger level is set so logs propagate correctly
+_root_logger = logging.getLogger()
+_root_logger.setLevel(logging.DEBUG)
+
 
 def test_is_safe_request_id_valid() -> None:
     """Test _is_safe_request_id accepts valid request IDs."""
@@ -42,6 +51,11 @@ def test_is_safe_request_id_non_ascii() -> None:
 @pytest.fixture
 def test_app() -> FastAPI:
     """Create test FastAPI app with middleware."""
+    # Ensure middleware logger is configured before middleware runs
+    middleware_logger = logging.getLogger("backend.middleware")
+    middleware_logger.setLevel(logging.DEBUG)  # Set to DEBUG to ensure all logs are captured
+    middleware_logger.propagate = True
+
     app = FastAPI()
 
     @app.get("/test")
@@ -95,16 +109,14 @@ def test_middleware_rejects_unsafe_request_id(test_app: FastAPI) -> None:
 
 def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
     """Test middleware logs http_request event with correct fields."""
-    # Ensure the middleware logger level is set to INFO and propagates
+    # Ensure logger levels are set to DEBUG to capture all logs
+    # This ensures logs are captured even if other tests reset logging
     middleware_logger = logging.getLogger("backend.middleware")
-    middleware_logger.setLevel(logging.INFO)
-    middleware_logger.propagate = True
-
-    # Also ensure root logger level is set
+    middleware_logger.setLevel(logging.DEBUG)
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(logging.DEBUG)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.DEBUG):
         client = TestClient(test_app)
         response = client.get("/test")
 
@@ -125,16 +137,14 @@ def test_middleware_logs_request(caplog: pytest.LogCaptureFixture, test_app: Fas
 
 def test_middleware_logs_error(caplog: pytest.LogCaptureFixture, test_app: FastAPI) -> None:
     """Test middleware logs http_error event for unhandled exceptions."""
-    # Ensure the middleware logger level is set to ERROR and propagates
+    # Ensure logger levels are set to DEBUG to capture all logs
+    # This ensures logs are captured even if other tests reset logging
     middleware_logger = logging.getLogger("backend.middleware")
-    middleware_logger.setLevel(logging.ERROR)
-    middleware_logger.propagate = True
-
-    # Also ensure root logger level is set
+    middleware_logger.setLevel(logging.DEBUG)
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.ERROR)
+    root_logger.setLevel(logging.DEBUG)
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.DEBUG):
         client = TestClient(test_app)
         try:
             client.get("/error")

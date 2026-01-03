@@ -175,6 +175,11 @@ class Settings(BaseSettings):
     notifications_enabled: bool = Field(default=True, alias="NOTIFICATIONS_ENABLED")
     notification_schedule: list[str] = Field(default_factory=lambda: ["24h", "6h"], alias="NOTIFICATION_SCHEDULE")
 
+    # Logging
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    telemetry_enabled: bool = Field(default=True, alias="TELEMETRY_ENABLED")
+    log_file_path: str | None = Field(default=None, alias="LOG_FILE_PATH")
+
     @field_validator("app_data_dir", mode="before")
     @classmethod
     def expand_app_data_dir(cls, v: str | Path) -> Path:
@@ -249,6 +254,30 @@ class Settings(BaseSettings):
     def logs_path(self) -> Path:
         """Get canonical logs directory path."""
         return self.app_data_dir / "logs"
+
+    def get_log_level(self) -> str:
+        """Get resolved log level (DEBUG when debug=True, otherwise configured level).
+
+        Returns:
+            Log level string (DEBUG if debug=True, otherwise log_level.upper()).
+        """
+        if self.debug:
+            return "DEBUG"
+        return self.log_level.upper()
+
+    def get_log_file_path(self) -> Path:
+        """Get resolved log file path with default if not set.
+
+        File logging is always enabled. If LOG_FILE_PATH is not set, uses default
+        path ({app_data_dir}/logs/taskgenie.jsonl).
+
+        Returns:
+            Path to log file (configured path or default).
+        """
+        if self.log_file_path:
+            return Path(self.log_file_path).expanduser()
+        # Default to {app_data_dir}/logs/taskgenie.jsonl
+        return self.app_data_dir / "logs" / "taskgenie.jsonl"
 
 
 @lru_cache(maxsize=1)

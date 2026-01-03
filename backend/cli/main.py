@@ -10,6 +10,10 @@ import typer
 from rich.console import Console
 
 from backend.cli import db
+from backend.logging import setup_logging
+
+# Setup structured logging for CLI
+setup_logging()
 
 app = typer.Typer(help="TaskGenie CLI (implementation in progress)")
 console = Console()

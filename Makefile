@@ -12,7 +12,7 @@ help:
 	@echo "  make format     Run ruff formatter"
 	@echo "  make typecheck  Run mypy"
 	@echo "  make test       Run pytest"
-	@echo "  make test-cov   Run pytest with coverage"
+	@echo "  make test-cov   Run precommit + pytest with coverage (matches CI)"
 	@echo "  make docs-check Validate docs links/naming"
 	@echo "  make check      Run lint + typecheck + test"
 
@@ -41,7 +41,7 @@ typecheck:
 test:
 	uv run pytest -n 4
 
-test-cov:
+test-cov: precommit
 	uv run pytest -n 4 --cov=backend --cov-report=term-missing
 
 docs-check:

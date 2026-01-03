@@ -2,7 +2,7 @@
 
 **Status:** Spec Only  
 **Depends on:** PR-001  
-**Last Reviewed:** 2025-12-30
+**Last Reviewed:** 2026-01-02
 
 ## Goal
 
@@ -36,6 +36,7 @@ filtering and pagination.
 - REST endpoints for task CRUD.
 - Basic filters (status, priority, due_before, due_after) and pagination.
 - Input validation and consistent error shape.
+- Task responses include `attachments: []` until PR-004 lands (no attachment joins).
 
 ### Out
 
@@ -51,6 +52,8 @@ filtering and pagination.
 - Validate enums and required fields at the API boundary.
 - Standardize error responses (404 and validation).
 - Publish OpenAPI schemas with examples aligned to `API_REFERENCE.md`.
+- List responses include `total`, `page`, and `page_size` (page derived from limit/offset).
+- Default ordering: `created_at DESC, id ASC` for stable pagination.
 
 ## User Stories
 
@@ -73,7 +76,7 @@ filtering and pagination.
 
 - `Task` fields: id (UUID string), title, description, status, priority, eta,
   created_at, updated_at, tags, metadata.
-- Index on `(status, eta)` to support "what is due" queries.
+- Use existing indexes from PR-001 (`status`, `priority`, `eta`, `created_at`); no new migrations.
 
 ### API Contract
 
@@ -83,6 +86,9 @@ filtering and pagination.
 - `PATCH /api/v1/tasks/{id}` -> 200 OK, partial update.
 - `DELETE /api/v1/tasks/{id}` -> 204 No Content.
 - Error shape: `{"error": "...", "code": "TASK_NOT_FOUND"}` for 404s.
+- List response shape: `{ "tasks": [...], "total": <int>, "page": <int>, "page_size": <int> }`
+  where `page = floor(offset / limit) + 1` and `page_size = limit`.
+- Task response includes `attachments: []` until PR-004.
 
 ### Background Jobs
 
@@ -116,6 +122,8 @@ filtering and pagination.
 **Success Criteria:**
 - [ ] List endpoint supports status, priority, due_before, due_after.
 - [ ] Limit/offset default to 50/0 and are enforced.
+- [ ] List response includes `total`, `page`, and `page_size` consistent with limit/offset.
+- [ ] Default sort order is `created_at DESC, id ASC`.
 
 ## Test Plan
 
@@ -123,6 +131,8 @@ filtering and pagination.
 
 - API tests for CRUD, validation, and 404s.
 - API tests for filters and pagination ordering.
+- API tests for list response shape (`total`, `page`, `page_size`) and default ordering.
+- API tests confirm `attachments` is an empty list for tasks.
 
 ### Manual
 
@@ -131,4 +141,4 @@ filtering and pagination.
 
 ## Notes / Risks / Open Questions
 
-- Decide default sort order (eta asc vs created_at desc).
+- None.

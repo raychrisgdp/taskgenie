@@ -9,6 +9,7 @@ Author:
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from backend.services.task_service import TaskNotFoundError, create_task, delete
 
 
 @pytest.fixture
-async def db_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncSession:
+async def db_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncSession, None]:
     """Create a real database session for testing."""
     db_path = tmp_path / "test.db"
     db_url = f"sqlite+aiosqlite:///{db_path}"
@@ -32,7 +33,7 @@ async def db_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncSe
     config.get_settings.cache_clear()
 
     # Initialize database
-    from backend.database import init_db_async, get_db  # noqa: PLC0415
+    from backend.database import get_db, init_db_async  # noqa: PLC0415
 
     await init_db_async()
 
@@ -114,15 +115,9 @@ async def test_list_tasks_service_with_filters(db_session: AsyncSession) -> None
     eta2 = now.replace(hour=14, minute=0, second=0, microsecond=0)
     eta3 = now.replace(hour=11, minute=0, second=0, microsecond=0)
 
-    task1_data = TaskCreate(
-        title="Task 1", status=TaskStatus.PENDING, priority=TaskPriority.HIGH, eta=eta1
-    )
-    task2_data = TaskCreate(
-        title="Task 2", status=TaskStatus.COMPLETED, priority=TaskPriority.LOW, eta=eta2
-    )
-    task3_data = TaskCreate(
-        title="Task 3", status=TaskStatus.PENDING, priority=TaskPriority.HIGH, eta=eta3
-    )
+    task1_data = TaskCreate(title="Task 1", status=TaskStatus.PENDING, priority=TaskPriority.HIGH, eta=eta1)
+    task2_data = TaskCreate(title="Task 2", status=TaskStatus.COMPLETED, priority=TaskPriority.LOW, eta=eta2)
+    task3_data = TaskCreate(title="Task 3", status=TaskStatus.PENDING, priority=TaskPriority.HIGH, eta=eta3)
 
     await create_task(db_session, task1_data)
     await create_task(db_session, task2_data)
@@ -134,13 +129,7 @@ async def test_list_tasks_service_with_filters(db_session: AsyncSession) -> None
     after_eta1 = now.replace(hour=10, minute=30, second=0, microsecond=0)
     noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
     result = await list_tasks(
-        db_session,
-        status="pending",
-        priority="high",
-        due_before=noon,
-        due_after=after_eta1,
-        limit=10,
-        offset=0,
+        db_session, status="pending", priority="high", due_before=noon, due_after=after_eta1, limit=10, offset=0
     )
 
     # Should match Task 3 (pending, high, eta=eta3 which is after 10:30am and before noon)
@@ -162,7 +151,7 @@ async def test_list_tasks_service_pagination(db_session: AsyncSession) -> None:
     result = await list_tasks(db_session, limit=3, offset=6)
 
     assert result.total == 10  # noqa: PLR2004
-    assert result.page == 3  # (6 // 3) + 1 = 3
+    assert result.page == 3  # noqa: PLR2004  # (6 // 3) + 1 = 3
     assert result.page_size == 3  # noqa: PLR2004
 
 
@@ -171,10 +160,7 @@ async def test_update_task_service(db_session: AsyncSession) -> None:
     """Test update_task service function directly."""
     # Create a task
     task_data = TaskCreate(
-        title="Original Title",
-        description="Original Description",
-        status=TaskStatus.PENDING,
-        priority=TaskPriority.LOW,
+        title="Original Title", description="Original Description", status=TaskStatus.PENDING, priority=TaskPriority.LOW
     )
     created_task = await create_task(db_session, task_data)
     await db_session.commit()
@@ -249,10 +235,7 @@ async def test_update_task_service_only_optional_fields(db_session: AsyncSession
     """Test update_task with only optional fields (eta, tags, metadata) to cover branch paths."""
     # Create a task with initial values
     task_data = TaskCreate(
-        title="Original Title",
-        description="Original Description",
-        status=TaskStatus.PENDING,
-        priority=TaskPriority.LOW,
+        title="Original Title", description="Original Description", status=TaskStatus.PENDING, priority=TaskPriority.LOW
     )
     created_task = await create_task(db_session, task_data)
     await db_session.commit()

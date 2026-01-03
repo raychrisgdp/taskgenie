@@ -45,7 +45,7 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     """Schema for updating a task (all fields optional)."""
 
-    title: str | None = Field(None, min_length=1, max_length=255)
+    title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
     status: TaskStatus | None = None
     priority: TaskPriority | None = None

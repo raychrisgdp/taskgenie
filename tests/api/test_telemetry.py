@@ -6,16 +6,21 @@ Author:
 
 from __future__ import annotations
 
+import time
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock
 
 import pytest
+from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from backend import config, database
 from backend.api.v1 import telemetry
+from backend.database import _run_migrations_if_needed, get_db
 from backend.main import app
+
+HTTP_OK = status.HTTP_200_OK
 
 
 @pytest.fixture
@@ -30,7 +35,7 @@ async def test_telemetry_endpoint_returns_200(client: TestClient) -> None:
     await database.init_db_async()
     try:
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
     finally:
         await database.close_db()
 
@@ -43,7 +48,7 @@ async def test_telemetry_endpoint_includes_required_fields(
     await database.init_db_async()
     try:
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
 
         data = response.json()
         assert "status" in data
@@ -69,7 +74,7 @@ async def test_telemetry_endpoint_db_health_connected(
     await database.init_db_async()
     try:
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
 
         data = response.json()
         assert data["db"]["connected"] is True
@@ -86,14 +91,12 @@ async def test_telemetry_endpoint_migration_version(
     await database.init_db_async()
     try:
         # Ensure migrations have run
-        from backend.database import _run_migrations_if_needed
-
         settings = config.get_settings()
         db_url = settings.database_url_resolved
         _run_migrations_if_needed(settings, db_url)
 
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
 
         data = response.json()
         assert data["db"]["migration_version"] is not None
@@ -111,7 +114,7 @@ async def test_telemetry_endpoint_optional_metrics_null(
     await database.init_db_async()
     try:
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
 
         data = response.json()
         assert data["optional"]["event_queue_size"] is None
@@ -127,16 +130,14 @@ async def test_telemetry_endpoint_uptime_increases(
     """Test telemetry endpoint uptime increases over time."""
     await database.init_db_async()
     try:
-        import time
-
         response1 = client.get("/api/v1/telemetry")
-        assert response1.status_code == 200
+        assert response1.status_code == HTTP_OK
         uptime1 = response1.json()["uptime_s"]
 
         time.sleep(1)
 
         response2 = client.get("/api/v1/telemetry")
-        assert response2.status_code == 200
+        assert response2.status_code == HTTP_OK
         uptime2 = response2.json()["uptime_s"]
 
         assert uptime2 >= uptime1
@@ -149,10 +150,6 @@ async def test_telemetry_endpoint_degraded_status_on_db_error(
     client: TestClient,
 ) -> None:
     """Test telemetry endpoint returns degraded status when DB check fails."""
-    from collections.abc import AsyncGenerator
-
-    from backend.api.v1 import telemetry
-
     # Mock get_db to return a session that raises on execute
     async def mock_get_db() -> AsyncGenerator[AsyncMock, None]:
         mock_session = AsyncMock()
@@ -161,12 +158,10 @@ async def test_telemetry_endpoint_degraded_status_on_db_error(
         yield mock_session
 
     # Override FastAPI dependency
-    from backend.database import get_db
-
     app.dependency_overrides[get_db] = lambda: mock_get_db()
     try:
         response = client.get("/api/v1/telemetry")
-        assert response.status_code == 200
+        assert response.status_code == HTTP_OK
 
         data = response.json()
         assert data["status"] == "degraded"
@@ -183,8 +178,6 @@ async def test_get_migration_version_returns_version() -> None:
     await database.init_db_async()
     try:
         # Ensure migrations have run
-        from backend.database import _run_migrations_if_needed
-
         settings = config.get_settings()
         db_url = settings.database_url_resolved
         _run_migrations_if_needed(settings, db_url)

@@ -11,9 +11,14 @@ import logging
 from pathlib import Path
 
 import pytest
+from fastapi import status
 
 from backend import config
 from backend.logging import JSONFormatter, RedactionFilter, request_id_var, setup_logging
+
+HTTP_OK = status.HTTP_200_OK
+EXPECTED_DURATION_MS = 123.45
+MIN_HANDLERS_WITH_FILE = 2
 
 
 def test_json_formatter_basic_fields() -> None:
@@ -89,8 +94,8 @@ def test_json_formatter_with_event() -> None:
     assert data["event"] == "http_request"
     assert data["method"] == "GET"
     assert data["path"] == "/api/v1/tasks"
-    assert data["status"] == 200
-    assert data["duration_ms"] == 123.45
+    assert data["status"] == HTTP_OK
+    assert data["duration_ms"] == EXPECTED_DURATION_MS
 
 
 def test_redaction_filter_sensitive_keys() -> None:
@@ -183,7 +188,7 @@ def test_setup_logging_creates_file_handler(tmp_path: Path, monkeypatch: pytest.
     handlers = root_logger.handlers
 
     # Should have both console and file handler
-    assert len(handlers) >= 2
+    assert len(handlers) >= MIN_HANDLERS_WITH_FILE
     assert any(isinstance(h, logging.handlers.RotatingFileHandler) for h in handlers)
     assert log_file.parent.exists()
 

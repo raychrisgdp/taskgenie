@@ -6,6 +6,7 @@ help:
 	@echo "Usage:"
 	@echo "  make dev        Install dev dependencies (includes API for tests)"
 	@echo "  make install-all Install all optional dependencies"
+	@echo "  make lock       Update uv.lock file after modifying pyproject.toml dependencies"
 	@echo "  make hooks      Install pre-commit git hooks"
 	@echo "  make precommit  Run docs check + pre-commit on all files"
 	@echo "  make lint       Run ruff lint"
@@ -17,10 +18,22 @@ help:
 	@echo "  make check      Run lint + typecheck + test"
 
 dev:
-	uv pip install -e ".[dev]"
+	@if [ -f uv.lock ]; then \
+		uv sync --extra dev; \
+	else \
+		uv venv && uv pip install --python .venv/bin/python -e ".[dev]"; \
+	fi
 
 install-all:
-	uv pip install -e ".[all]"
+	@if [ -f uv.lock ]; then \
+		uv sync --all-extras; \
+	else \
+		uv venv && uv pip install --python .venv/bin/python -e ".[all]"; \
+	fi
+
+# Update lock file when dependencies change (run this after modifying pyproject.toml)
+lock:
+	uv lock
 
 hooks: dev
 	uv run pre-commit install

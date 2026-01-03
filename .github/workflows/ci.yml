@@ -24,11 +24,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Create virtual environment
-        run: uv venv
-
       - name: Install dependencies
-        run: uv pip install -e ".[dev]"
+        run: |
+          if [ -f uv.lock ]; then
+            uv sync --extra dev
+          else
+            uv venv && uv pip install --python .venv/bin/python -e ".[dev]"
+          fi
 
       - name: Tests
         run: make test-cov

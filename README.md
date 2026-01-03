@@ -33,6 +33,16 @@ uv run tgenie --help
 - Start the FastAPI app and call `GET /health`.
 - Configure settings via `.env` (`backend/config.py`).
 - Use the CLI entrypoint (`tgenie --help`) to view placeholder commands.
+- Check system health via `GET /api/v1/telemetry` (see `docs/USER_GUIDE.md` for observability settings).
+
+### Observability
+
+TaskGenie provides structured JSON logging and a telemetry endpoint for monitoring:
+
+- **Logging**: Configure via `LOG_LEVEL` (default: `INFO`) and `LOG_FILE_PATH` (default: `~/.taskgenie/logs/taskgenie.jsonl`)
+- **Telemetry**: Enable/disable via `TELEMETRY_ENABLED` (default: `true`). Endpoint: `/api/v1/telemetry`
+
+See `docs/USER_GUIDE.md` for detailed observability configuration.
 
 ## Try It Now
 

@@ -46,10 +46,9 @@ class JSONFormatter(logging.Formatter):
             "message": record.getMessage(),
         }
 
-        # Add request_id if available
+        # Add request_id (always include, null if not in request context)
         request_id = request_id_var.get()
-        if request_id:
-            log_data["request_id"] = request_id
+        log_data["request_id"] = request_id
 
         # Add event type if present
         if hasattr(record, "event"):

@@ -36,7 +36,7 @@ def test_json_formatter_basic_fields() -> None:
     assert data["level"] == "INFO"
     assert data["logger"] == "test.logger"
     assert data["message"] == "Test message"
-    assert "request_id" not in data  # Not set in context
+    assert data["request_id"] is None  # Always present, null when not in request context
 
 
 def test_json_formatter_with_request_id() -> None:

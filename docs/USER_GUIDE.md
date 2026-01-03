@@ -111,6 +111,79 @@ Details: `docs/01-design/DESIGN_DATA.md`
 
 ---
 
+## Observability
+
+TaskGenie provides structured logging and telemetry for monitoring and debugging.
+
+### Logging Configuration
+
+Logs are written in JSON format (one JSON object per line) for easy parsing and analysis.
+
+**Environment Variables:**
+
+- `LOG_LEVEL`: Set the minimum log level (default: `INFO`). Valid values: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
+- `LOG_FILE_PATH`: Custom path for log file (default: `~/.taskgenie/logs/taskgenie.jsonl`).
+
+**Example:**
+
+```bash
+# Enable debug logging
+export LOG_LEVEL=DEBUG
+
+# Use custom log file location
+export LOG_FILE_PATH=/var/log/taskgenie/app.jsonl
+```
+
+Logs include structured fields:
+- `timestamp`: ISO 8601 timestamp
+- `level`: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `logger`: Logger name (e.g., `backend.middleware`)
+- `message`: Log message
+- `request_id`: Request correlation ID (when available)
+- `event`: Event type (e.g., `http_request`, `http_error`)
+
+Sensitive data (passwords, API keys, email addresses) is automatically redacted.
+
+### Telemetry Endpoint
+
+The `/api/v1/telemetry` endpoint provides system health and metrics.
+
+**Usage:**
+
+```bash
+curl http://127.0.0.1:8080/api/v1/telemetry
+```
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "version": "0.1.0",
+  "uptime_s": 3600,
+  "db": {
+    "connected": true,
+    "migration_version": "001"
+  },
+  "optional": {
+    "event_queue_size": null,
+    "agent_runs_active": null
+  }
+}
+```
+
+**Status Values:**
+- `ok`: System is healthy (database connected)
+- `degraded`: System is operational but database is unavailable
+
+**Configuration:**
+
+- `TELEMETRY_ENABLED`: Enable/disable telemetry endpoint (default: `true`). Set to `false` to disable.
+
+**Note:** The telemetry endpoint always returns HTTP 200. Check the `status` field in the response to determine system health.
+
+---
+
 ## Troubleshooting
 
 See `docs/TROUBLESHOOTING.md`.

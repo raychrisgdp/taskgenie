@@ -45,7 +45,7 @@ app.add_middleware(RequestLoggingMiddleware)
 # Register API routers
 app.include_router(tasks_router.router, prefix="/api/v1")
 
-# Register telemetry router if enabled
+# Only register telemetry router if enabled
 if settings.telemetry_enabled:
     app.include_router(telemetry.router, prefix="/api/v1", tags=["telemetry"])
 
@@ -63,7 +63,6 @@ async def task_not_found_handler(request: Request, exc: TaskNotFoundError) -> JS
     """
     error_response = ErrorResponse(error="Task not found", code=exc.code)
     return JSONResponse(status_code=404, content=error_response.model_dump())
-
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:
